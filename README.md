@@ -6,6 +6,8 @@ An open source server implementation for **Virtual Magic Kingdom (VMK)**, the Di
 
 The goal is a self hostable, well documented server that speaks the original VMK client protocol, so the game can be preserved, studied, and run by anyone.
 
+**[Join the Discord](https://discord.gg/xgt5chaXS)** for discussion, progress updates, and release announcements.
+
 ## About VMK
 
 Virtual Magic Kingdom launched in 2005 as part of Disneyland's 50th anniversary celebration. Players explored virtual versions of the Disney parks, collected pins and furniture, decorated their own rooms, and played mini games. Disney shut the servers down on May 21, 2008. The client was Shockwave based, and since the official servers went dark, the game has only lived on through community preservation work.
@@ -39,8 +41,8 @@ Setup instructions will be published with the first release. Nothing here is run
 
 ```bash
 # Coming soon
-git clone https://github.com/USERNAME/REPO.git
-cd REPO
+git clone https://github.com/OpenVMK/OpenVMK.git
+cd OpenVMK
 ```
 
 ## Roadmap
@@ -52,9 +54,15 @@ cd REPO
 5. Mini games
 6. First public release
 
+## Community
+
+Discussion, questions, and development chat happen in Discord: **https://discord.gg/xgt5chaXS**
+
+For bugs and feature requests, use GitHub Issues so they stay searchable.
+
 ## Contributing
 
-Contributions are welcome once the initial code lands. Protocol documentation, packet captures, preserved client assets, and testing help are all useful in the meantime. Open an issue if you want to get involved early.
+Contributions are welcome once the initial code lands. Protocol documentation, packet captures, preserved client assets, and testing help are all useful in the meantime. Open an issue or drop into the Discord if you want to get involved early.
 
 ## Disclaimer
 
