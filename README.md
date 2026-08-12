@@ -56,10 +56,6 @@ cd REPO
 
 Contributions are welcome once the initial code lands. Protocol documentation, packet captures, preserved client assets, and testing help are all useful in the meantime. Open an issue if you want to get involved early.
 
-## Preservation Notice
-
-This project does not distribute Disney's client, assets, or any copyrighted material. It is a clean server implementation intended for preservation and educational purposes.
-
 ## Disclaimer
 
 This project is not affiliated with, endorsed by, or associated with The Walt Disney Company or any of its subsidiaries. Virtual Magic Kingdom, Disney, and all related names and marks are the property of their respective owners.
