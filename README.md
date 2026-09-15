@@ -56,7 +56,7 @@ cd OpenVMK
 
 ## Community
 
-Discussion, questions, and development chat happen in Discord: **https://discord.gg/xgt5chaXS**
+Discussion, questions, and development chat happen in Discord: **https://discord.gg/WG9ch4exd5**
 
 For bugs and feature requests, use GitHub Issues so they stay searchable.
 
