@@ -6,7 +6,7 @@ An open source server implementation for **Virtual Magic Kingdom (VMK)**, the Di
 
 The goal is a self hostable, well documented server that speaks the original VMK client protocol, so the game can be preserved, studied, and run by anyone.
 
-**[Join the Discord](https://discord.gg/xgt5chaXS)** for discussion, progress updates, and release announcements.
+**[Join the Discord](https://discord.gg/WG9ch4exd5)** for discussion, progress updates, and release announcements.
 
 ## About VMK
 
