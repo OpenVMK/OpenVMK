@@ -1,6 +1,6 @@
 # OpenVMK — Virtual Magic Kingdom Server
 
-> **Status: In active development.** Much of the game already works end to end against the original client. There is no public release yet.
+> **First release: October 18, 2026** on [GitHub Releases](https://github.com/OpenVMK/OpenVMK/releases). It's a GitHub Release for now: the full source code will be published here once it's been cleaned up.
 
 An open source server implementation for **Virtual Magic Kingdom (VMK)**, the Disney virtual world that ran from 2005 to 2008.
 
@@ -34,15 +34,17 @@ Virtual Magic Kingdom launched in 2005 as part of Disneyland's 50th anniversary 
 - [x] Pins, magic, and FastPasses
 - [x] Camera, photo album, and photo walls
 - [x] Staff admin panel and moderation (kicks, bans, staff alerts)
-- [x] Mini games: Castle Fireworks Remixed, Jungle Cruise Photo Safari, Street Party Music Mixer
+- [x] Mini games: Pirates of the Caribbean, Haunted Mansion Ghost Chasers, Castle Fireworks Remixed, Jungle Cruise Photo Safari, Street Party Music Game
 
 **In progress**
 
-- [ ] Mini games: Pirates of the Caribbean, Haunted Mansion
+- [ ] Mini games: Magic Shop Checkers (the last one)
+- [ ] Haunted Mansion public rooms with NPC ghosts
 - [ ] TypeScript browser port of the original client
 - [ ] Quests and Hidden Mickeys
+- [ ] First release on GitHub Releases (October 18, 2026)
+- [ ] Publish the full source code once it's cleaned up
 - [ ] Docker-based deployment
-- [ ] Setup documentation and first public release
 
 ## Tech Stack
 
@@ -63,17 +65,15 @@ The original Shockwave files (`.dcr` / `.cct` casts) are not included, but are *
 
 ## Getting Started
 
-Setup instructions will be published with the first release.
+The first release comes out on **October 18, 2026**:
 
-```bash
-# Coming with the first release
-git clone https://github.com/OpenVMK/OpenVMK.git
-cd OpenVMK
-npm install
-npm start
-```
+1. Download the latest release from [GitHub Releases](https://github.com/OpenVMK/OpenVMK/releases).
+2. Extract it to a folder of your choice.
+3. Follow the setup steps in the release notes and the included README.
 
 All you'll need is Node.js. Docker-based deployment is planned.
+
+The source code isn't in this repository yet. It will be published here once it's been cleaned up.
 
 ## Roadmap
 
@@ -81,10 +81,11 @@ All you'll need is Node.js. Docker-based deployment is planned.
 2. ~~Minimum viable server: login, walk into a room, chat~~
 3. ~~Persistence layer~~
 4. ~~Rooms, furniture, and inventory~~
-5. Mini games: three done, Pirates and Haunted Mansion in progress
-6. TypeScript browser client
-7. Docker packaging and setup docs
-8. First public release
+5. Mini games: five of six done, Checkers in progress
+6. First release on GitHub Releases: October 18, 2026
+7. Publish the full source code once it's cleaned up
+8. Quests and Hidden Mickeys
+9. Docker packaging
 
 ## Community
 
@@ -94,11 +95,11 @@ For bugs and feature requests, use GitHub Issues so they stay searchable.
 
 ## Contributing
 
-Code contributions will open up with the first public release. In the meantime, these are all useful:
+Code contributions will open up once the source code is published. In the meantime, these are all useful:
 
 - **Game files.** Archived client files, casts, and text files, especially rare or late versions.
 - **Research.** Packet captures, protocol notes, screenshots, videos, and recollections of how rooms, items, and games worked.
-- **Testing.** Trying development builds and reporting what doesn't match the original.
+- **Testing.** Trying the release and reporting what doesn't match the original.
 
 Open an issue or drop into the Discord if you want to get involved.
 
@@ -108,4 +109,4 @@ This project is not affiliated with, endorsed by, or associated with The Walt Di
 
 ## License
 
-TBD — will be published with the code.
+TBD — will be published with the source code.
