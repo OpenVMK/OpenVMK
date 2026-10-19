@@ -1,6 +1,6 @@
 # OpenVMK — Virtual Magic Kingdom Server
 
-> **First release: October 18, 2026** on [GitHub Releases](https://github.com/OpenVMK/OpenVMK/releases). **[Download the latest release](https://github.com/OpenVMK/OpenVMK/releases/latest)**, unzip it, and start it — no plugin, no installs. It's a GitHub Release for now: the full source code will be published here once it's been cleaned up.
+> **[Download the latest release](https://github.com/OpenVMK/OpenVMK/releases/latest)**, unzip it, and start it — no plugin, no installs. It's a GitHub Release for now: the full source code will be published here once it's been cleaned up.
 
 An open source server implementation for **Virtual Magic Kingdom (VMK)**, the Disney virtual world that ran from 2005 to 2008.
 
