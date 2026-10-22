@@ -32,7 +32,7 @@ reach, create yours before you tell anyone the address.
 
 ### Windows
 
-1. Unzip the release somewhere with about 6 GB free.
+1. Unzip the release somewhere with about 5 GB free.
 2. Double-click **`Start VMK.bat`**.
 3. Your browser opens `http://127.0.0.1:5199/` once the game is ready (10–30
    seconds). Create an account and play.
