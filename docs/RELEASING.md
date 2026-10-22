@@ -1,7 +1,10 @@
 # Publishing an OpenVMK release
 
-For maintainers, on a Windows machine with a full working checkout: the release
-is built from the extracted casts in `client/assets/casts`, which aren't in git.
+For maintainers, on a Windows machine (the release bundles the Node.js binary
+it is built with). A plain clone of this repository has everything the release
+needs: the extracted casts in `client/assets/casts` are committed, and
+`make-release.mjs` rebuilds `bitmaps.pack` and recompresses the art in its own
+copy, never in the repository.
 
 The release goes to **https://github.com/OpenVMK/OpenVMK/releases**.
 
