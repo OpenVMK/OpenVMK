@@ -1,0 +1,19 @@
+// cd68dc66788fcd3c03d04c79875c1524.cct / CBillBoardsComponent / activateBillBoards
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function activateBillBoards(_me: LingoMe) {
+  if ((lingoTruthy(callNamed("objectp", meProp(_me, "m_boardMgr"))) ? 0 : 1)) {
+  callMethod("createManager", _me)
+  }
+
+  callNamed("createTimeout", "LateBillboardActivator", 1000, symbol("LateActivation"), callMethod("getID", _me), undefined, 1)
+}
+

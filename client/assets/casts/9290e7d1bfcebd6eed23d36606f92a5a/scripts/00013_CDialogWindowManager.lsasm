@@ -1,0 +1,371 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] pushPropList    
+  [0003] setProp          32
+  [0005] pushArgList      0
+  [0007] pushPropList    
+  [0008] setProp          33
+  [0010] pushArgList      0
+  [0012] pushPropList    
+  [0013] setProp          34
+  [0015] pushInt8         1
+  [0017] pushArgListNoRet 1
+  [0019] extCall          16
+  [0021] ret             
+end
+
+on deconstruct
+  [0000] pushInt8         1
+  [0002] pushArgListNoRet 1
+  [0004] extCall          16
+  [0006] ret             
+end
+
+on Initialize
+  [0000] ret             
+end
+
+on createDialogWindow
+  [0000] getParam         2
+  [0002] pushCons         0
+  [0004] pushArgList      2
+  [0006] extCall          37
+  [0008] setLocal         0
+  [0010] getLocal         0
+  [0012] pushZero        
+  [0013] ntEq            
+  [0014] jmpIfZ           27
+  [0017] getLocal         0
+  [0019] getParam         1
+  [0021] getParam         2
+  [0023] getParam         3
+  [0025] getParam         4
+  [0027] pushArgListNoRet 5
+  [0029] objCall          38
+  [0031] getProp          32
+  [0033] getParam         2
+  [0035] getLocal         0
+  [0037] pushArgListNoRet 3
+  [0039] objCall          39
+  [0041] getParam         4
+  [0043] pushCons         1
+  [0045] pushArgList      1
+  [0047] extCall          40
+  [0049] and             
+  [0050] jmpIfZ           15
+  [0053] pushCons         2
+  [0055] pushArgList      1
+  [0057] extCall          41
+  [0059] pushInt8         1
+  [0061] pushArgListNoRet 2
+  [0063] objCall          42
+  [0065] getLocal         0
+  [0067] pushArgListNoRet 1
+  [0069] extCall          16
+  [0071] ret             
+end
+
+on removeDialogWindow
+  [0000] getParam         1
+  [0002] setLocal         0
+  [0004] getProp          32
+  [0006] getLocal         0
+  [0008] pushArgList      2
+  [0010] objCall          49
+  [0012] pushArgList      1
+  [0014] extCall          48
+  [0016] not             
+  [0017] jmpIfZ           46
+  [0020] getProp          32
+  [0022] getLocal         0
+  [0024] pushArgList      2
+  [0026] objCall          50
+  [0028] pushArgListNoRet 1
+  [0030] objCall          51
+  [0032] getProp          32
+  [0034] getLocal         0
+  [0036] pushArgListNoRet 2
+  [0038] objCall          52
+  [0040] getLocal         0
+  [0042] pushArgList      1
+  [0044] extCall          41
+  [0046] pushZero        
+  [0047] ntEq            
+  [0048] jmpIfZ           9
+  [0051] getLocal         0
+  [0053] pushArgListNoRet 1
+  [0055] extCall          53
+  [0057] pushInt8         1
+  [0059] pushArgListNoRet 1
+  [0061] extCall          16
+  [0063] pushZero        
+  [0064] pushArgListNoRet 1
+  [0066] extCall          16
+  [0068] ret             
+end
+
+on RemoveAllDialogWindows
+  [0000] ret             
+end
+
+on ShowDialogWindows
+  [0000] getProp          32
+  [0002] peek             0
+  [0004] pushArgList      1
+  [0006] extCall          55
+  [0008] pushInt8         1
+  [0010] peek             0
+  [0012] peek             2
+  [0014] ltEq            
+  [0015] jmpIfZ           18
+  [0018] peek             2
+  [0020] peek             1
+  [0022] pushArgList      2
+  [0024] extCall          50
+  [0026] setLocal         0
+  [0028] pushInt8         1
+  [0030] add             
+  [0031] endRepeat        21
+  [0033] pop              3
+  [0035] getProp          32
+  [0037] pushArgListNoRet 1
+  [0039] extCall          56
+  [0041] ret             
+end
+
+on dialogExists
+  [0000] getProp          32
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          49
+  [0008] pushArgList      1
+  [0010] extCall          48
+  [0012] not             
+  [0013] pushArgListNoRet 1
+  [0015] extCall          16
+  [0017] ret             
+end
+
+on createNPCDialogWindow
+  [0000] getParam         2
+  [0002] pushCons         3
+  [0004] pushArgList      2
+  [0006] extCall          37
+  [0008] setLocal         0
+  [0010] getLocal         0
+  [0012] pushZero        
+  [0013] ntEq            
+  [0014] jmpIfZ           27
+  [0017] getLocal         0
+  [0019] getParam         1
+  [0021] getParam         2
+  [0023] getParam         3
+  [0025] getParam         4
+  [0027] pushArgListNoRet 5
+  [0029] objCall          38
+  [0031] getProp          33
+  [0033] getParam         2
+  [0035] getLocal         0
+  [0037] pushArgListNoRet 3
+  [0039] objCall          39
+  [0041] getLocal         0
+  [0043] pushArgListNoRet 1
+  [0045] extCall          16
+  [0047] ret             
+end
+
+on RemoveNPCDialogWindow
+  [0000] getParam         1
+  [0002] setLocal         0
+  [0004] getProp          33
+  [0006] getLocal         0
+  [0008] pushArgList      2
+  [0010] objCall          49
+  [0012] pushArgList      1
+  [0014] extCall          48
+  [0016] not             
+  [0017] jmpIfZ           46
+  [0020] getProp          33
+  [0022] getLocal         0
+  [0024] pushArgList      2
+  [0026] objCall          50
+  [0028] pushArgListNoRet 1
+  [0030] objCall          51
+  [0032] getProp          33
+  [0034] getLocal         0
+  [0036] pushArgListNoRet 2
+  [0038] objCall          52
+  [0040] getLocal         0
+  [0042] pushArgList      1
+  [0044] extCall          41
+  [0046] pushZero        
+  [0047] ntEq            
+  [0048] jmpIfZ           9
+  [0051] getLocal         0
+  [0053] pushArgListNoRet 1
+  [0055] extCall          53
+  [0057] pushInt8         1
+  [0059] pushArgListNoRet 1
+  [0061] extCall          16
+  [0063] pushZero        
+  [0064] pushArgListNoRet 1
+  [0066] extCall          16
+  [0068] ret             
+end
+
+on RemoveAllNPCDialogWindows
+  [0000] ret             
+end
+
+on ShowNPCDialogWindows
+  [0000] getProp          33
+  [0002] peek             0
+  [0004] pushArgList      1
+  [0006] extCall          55
+  [0008] pushInt8         1
+  [0010] peek             0
+  [0012] peek             2
+  [0014] ltEq            
+  [0015] jmpIfZ           18
+  [0018] peek             2
+  [0020] peek             1
+  [0022] pushArgList      2
+  [0024] extCall          50
+  [0026] setLocal         0
+  [0028] pushInt8         1
+  [0030] add             
+  [0031] endRepeat        21
+  [0033] pop              3
+  [0035] getProp          33
+  [0037] pushArgListNoRet 1
+  [0039] extCall          56
+  [0041] ret             
+end
+
+on NPCdialogExists
+  [0000] getProp          33
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          49
+  [0008] pushArgList      1
+  [0010] extCall          48
+  [0012] not             
+  [0013] pushArgListNoRet 1
+  [0015] extCall          16
+  [0017] ret             
+end
+
+on createTutorialWindow
+  [0000] getParam         2
+  [0002] pushCons         4
+  [0004] pushArgList      2
+  [0006] extCall          37
+  [0008] setLocal         0
+  [0010] getLocal         0
+  [0012] pushZero        
+  [0013] ntEq            
+  [0014] jmpIfZ           27
+  [0017] getLocal         0
+  [0019] getParam         1
+  [0021] getParam         2
+  [0023] getParam         3
+  [0025] getParam         4
+  [0027] pushArgListNoRet 5
+  [0029] objCall          38
+  [0031] getProp          34
+  [0033] getParam         2
+  [0035] getLocal         0
+  [0037] pushArgListNoRet 3
+  [0039] objCall          39
+  [0041] getLocal         0
+  [0043] pushArgListNoRet 1
+  [0045] extCall          16
+  [0047] ret             
+end
+
+on removeTutorialWindow
+  [0000] getParam         1
+  [0002] setLocal         0
+  [0004] getProp          34
+  [0006] getLocal         0
+  [0008] pushArgList      2
+  [0010] objCall          49
+  [0012] pushArgList      1
+  [0014] extCall          48
+  [0016] not             
+  [0017] jmpIfZ           46
+  [0020] getProp          34
+  [0022] getLocal         0
+  [0024] pushArgList      2
+  [0026] objCall          50
+  [0028] pushArgListNoRet 1
+  [0030] objCall          51
+  [0032] getProp          34
+  [0034] getLocal         0
+  [0036] pushArgListNoRet 2
+  [0038] objCall          52
+  [0040] getLocal         0
+  [0042] pushArgList      1
+  [0044] extCall          41
+  [0046] pushZero        
+  [0047] ntEq            
+  [0048] jmpIfZ           9
+  [0051] getLocal         0
+  [0053] pushArgListNoRet 1
+  [0055] extCall          53
+  [0057] pushInt8         1
+  [0059] pushArgListNoRet 1
+  [0061] extCall          16
+  [0063] pushZero        
+  [0064] pushArgListNoRet 1
+  [0066] extCall          16
+  [0068] ret             
+end
+
+on removeAllTutorialWindows
+  [0000] ret             
+end
+
+on showTutorialWindows
+  [0000] getProp          34
+  [0002] peek             0
+  [0004] pushArgList      1
+  [0006] extCall          55
+  [0008] pushInt8         1
+  [0010] peek             0
+  [0012] peek             2
+  [0014] ltEq            
+  [0015] jmpIfZ           32
+  [0018] peek             2
+  [0020] peek             1
+  [0022] pushArgList      2
+  [0024] extCall          50
+  [0026] setLocal         0
+  [0028] pushCons         5
+  [0030] getLocal         0
+  [0032] getObjProp       58
+  [0034] joinPadStr      
+  [0035] getLocal         0
+  [0037] joinPadStr      
+  [0038] pushArgListNoRet 1
+  [0040] extCall          56
+  [0042] pushInt8         1
+  [0044] add             
+  [0045] endRepeat        35
+  [0047] pop              3
+  [0049] ret             
+end
+
+on tutorialExists
+  [0000] getProp          34
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          49
+  [0008] pushArgList      1
+  [0010] extCall          48
+  [0012] not             
+  [0013] pushArgListNoRet 1
+  [0015] extCall          16
+  [0017] ret             
+end

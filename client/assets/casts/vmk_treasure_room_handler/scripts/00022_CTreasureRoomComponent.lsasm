@@ -1,0 +1,162 @@
+-- Parent Script
+on construct
+  [0000] pushInt8         1
+  [0002] setProp          32
+  [0004] pushInt8         1
+  [0006] pushArgListNoRet 1
+  [0008] extCall          15
+  [0010] ret             
+end
+
+on deconstruct
+  [0000] pushInt8         1
+  [0002] pushArgListNoRet 1
+  [0004] extCall          15
+  [0006] ret             
+end
+
+on TreasureChestClosed
+  [0000] getProp          32
+  [0002] jmpIfZ           84
+  [0005] getParam         1
+  [0007] peek             0
+  [0009] pushInt8         1
+  [0011] eq              
+  [0012] jmpIfZ           18
+  [0015] pushSymb         40
+  [0017] pushCons         0
+  [0019] pushSymb         76
+  [0021] pushCons         1
+  [0023] pushArgListNoRet 4
+  [0025] extCall          39
+  [0027] jmp              57
+  [0030] peek             0
+  [0032] pushInt8         2
+  [0034] eq              
+  [0035] jmpIfZ           18
+  [0038] pushSymb         40
+  [0040] pushCons         2
+  [0042] pushSymb         76
+  [0044] pushCons         3
+  [0046] pushArgListNoRet 4
+  [0048] extCall          39
+  [0050] jmp              34
+  [0053] peek             0
+  [0055] pushZero        
+  [0056] eq              
+  [0057] jmpIfZ           18
+  [0060] pushSymb         40
+  [0062] pushCons         4
+  [0064] pushSymb         76
+  [0066] pushCons         5
+  [0068] pushArgListNoRet 4
+  [0070] extCall          39
+  [0072] jmp              12
+  [0075] pushCons         6
+  [0077] getParam         1
+  [0079] joinPadStr      
+  [0080] pushArgListNoRet 1
+  [0082] extCall          38
+  [0084] pop              1
+  [0086] ret             
+end
+
+on TreasureChestOpenWithTreasure
+  [0000] pushCons         7
+  [0002] pushCons         8
+  [0004] pushArgListNoRet 2
+  [0006] extCall          39
+  [0008] getProp          32
+  [0010] jmpIfZ           85
+  [0013] getParam         1
+  [0015] peek             0
+  [0017] pushInt8         1
+  [0019] eq              
+  [0020] jmpIfZ           18
+  [0023] pushSymb         40
+  [0025] pushCons         0
+  [0027] pushSymb         76
+  [0029] pushCons         9
+  [0031] pushArgListNoRet 4
+  [0033] extCall          39
+  [0035] jmp              58
+  [0038] peek             0
+  [0040] pushInt8         2
+  [0042] eq              
+  [0043] jmpIfZ           18
+  [0046] pushSymb         40
+  [0048] pushCons         2
+  [0050] pushSymb         76
+  [0052] pushCons         10
+  [0054] pushArgListNoRet 4
+  [0056] extCall          39
+  [0058] jmp              35
+  [0061] peek             0
+  [0063] pushZero        
+  [0064] eq              
+  [0065] jmpIfZ           18
+  [0068] pushSymb         40
+  [0070] pushCons         4
+  [0072] pushSymb         76
+  [0074] pushCons         11
+  [0076] pushArgListNoRet 4
+  [0078] extCall          39
+  [0080] jmp              13
+  [0083] getParam         0
+  [0085] pushCons         12
+  [0087] pushSymb         73
+  [0089] pushArgListNoRet 3
+  [0091] extCall          64
+  [0093] pop              1
+  [0095] ret             
+end
+
+on TreasureChestOpenEmpty
+  [0000] pushCons         7
+  [0002] pushCons         8
+  [0004] pushArgListNoRet 2
+  [0006] extCall          39
+  [0008] getProp          32
+  [0010] jmpIfZ           85
+  [0013] getParam         1
+  [0015] peek             0
+  [0017] pushInt8         1
+  [0019] eq              
+  [0020] jmpIfZ           18
+  [0023] pushSymb         40
+  [0025] pushCons         0
+  [0027] pushSymb         76
+  [0029] pushCons         13
+  [0031] pushArgListNoRet 4
+  [0033] extCall          39
+  [0035] jmp              58
+  [0038] peek             0
+  [0040] pushInt8         2
+  [0042] eq              
+  [0043] jmpIfZ           18
+  [0046] pushSymb         40
+  [0048] pushCons         2
+  [0050] pushSymb         76
+  [0052] pushCons         14
+  [0054] pushArgListNoRet 4
+  [0056] extCall          39
+  [0058] jmp              35
+  [0061] peek             0
+  [0063] pushZero        
+  [0064] eq              
+  [0065] jmpIfZ           18
+  [0068] pushSymb         40
+  [0070] pushCons         4
+  [0072] pushSymb         76
+  [0074] pushCons         15
+  [0076] pushArgListNoRet 4
+  [0078] extCall          39
+  [0080] jmp              13
+  [0083] getParam         0
+  [0085] pushCons         12
+  [0087] pushSymb         75
+  [0089] pushArgListNoRet 3
+  [0091] extCall          64
+  [0093] pop              1
+  [0095] ret             
+end

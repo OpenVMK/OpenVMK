@@ -1,0 +1,71 @@
+-- Behavior
+on construct
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          6
+  [0006] pushArgList      1
+  [0008] extCall          5
+  [0010] setGlobal        8
+  [0012] getGlobal        8
+  [0014] pushArgListNoRet 1
+  [0016] objCall          7
+  [0018] ret             
+end
+
+on tDelim
+  [0000] pushArgList      0
+  [0002] theBuiltin       110
+  [0004] pushArgListNoRet 1
+  [0006] extCall          111
+  [0008] ret             
+end
+
+on deconstruct
+  [0000] getGlobal        8
+  [0002] pushArgList      1
+  [0004] extCall          9
+  [0006] jmpIfZ           15
+  [0009] getGlobal        8
+  [0011] pushArgListNoRet 1
+  [0013] objCall          10
+  [0015] pushArgList      0
+  [0017] extCall          11
+  [0019] setGlobal        8
+  [0021] pushArgListNoRet 0
+  [0023] extCall          12
+  [0025] ret             
+end
+
+on showLogo
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] extCall          13
+  [0006] jmpIfZ           3
+  [0009] ret             
+end
+
+on hideLogo
+  [0000] pushCons         1
+  [0002] getParam         0
+  [0004] getParam         1
+  [0006] getParam         2
+  [0008] getParam         3
+  [0010] pushArgList      5
+  [0012] pushList        
+  [0013] pushArgListNoRet 1
+  [0015] extCall          15
+  [0017] getParam         1
+  [0019] pushCons         2
+  [0021] eq              
+  [0022] jmpIfZ           12
+  [0025] getParam         0
+  [0027] pushCons         3
+  [0029] joinPadStr      
+  [0030] pushArgListNoRet 1
+  [0032] extCall          15
+  [0034] ret             
+end
+
+on updateState
+  [0000] ret             
+end

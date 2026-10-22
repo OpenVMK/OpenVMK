@@ -1,0 +1,243 @@
+-- Parent Script
+on construct
+  [0000] pushZero        
+  [0001] setProp          108
+  [0003] pushCons         0
+  [0005] pushArgList      1
+  [0007] extCall          110
+  [0009] setProp          109
+  [0011] pushArgList      0
+  [0013] pushPropList    
+  [0014] setProp          111
+  [0016] pushInt8         1
+  [0018] pushArgListNoRet 1
+  [0020] extCall          21
+  [0022] ret             
+end
+
+on deconstruct
+  [0000] pushCons         1
+  [0002] getParam         0
+  [0004] pushArgListNoRet 2
+  [0006] extCall          112
+  [0008] getProp          111
+  [0010] peek             0
+  [0012] pushArgList      1
+  [0014] extCall          34
+  [0016] pushInt8         1
+  [0018] peek             0
+  [0020] peek             2
+  [0022] ltEq            
+  [0023] jmpIfZ           28
+  [0026] peek             2
+  [0028] peek             1
+  [0030] pushArgList      2
+  [0032] extCall          113
+  [0034] setLocal         0
+  [0036] getLocal         0
+  [0038] pushArgList      1
+  [0040] objCall          20
+  [0042] pushArgListNoRet 1
+  [0044] extCall          114
+  [0046] pushInt8         1
+  [0048] add             
+  [0049] endRepeat        31
+  [0051] pop              3
+  [0053] pushArgList      0
+  [0055] extCall          24
+  [0057] setProp          111
+  [0059] pushInt8         1
+  [0061] pushArgListNoRet 1
+  [0063] extCall          21
+  [0065] ret             
+end
+
+on GetGameTypeCode
+  [0000] getProp          108
+  [0002] pushArgListNoRet 1
+  [0004] extCall          21
+  [0006] ret             
+end
+
+on GetGameInstance
+  [0000] getProp          111
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          28
+  [0008] pushArgListNoRet 1
+  [0010] extCall          21
+  [0012] ret             
+end
+
+on ShowInterface
+  [0000] getParam         1
+  [0002] peek             0
+  [0004] pushSymb         117
+  [0006] eq              
+  [0007] jmpIfZ           6
+  [0010] jmp              22
+  [0013] peek             0
+  [0015] pushSymb         118
+  [0017] eq              
+  [0018] jmpIfZ           6
+  [0021] jmp              11
+  [0024] peek             0
+  [0026] pushSymb         80
+  [0028] eq              
+  [0029] jmpIfZ           3
+  [0032] pop              1
+  [0034] ret             
+end
+
+on GetPlayInterface
+  [0000] pushArgList      0
+  [0002] extCall          24
+  [0004] pushArgListNoRet 1
+  [0006] extCall          21
+  [0008] ret             
+end
+
+on GetGameListInterface
+  [0000] pushArgList      0
+  [0002] extCall          24
+  [0004] pushArgListNoRet 1
+  [0006] extCall          21
+  [0008] ret             
+end
+
+on GetHighScoreInterface
+  [0000] pushArgList      0
+  [0002] extCall          24
+  [0004] pushArgListNoRet 1
+  [0006] extCall          21
+  [0008] ret             
+end
+
+on OnCreateGame
+  [0000] getProp          111
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          28
+  [0008] pushArgList      1
+  [0010] extCall          27
+  [0012] jmpIfZ           48
+  [0015] pushArgList      0
+  [0017] extCall          67
+  [0019] getProp          109
+  [0021] pushArgList      2
+  [0023] extCall          66
+  [0025] setLocal         0
+  [0027] getLocal         0
+  [0029] getParam         1
+  [0031] pushSymb         121
+  [0033] pushArgList      1
+  [0035] extCall          120
+  [0037] getChainedProp   122
+  [0039] pushArgList      1
+  [0041] objCall          123
+  [0043] pushArgListNoRet 3
+  [0045] objCall          124
+  [0047] getProp          111
+  [0049] getParam         1
+  [0051] getLocal         0
+  [0053] pushArgListNoRet 3
+  [0055] objCall          29
+  [0057] jmp              19
+  [0060] getParam         0
+  [0062] pushCons         2
+  [0064] getParam         1
+  [0066] joinPadStr      
+  [0067] pushCons         3
+  [0069] joinPadStr      
+  [0070] pushSymb         53
+  [0072] pushArgListNoRet 3
+  [0074] extCall          30
+  [0076] ret             
+end
+
+on OnAddPlayer
+  [0000] getProp          111
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          28
+  [0008] getParam         2
+  [0010] getParam         3
+  [0012] pushArgListNoRet 3
+  [0014] objCall          126
+  [0016] ret             
+end
+
+on RemovePlayer
+  [0000] getProp          111
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          28
+  [0008] getParam         2
+  [0010] getParam         3
+  [0012] pushArgListNoRet 3
+  [0014] objCall          107
+  [0016] ret             
+end
+
+on OnGameStart
+  [0000] getProp          111
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          28
+  [0008] getParam         2
+  [0010] pushArgListNoRet 2
+  [0012] objCall          128
+  [0014] ret             
+end
+
+on OnGameEnd
+  [0000] getProp          111
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          28
+  [0008] getParam         2
+  [0010] getParam         3
+  [0012] pushArgListNoRet 3
+  [0014] objCall          129
+  [0016] ret             
+end
+
+on OnGameEvent
+  [0000] getProp          111
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          28
+  [0008] getParam         2
+  [0010] getParam         3
+  [0012] pushArgListNoRet 3
+  [0014] objCall          131
+  [0016] ret             
+end
+
+on OnNextTurn
+  [0000] getProp          111
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          28
+  [0008] getParam         2
+  [0010] getParam         3
+  [0012] pushArgListNoRet 3
+  [0014] objCall          133
+  [0016] ret             
+end
+
+on OnGameDetails
+  [0000] ret             
+end
+
+on OnPlayerDetails
+  [0000] ret             
+end
+
+on OnNextGameStarting
+  [0000] ret             
+end
+
+on OnNextGameCanceled
+  [0000] ret             
+end

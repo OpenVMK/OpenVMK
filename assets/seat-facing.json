@@ -1,0 +1,38 @@
+{
+  "//": "Facing for public-room seats whose tile NAME carries no _dir_N, where the default (perpendicular to the bench, toward the floor's centre; tools/extract-room-seats.mjs) is wrong. Per room: seat tile ref -> direction (server clockwise index: 1 = up-right, 3 = down-right, 5 = down-left, 7 = up-left), or \"*\" for the whole room. Checked against the room art in logs/room-doorways.html (tools/render-room-doorways.mjs).",
+  "rooms": {
+    "drivein": {
+      "//": "The cars point at the screen on the upper left; the red deck chairs sit against the poster wall and face out.",
+      "*": 7,
+      "23": 5,
+      "24": 5,
+      "26": 5,
+      "27": 5
+    },
+    "steamboat": {
+      "//": "Theatre rows face the stage on the upper right; the balcony box looks across at it.",
+      "28": 1, "29": 1, "30": 1, "32": 1, "33": 1, "34": 1,
+      "49": 1, "50": 1, "51": 1, "53": 1, "54": 1, "55": 1,
+      "69": 1, "70": 1, "71": 1, "73": 1, "74": 1, "75": 1,
+      "252": 3, "254": 3
+    },
+    "vmk_esplanade": {
+      "//": "Benches stand back to back in pairs: the inner bench faces the plaza (the default), the outer one looks out — toward the Monsters Inc. billboard (left), the Yeti Vision billboard (top), and off the right edge. Checked by eye against the original.",
+      "195": 7, "218": 7,
+      "31": 1, "32": 1,
+      "211": 3, "234": 3
+    },
+    "monorail_train": {
+      "//": "Two sofas back to back mid-lounge: the near one faces the DJ end (the default), the far one the other way.",
+      "82": 3, "103": 3, "118": 3
+    },
+    "tomorrowland_hub": {
+      "//": "Rocket seats face the rocket's nose: up-left. hub_rocketride_enter moves the rocket in toward the upper left, leave_blur exits into the tube further up-left, and each seat's rocket_exit tile is on its up-left side.",
+      "251": 7, "253": 7
+    },
+    "spacemountain": {
+      "//": "sit_front (y 103) sits ahead of sit_back (y 151) in the same rocket, so both face its nose, up-right. The inferred default turned sit_back around.",
+      "369": 1, "372": 1
+    }
+  }
+}

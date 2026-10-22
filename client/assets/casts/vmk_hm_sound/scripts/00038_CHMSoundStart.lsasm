@@ -1,0 +1,28 @@
+-- Parent Script
+on construct
+  [0000] pushInt8         1
+  [0002] pushArgListNoRet 1
+  [0004] extCall          3
+  [0006] ret             
+end
+
+on startSound
+  [0000] pushCons         0
+  [0002] pushArgListNoRet 1
+  [0004] extCall          5
+  [0006] pushCons         1
+  [0008] pushCons         2
+  [0010] pushArgListNoRet 2
+  [0012] extCall          6
+  [0014] ret             
+end
+
+on deconstruct
+  [0000] pushCons         3
+  [0002] pushArgListNoRet 1
+  [0004] extCall          6
+  [0006] pushInt8         1
+  [0008] pushArgListNoRet 1
+  [0010] extCall          3
+  [0012] ret             
+end

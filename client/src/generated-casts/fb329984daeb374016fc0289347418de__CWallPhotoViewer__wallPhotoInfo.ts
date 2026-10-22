@@ -1,0 +1,20 @@
+// fb329984daeb374016fc0289347418de.cct / CWallPhotoViewer / wallPhotoInfo
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function wallPhotoInfo(_me: LingoMe, tdata: LingoValue, a_iID: LingoValue) {
+  var tCaption = tdata.content.word.range(3, tdata.content.word.count);
+  var tWndObj = callNamed("getWindow", meProp(_me, "m_sWindowTitle"));
+  if (lingoBinary("neq", tWndObj, 0)) {
+  callMethod("setText", callMethod("getElement", tWndObj, "fto.wallview.caption"), tCaption)
+  }
+
+}
+

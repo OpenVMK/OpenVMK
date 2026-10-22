@@ -1,0 +1,150 @@
+-- Movie Script
+on rectToQuad
+  [0000] getParam         0
+  [0002] getObjProp       710
+  [0005] getParam         0
+  [0007] getObjProp       711
+  [0010] pushArgList      2
+  [0012] extCall          511
+  [0015] getParam         0
+  [0017] getObjProp       708
+  [0020] getParam         0
+  [0022] getObjProp       711
+  [0025] pushArgList      2
+  [0027] extCall          511
+  [0030] getParam         0
+  [0032] getObjProp       708
+  [0035] getParam         0
+  [0037] getObjProp       709
+  [0040] pushArgList      2
+  [0042] extCall          511
+  [0045] getParam         0
+  [0047] getObjProp       710
+  [0050] getParam         0
+  [0052] getObjProp       709
+  [0055] pushArgList      2
+  [0057] extCall          511
+  [0060] pushArgList      4
+  [0062] pushList        
+  [0063] pushArgListNoRet 1
+  [0065] extCall          13
+  [0067] ret             
+end
+
+on flipQuadH
+  [0000] getParam         0
+  [0002] pushInt8         2
+  [0004] pushArgList      2
+  [0006] objCall          129
+  [0008] getParam         0
+  [0010] pushInt8         1
+  [0012] pushArgList      2
+  [0014] objCall          129
+  [0016] getParam         0
+  [0018] pushInt8         4
+  [0020] pushArgList      2
+  [0022] objCall          129
+  [0024] getParam         0
+  [0026] pushInt8         3
+  [0028] pushArgList      2
+  [0030] objCall          129
+  [0032] pushArgList      4
+  [0034] pushList        
+  [0035] pushArgListNoRet 1
+  [0037] extCall          13
+  [0039] ret             
+end
+
+on ClipAlphaHighValues
+  [0000] pushInt8         1
+  [0002] setLocal         0
+  [0004] getLocal         0
+  [0006] getParam         0
+  [0008] getObjProp       43
+  [0010] ltEq            
+  [0011] jmpIfZ           76
+  [0014] pushInt8         1
+  [0016] setLocal         1
+  [0018] getLocal         1
+  [0020] getParam         0
+  [0022] getObjProp       42
+  [0024] ltEq            
+  [0025] jmpIfZ           53
+  [0028] getParam         0
+  [0030] getLocal         1
+  [0032] getLocal         0
+  [0034] pushSymb         75
+  [0036] pushArgList      4
+  [0038] objCall          1191
+  [0041] setLocal         2
+  [0043] getLocal         2
+  [0045] getParam         1
+  [0047] gt              
+  [0048] jmpIfZ           8
+  [0051] pushInt16        255
+  [0054] setLocal         2
+  [0056] getParam         0
+  [0058] getLocal         1
+  [0060] getLocal         0
+  [0062] getLocal         2
+  [0064] pushArgListNoRet 4
+  [0066] objCall          1192
+  [0069] pushInt8         1
+  [0071] getLocal         1
+  [0073] add             
+  [0074] setLocal         1
+  [0076] endRepeat        58
+  [0078] pushInt8         1
+  [0080] getLocal         0
+  [0082] add             
+  [0083] setLocal         0
+  [0085] endRepeat        81
+  [0087] ret             
+end
+
+on ClipAlphaLowValues
+  [0000] pushInt8         1
+  [0002] setLocal         0
+  [0004] getLocal         0
+  [0006] getParam         0
+  [0008] getObjProp       43
+  [0010] ltEq            
+  [0011] jmpIfZ           74
+  [0014] pushInt8         1
+  [0016] setLocal         1
+  [0018] getLocal         1
+  [0020] getParam         0
+  [0022] getObjProp       42
+  [0024] ltEq            
+  [0025] jmpIfZ           51
+  [0028] getParam         0
+  [0030] getLocal         1
+  [0032] getLocal         0
+  [0034] pushSymb         75
+  [0036] pushArgList      4
+  [0038] objCall          1191
+  [0041] setLocal         2
+  [0043] getLocal         2
+  [0045] getParam         1
+  [0047] lt              
+  [0048] jmpIfZ           6
+  [0051] pushZero        
+  [0052] setLocal         2
+  [0054] getParam         0
+  [0056] getLocal         1
+  [0058] getLocal         0
+  [0060] getLocal         2
+  [0062] pushArgListNoRet 4
+  [0064] objCall          1192
+  [0067] pushInt8         1
+  [0069] getLocal         1
+  [0071] add             
+  [0072] setLocal         1
+  [0074] endRepeat        56
+  [0076] pushInt8         1
+  [0078] getLocal         0
+  [0080] add             
+  [0081] setLocal         0
+  [0083] endRepeat        79
+  [0085] ret             
+end

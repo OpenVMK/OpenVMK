@@ -1,0 +1,29 @@
+// 6df220c58a1fbfc6fa5eee1823840b41.cct / CRoomInfoComponent / deconstruct
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function deconstruct(_me: LingoMe) {
+  callNamed("unregisterMessage", symbol("ui_help"), callMethod("getID", _me))
+  callNamed("unregisterMessage", symbol("hide_roominfo"), callMethod("getID", _me))
+  callNamed("unregisterMessage", symbol("avatarsex"), callMethod("getID", _me))
+  callNamed("unregisterMessage", symbol("roomOwner"), callMethod("getID", _me))
+  callNamed("unregisterMessage", "room_leave", callMethod("getID", _me))
+  if ((lingoTruthy(callNamed("voidp", meProp(_me, "m_pulser"))) ? 0 : 1)) {
+  callNamed("removeObject", callMethod("getID", meProp(_me, "m_pulser")))
+  }
+
+  if ((lingoTruthy(callNamed("voidp", meProp(_me, "m_pRoomInfo"))) ? 0 : 1)) {
+  callNamed("removeObject", callMethod("getID", meProp(_me, "m_pRoomInfo")))
+  }
+
+  setMeProp(_me, "m_pRoomInfo", undefined);
+  return 1;
+}
+

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>VMK client</title>
+    <!--
+      The site root is not a page of its own — it forwards to the real client.
+
+      This used to be the "Castle Fireworks HUD" demo (`src/demo.ts`), which was
+      scaffolding from before `client.html` booted end to end. It outlived its
+      purpose and, because Vite serves this file at `/`, it was what anyone
+      opening http://localhost:5180 actually saw — including the preview tab,
+      which made the dev server look like it was still running a test harness.
+
+      ⚠ The query string is CARRIED ACROSS. The client takes its login through
+      `?sw1=username%3D…&sw2=password%3D<ticket>` (see tools/mint-ticket.mjs), so
+      dropping it here would land on the client with no credentials and send it
+      down its no-login branch.
+    -->
+    <script>
+      location.replace("client.html" + location.search + location.hash);
+    </script>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #0e1117;
+        color: #d5d9e0;
+        font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      a { color: #7aa2f7; }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <p>Continue to the <a href="client.html">VMK client</a>.</p>
+    </noscript>
+  </body>
+</html>

@@ -1,0 +1,88 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] extCall          28
+  [0004] setProp          1039
+  [0007] pushInt8         1
+  [0009] pushArgListNoRet 1
+  [0011] extCall          31
+  [0013] ret             
+end
+
+on deconstruct
+  [0000] pushInt8         1
+  [0002] pushArgListNoRet 1
+  [0004] extCall          31
+  [0006] ret             
+end
+
+on CreateImage
+  [0000] getParam         1
+  [0002] pushArgList      1
+  [0004] extCall          192
+  [0006] setLocal         0
+  [0008] getMovieProp     83
+  [0010] getChainedProp   84
+  [0012] getObjProp       195
+  [0014] getMovieProp     83
+  [0016] getChainedProp   84
+  [0018] getObjProp       85
+  [0020] pushInt8         24
+  [0022] pushArgList      3
+  [0024] extCall          84
+  [0026] setProp          1039
+  [0029] pushInt8         1
+  [0031] setLocal         1
+  [0033] getLocal         1
+  [0035] getProp          1039
+  [0038] getObjProp       85
+  [0040] ltEq            
+  [0041] jmpIfZ           89
+  [0044] pushInt8         1
+  [0046] setLocal         2
+  [0048] getLocal         2
+  [0050] getProp          1039
+  [0053] getObjProp       195
+  [0055] ltEq            
+  [0056] jmpIfZ           65
+  [0059] getParam         2
+  [0061] getLocal         2
+  [0063] getLocal         1
+  [0065] pushArgList      2
+  [0067] extCall          78
+  [0069] pushArgList      1
+  [0071] extCall          81
+  [0073] pushArgList      2
+  [0075] objCall          422
+  [0078] setLocal         3
+  [0080] pushInt8         50
+  [0082] getLocal         3
+  [0084] mul             
+  [0085] pushInt8         50
+  [0087] getLocal         3
+  [0089] mul             
+  [0090] pushZero        
+  [0091] pushArgList      3
+  [0093] extCall          501
+  [0096] setLocal         4
+  [0098] getProp          1039
+  [0101] getLocal         2
+  [0103] getLocal         1
+  [0105] getLocal         4
+  [0107] pushArgListNoRet 4
+  [0109] objCall          1040
+  [0112] pushInt8         1
+  [0114] getLocal         2
+  [0116] add             
+  [0117] setLocal         2
+  [0119] endRepeat        71
+  [0121] pushInt8         1
+  [0123] getLocal         1
+  [0125] add             
+  [0126] setLocal         1
+  [0128] endRepeat        95
+  [0130] getLocal         0
+  [0132] getProp          1039
+  [0135] setObjProp       84
+  [0137] ret             
+end

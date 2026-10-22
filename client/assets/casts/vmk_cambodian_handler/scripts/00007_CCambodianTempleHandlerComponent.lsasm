@@ -1,0 +1,78 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] extCall          49
+  [0004] setProp          68
+  [0006] pushSymb         70
+  [0008] getParam         0
+  [0010] pushArgList      1
+  [0012] objCall          14
+  [0014] pushSymb         67
+  [0016] pushArgListNoRet 3
+  [0018] extCall          69
+  [0020] pushInt8         1
+  [0022] pushArgListNoRet 1
+  [0024] extCall          11
+  [0026] ret             
+end
+
+on deconstruct
+  [0000] pushSymb         70
+  [0002] pushArgListNoRet 1
+  [0004] extCall          71
+  [0006] getProp          68
+  [0008] pushArgList      1
+  [0010] extCall          322
+  [0013] jmpIfZ           13
+  [0016] getProp          68
+  [0018] pushArgList      1
+  [0020] objCall          14
+  [0022] pushArgListNoRet 1
+  [0024] extCall          72
+  [0026] pushInt8         1
+  [0028] pushArgListNoRet 1
+  [0030] extCall          11
+  [0032] ret             
+end
+
+on GetSpline
+  [0000] getProp          68
+  [0002] pushZero        
+  [0003] ntEq            
+  [0004] jmpIfZ           16
+  [0007] getProp          68
+  [0009] pushArgList      1
+  [0011] objCall          73
+  [0013] pushArgListNoRet 1
+  [0015] extCall          11
+  [0017] jmp              11
+  [0020] pushArgList      0
+  [0022] extCall          49
+  [0024] pushArgListNoRet 1
+  [0026] extCall          11
+  [0028] ret             
+end
+
+on RoomReady
+  [0000] pushCons         0
+  [0002] pushCons         1
+  [0004] pushArgList      2
+  [0006] extCall          74
+  [0008] setProp          68
+  [0010] getProp          68
+  [0012] pushArgList      1
+  [0014] extCall          322
+  [0017] jmpIfZ           25
+  [0020] getProp          68
+  [0022] pushCons         2
+  [0024] pushArgListNoRet 2
+  [0026] objCall          75
+  [0028] getParam         0
+  [0030] pushArgList      1
+  [0032] objCall          77
+  [0034] pushArgList      1
+  [0036] objCall          14
+  [0038] pushArgListNoRet 1
+  [0040] extCall          76
+  [0042] ret             
+end

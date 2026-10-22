@@ -1,0 +1,79 @@
+# VMK on Docker.
+#
+#   cp .env.example .env      # optional: set your domain etc. (see .env.example)
+#   docker compose up -d      # plain HTTP on ports 5199 (web) and 8080 (game)
+#   docker compose --profile https up -d    # + automatic HTTPS for VMK_DOMAIN
+#
+# The game runs straight out of this folder in a stock Node image — nothing is
+# built, so updating is: stop, replace the folder (keep data/), start.
+# Accounts and rooms live in ./data/vmk.db; back that file up.
+
+services:
+  vmk:
+    image: node:24-bookworm-slim
+    working_dir: /vmk
+    command: ["node", "start.mjs", "--no-browser"]
+    restart: unless-stopped
+    # Run as you, not root, so data/ and logs/ stay owned by your account.
+    # 1000 is the first user on most Linux installs; check with `id -u`.
+    user: "${VMK_UID:-1000}:${VMK_GID:-1000}"
+    volumes:
+      - ./:/vmk
+    environment:
+      # Listen on every interface INSIDE the container; what the outside world
+      # can reach is decided by `ports:` below.
+      VMK_HOST: 0.0.0.0
+      # Where players reach the game. Blank = whatever address they typed,
+      # which is right for http://<server-ip>:5199. Set both behind HTTPS.
+      VMK_PUBLIC_ORIGIN: ${VMK_PUBLIC_ORIGIN:-}
+      VMK_PUBLIC_GAME_URL: ${VMK_PUBLIC_GAME_URL:-}
+      # Whose X-Forwarded-For to believe for players' real IPs (staff tools).
+      # Default: the bundled Caddy below, at its fixed address, and nothing
+      # else. ONLY add a proxy you run — anyone in this list can set the IP the
+      # staff see. Your own nginx on the host connects from 172.30.99.1.
+      VMK_TRUSTED_PROXIES: ${VMK_TRUSTED_PROXIES:-loopback,172.30.99.10}
+      VMK_SEASON: ${VMK_SEASON:-}
+      VMK_CHAT_CENSOR: ${VMK_CHAT_CENSOR:-on}
+      TZ: ${TZ:-UTC}
+    networks:
+      vmk:
+    ports:
+      # VMK_BIND=127.0.0.1 hides these from the network (use it with the
+      # https profile, where Caddy is the only way in).
+      - "${VMK_BIND:-0.0.0.0}:${VMK_HOST_WEB_PORT:-5199}:5199"
+      - "${VMK_BIND:-0.0.0.0}:${VMK_HOST_GAME_PORT:-8080}:8080"
+
+  # Optional HTTPS front door: `docker compose --profile https up -d`.
+  # Needs VMK_DOMAIN pointing at this machine and ports 80/443 open; Caddy gets
+  # and renews the certificate itself.
+  caddy:
+    image: caddy:2.8
+    profiles: ["https"]
+    restart: unless-stopped
+    depends_on: [vmk]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      VMK_DOMAIN: ${VMK_DOMAIN:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      vmk:
+        # Fixed, so VMK can trust exactly this address and no other container
+        # or host on the network (VMK_TRUSTED_PROXIES above).
+        ipv4_address: 172.30.99.10
+
+networks:
+  vmk:
+    ipam:
+      config:
+        # Change both this and the addresses above if it clashes with a
+        # network you already have (`docker network ls`).
+        - subnet: 172.30.99.0/24
+
+volumes:
+  caddy-data:
+  caddy-config:

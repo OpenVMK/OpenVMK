@@ -1,0 +1,56 @@
+-- Parent Script
+on construct
+  [0000] pushInt8         1
+  [0002] pushArgListNoRet 1
+  [0004] extCall          81
+  [0006] ret             
+end
+
+on deconstruct
+  [0000] pushInt8         1
+  [0002] pushArgListNoRet 1
+  [0004] extCall          81
+  [0006] ret             
+end
+
+on IsRemovable
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          34
+  [0006] pushCons         0
+  [0008] pushArgList      2
+  [0010] objCall          36
+  [0012] pushInt8         10
+  [0014] gt              
+  [0015] jmpIfZ           12
+  [0018] pushInt8         1
+  [0020] pushArgListNoRet 1
+  [0022] extCall          81
+  [0024] jmp              8
+  [0027] pushZero        
+  [0028] pushArgListNoRet 1
+  [0030] extCall          81
+  [0032] ret             
+end
+
+on update
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          34
+  [0006] pushCons         0
+  [0008] pushArgList      2
+  [0010] objCall          36
+  [0012] setLocal         0
+  [0014] getLocal         0
+  [0016] pushInt8         1
+  [0018] add             
+  [0019] setLocal         0
+  [0021] getParam         0
+  [0023] pushArgList      1
+  [0025] objCall          34
+  [0027] pushCons         0
+  [0029] getLocal         0
+  [0031] pushArgListNoRet 3
+  [0033] objCall          638
+  [0036] ret             
+end

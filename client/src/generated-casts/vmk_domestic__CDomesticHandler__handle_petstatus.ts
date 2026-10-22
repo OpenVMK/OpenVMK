@@ -1,0 +1,49 @@
+// vmk_domestic.cct / CDomesticHandler / handle_petstatus
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function handle_petstatus(_me: LingoMe, _this: LingoValue, tMsg: LingoValue) {
+  var tCon = tMsg.connection;
+  var t_rContext = callMethod("_AccessRoom", callMethod("getComponent", callNamed("getThread", "room")));
+  var t_iRef = callMethod("GetIntFrom", tCon);
+  var t_bMoveUpdate = callMethod("GetIntFrom", tCon);
+  var t_iTile = callMethod("GetIntFrom", tCon);
+  var t_iDir = callMethod("GetIntFrom", tCon);
+  var t_iAct = callMethod("GetIntFrom", tCon);
+  var t_rObj = callMethod("_AccessIndexed", t_rContext, t_iRef, "domestic");
+  if (callNamed("objectp", t_rObj)) {
+  callMethod("SetParam", t_rObj, "DIR", callNamed("string", t_iDir))
+  callMethod("SetParam", t_rObj, "ACT", callNamed("string", t_iAct))
+  var t_rTile = callMethod("_AccessIndexed", t_rContext, t_iTile, "tile");
+  if (callNamed("objectp", t_rTile)) {
+  var t_iStack = 0;
+  var t_rCopy = t_rTile;
+  while (1) {
+  if (lingoBinary("gt", callMethod("GetCount", t_rCopy), 0)) {
+  t_rCopy = t_rCopy[1];
+  t_iStack = lingoBinary("add", t_iStack, 1);
+  continue;
+  }
+
+  break;
+  }
+
+  if ((lingoTruthy(t_bMoveUpdate) ? 0 : 1)) {
+  callMethod("WalkToTile", callMethod("GetFactor", t_rObj), t_rTile, t_iStack)
+  } else {
+  callMethod("SetToTileStack", callMethod("GetFactor", t_rObj), t_rTile, t_iStack)
+  }
+
+  }
+
+  }
+
+}
+

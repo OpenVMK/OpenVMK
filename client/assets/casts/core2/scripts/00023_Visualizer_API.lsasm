@@ -1,0 +1,99 @@
+-- Movie Script
+on CreateVisualizerManager
+  [0000] pushSymb         244
+  [0002] pushCons         0
+  [0004] pushArgList      1
+  [0006] extCall          100
+  [0008] pushArgList      2
+  [0010] extCall          35
+  [0012] pushArgListNoRet 1
+  [0014] extCall          5
+  [0016] ret             
+end
+
+on RemoveVisualizerManager
+  [0000] pushSymb         244
+  [0002] pushArgList      1
+  [0004] extCall          36
+  [0006] pushArgListNoRet 1
+  [0008] extCall          5
+  [0010] ret             
+end
+
+on getVisualizerManager
+  [0000] pushArgList      0
+  [0002] extCall          29
+  [0004] setLocal         0
+  [0006] getLocal         0
+  [0008] pushSymb         244
+  [0010] pushArgList      2
+  [0012] objCall          38
+  [0014] jmpIfZ           18
+  [0017] getLocal         0
+  [0019] pushSymb         244
+  [0021] pushArgList      2
+  [0023] objCall          37
+  [0025] pushArgListNoRet 1
+  [0027] extCall          5
+  [0029] jmp              11
+  [0032] pushArgList      0
+  [0034] localCall        0
+  [0036] pushArgListNoRet 1
+  [0038] extCall          5
+  [0040] ret             
+end
+
+on createVisualizer
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] pushArgList      3
+  [0010] objCall          13
+  [0012] pushArgListNoRet 1
+  [0014] extCall          5
+  [0016] ret             
+end
+
+on removeVisualizer
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          70
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on getVisualizer
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          25
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on visualizerExists
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          24
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on printVisualizers
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          71
+  [0008] pushArgListNoRet 1
+  [0010] extCall          5
+  [0012] ret             
+end

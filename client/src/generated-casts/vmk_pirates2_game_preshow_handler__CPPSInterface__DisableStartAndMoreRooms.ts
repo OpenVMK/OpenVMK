@@ -1,0 +1,16 @@
+// vmk_pirates2_game_preshow_handler.cct / CPPSInterface / DisableStartAndMoreRooms
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function DisableStartAndMoreRooms(_me: LingoMe) {
+  var tWndObj = callNamed("getWindow", meProp(_me, "m_sGamelistWndTitle"));
+  callMethod("deactivate", callMethod("getElement", tWndObj, "button.newgame"))
+}
+

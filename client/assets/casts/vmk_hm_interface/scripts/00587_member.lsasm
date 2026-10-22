@@ -1,0 +1,44 @@
+-- Movie Script
+on fixregpoints
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          1
+  [0006] setLocal         0
+  [0008] getLocal         0
+  [0010] pushSymb         2
+  [0012] pushArgList      2
+  [0014] objCall          3
+  [0016] setLocal         1
+  [0018] pushInt8         1
+  [0020] setLocal         2
+  [0022] getLocal         2
+  [0024] getLocal         1
+  [0026] ltEq            
+  [0027] jmpIfZ           50
+  [0030] getLocal         2
+  [0032] pushCons         0
+  [0034] pushArgList      2
+  [0036] extCall          2
+  [0038] setLocal         3
+  [0040] getLocal         3
+  [0042] getObjProp       4
+  [0044] pushSymb         5
+  [0046] eq              
+  [0047] jmpIfZ           21
+  [0050] getLocal         3
+  [0052] getObjProp       6
+  [0054] pushArgListNoRet 1
+  [0056] extCall          7
+  [0058] getLocal         3
+  [0060] pushZero        
+  [0061] pushZero        
+  [0062] pushArgList      2
+  [0064] extCall          8
+  [0066] setObjProp       9
+  [0068] pushInt8         1
+  [0070] getLocal         2
+  [0072] add             
+  [0073] setLocal         2
+  [0075] endRepeat        53
+  [0077] ret             
+end

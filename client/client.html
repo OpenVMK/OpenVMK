@@ -1,0 +1,92 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Virtual Magic Kingdom</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+  }
+  /*
+    The game takes the whole window. #game is the box the stage is fitted into;
+    `src/page.ts` sizes the canvas to the largest 4:3 rectangle inside it.
+  */
+  #game {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #stage {
+    display: block;
+    /* The STAGE paints its own background (black, like Director's). A colour
+       here would show through wherever the movie has not drawn. */
+    background: #000;
+  }
+  #fullscreen {
+    position: fixed;
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+    border: 0;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    opacity: 0.45;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  #fullscreen:hover { opacity: 1; }
+  #fullscreen svg { display: block; width: 100%; height: 100%; }
+  #debug { display: none; }
+
+  /* ?debug=1 — the old diagnostic page: status, game, trace. */
+  body.debug {
+    overflow: auto;
+    background: #0e1117;
+    color: #d5d9e0;
+    font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  body.debug #game {
+    position: relative;
+    inset: auto;
+    height: 72vh;
+  }
+  body.debug #debug { display: block; padding: 8px 16px 16px; }
+  body.debug h1 { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+  body.debug #status { color: #8b93a7; margin: 0 0 8px; }
+  #trace {
+    white-space: pre-wrap;
+    background: #12161d;
+    border: 1px solid #2b3240;
+    padding: 10px;
+    max-height: 40vh;
+    overflow: auto;
+    margin: 0;
+    font-size: 12px;
+  }
+</style>
+
+<!--
+  800x600 is VMK's stage, not a display preference: the plugin page embeds the
+  movie at exactly this size (see the <object>/<embed> in server/src/assets.ts),
+  and VMK lays its windows out against `the stage.rect`. The canvas keeps that
+  resolution; only its DISPLAYED size is scaled to fit the window.
+-->
+<div id="game">
+  <canvas id="stage" width="800" height="600"></canvas>
+</div>
+<button id="fullscreen" type="button" tabindex="-1" title="Full screen" aria-label="Full screen">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+  </svg>
+</button>
+<div id="debug">
+  <h1>VMK client</h1>
+  <p id="status">booting&hellip;</p>
+  <pre id="trace"></pre>
+</div>
+<script type="module" src="/src/client.ts"></script>

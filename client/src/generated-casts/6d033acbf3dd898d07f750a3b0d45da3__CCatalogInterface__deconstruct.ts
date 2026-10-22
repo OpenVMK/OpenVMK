@@ -1,0 +1,28 @@
+// 6d033acbf3dd898d07f750a3b0d45da3.cct / CCatalogInterface / deconstruct
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function deconstruct(_me: LingoMe, _this: LingoValue) {
+  if (callNamed("objectp", meProp(_me, "m_rCurPageObj"))) {
+  callNamed("removeObject", callMethod("getID", meProp(_me, "m_rCurPageObj")))
+  setMeProp(_me, "m_rCurPageObj", undefined);
+  }
+
+  if (callNamed("writerExists", meProp(_me, "m_sShopsMissingWriter"))) {
+  callNamed("removeWriter", meProp(_me, "m_sShopsMissingWriter"))
+  }
+
+  callNamed("unregisterMessage", symbol("ui_catalog"), callMethod("getID", _this))
+  callNamed("unregisterMessage", symbol("close_catalog"), callMethod("getID", _this))
+  callNamed("unregisterMessage", "showCatalogPage", callMethod("getID", _this))
+  callNamed("unregisterMessage", "room_leave", callMethod("getID", _this))
+  return 1;
+}
+

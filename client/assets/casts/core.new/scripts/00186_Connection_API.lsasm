@@ -1,0 +1,152 @@
+-- Movie Script
+on constructConnectionManager
+  [0000] pushSymb         1505
+  [0003] pushCons         0
+  [0005] pushArgList      1
+  [0007] extCall          310
+  [0010] pushArgList      2
+  [0012] extCall          35
+  [0014] pushArgListNoRet 1
+  [0016] extCall          5
+  [0018] ret             
+end
+
+on deconstructConnectionManager
+  [0000] pushSymb         1505
+  [0003] pushArgList      1
+  [0005] extCall          36
+  [0007] pushArgListNoRet 1
+  [0009] extCall          5
+  [0011] ret             
+end
+
+on getConnectionManager
+  [0000] pushArgList      0
+  [0002] extCall          29
+  [0004] setLocal         0
+  [0006] getLocal         0
+  [0008] pushSymb         1505
+  [0011] pushArgList      2
+  [0013] objCall          38
+  [0015] jmpIfZ           19
+  [0018] getLocal         0
+  [0020] pushSymb         1505
+  [0023] pushArgList      2
+  [0025] objCall          37
+  [0027] pushArgListNoRet 1
+  [0029] extCall          5
+  [0031] jmp              11
+  [0034] pushArgList      0
+  [0036] localCall        0
+  [0038] pushArgListNoRet 1
+  [0040] extCall          5
+  [0042] ret             
+end
+
+on createConnection
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] pushArgList      4
+  [0012] objCall          13
+  [0014] pushArgListNoRet 1
+  [0016] extCall          5
+  [0018] ret             
+end
+
+on removeConnection
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          70
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on getConnection
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          25
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on connectionExists
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          24
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on printConnections
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          71
+  [0008] pushArgListNoRet 1
+  [0010] extCall          5
+  [0012] ret             
+end
+
+on registerListener
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] pushArgList      4
+  [0012] objCall          1501
+  [0015] pushArgListNoRet 1
+  [0017] extCall          5
+  [0019] ret             
+end
+
+on unregisterListener
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] pushArgList      4
+  [0012] objCall          1502
+  [0015] pushArgListNoRet 1
+  [0017] extCall          5
+  [0019] ret             
+end
+
+on registerCommands
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] pushArgList      4
+  [0012] objCall          1503
+  [0015] pushArgListNoRet 1
+  [0017] extCall          5
+  [0019] ret             
+end
+
+on unregisterCommands
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] pushArgList      4
+  [0012] objCall          1504
+  [0015] pushArgListNoRet 1
+  [0017] extCall          5
+  [0019] ret             
+end

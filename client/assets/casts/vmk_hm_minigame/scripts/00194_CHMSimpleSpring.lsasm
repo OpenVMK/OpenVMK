@@ -1,0 +1,114 @@
+-- Parent Script
+on construct
+  [0000] pushCons         0
+  [0002] setProp          707
+  [0005] pushCons         1
+  [0007] setProp          708
+  [0010] pushZero        
+  [0011] pushZero        
+  [0012] pushZero        
+  [0013] pushArgList      3
+  [0015] extCall          130
+  [0017] setProp          709
+  [0020] pushZero        
+  [0021] pushZero        
+  [0022] pushZero        
+  [0023] pushArgList      3
+  [0025] extCall          130
+  [0027] setProp          710
+  [0030] pushZero        
+  [0031] setProp          711
+  [0034] pushZero        
+  [0035] setProp          712
+  [0038] pushInt8         1
+  [0040] pushArgListNoRet 1
+  [0042] extCall          53
+  [0044] ret             
+end
+
+on deconstruct
+  [0000] ret             
+end
+
+on update
+  [0000] getProp          710
+  [0003] getObjProp       380
+  [0006] inv             
+  [0007] getProp          709
+  [0010] getObjProp       380
+  [0013] add             
+  [0014] setLocal         0
+  [0016] getProp          710
+  [0019] getObjProp       381
+  [0022] inv             
+  [0023] getProp          709
+  [0026] getObjProp       381
+  [0029] add             
+  [0030] setLocal         1
+  [0032] getProp          711
+  [0035] getProp          707
+  [0038] mul             
+  [0039] getLocal         0
+  [0041] getProp          708
+  [0044] mul             
+  [0045] add             
+  [0046] setProp          711
+  [0049] getProp          712
+  [0052] getProp          707
+  [0055] mul             
+  [0056] getLocal         1
+  [0058] getProp          708
+  [0061] mul             
+  [0062] add             
+  [0063] setProp          712
+  [0066] getProp          710
+  [0069] getProp          710
+  [0072] getObjProp       380
+  [0075] getProp          711
+  [0078] add             
+  [0079] setObjProp       380
+  [0082] getProp          710
+  [0085] getProp          710
+  [0088] getObjProp       381
+  [0091] getProp          712
+  [0094] add             
+  [0095] setObjProp       381
+  [0098] getProp          709
+  [0101] getObjProp       137
+  [0103] getProp          710
+  [0106] getObjProp       137
+  [0108] sub             
+  [0109] setLocal         2
+  [0111] getProp          710
+  [0114] getProp          710
+  [0117] getObjProp       137
+  [0119] getLocal         2
+  [0121] pushInt8         10
+  [0123] div             
+  [0124] add             
+  [0125] setObjProp       137
+  [0127] ret             
+end
+
+on setAnchorPoint
+  [0000] getParam         1
+  [0002] pushArgList      1
+  [0004] objCall          716
+  [0007] setProp          709
+  [0010] ret             
+end
+
+on setBobPosition
+  [0000] getParam         1
+  [0002] pushArgList      1
+  [0004] objCall          716
+  [0007] setProp          710
+  [0010] ret             
+end
+
+on getPos
+  [0000] getProp          710
+  [0003] pushArgListNoRet 1
+  [0005] extCall          53
+  [0007] ret             
+end

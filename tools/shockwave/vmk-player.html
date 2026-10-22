@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VMK — LibreShockwave Player</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0a12;
+      --panel: #141824;
+      --line: #2a3344;
+      --text: #eef2ff;
+      --muted: #8b95a8;
+      --accent: #c41e3a;
+      --ok: #4ade80;
+      --warn: #fbbf24;
+      --danger: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .app {
+      display: grid;
+      grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    /* Play mode: just the game.
+       No sidebar, no frame/fps/size readout, and a black surround so the page
+       disappears around the 800x600 stage instead of framing it in panel grey.
+       Everything here is re-enabled by ?debug=1 (body.debug). */
+    body:not(.debug) .sidebar { display: none; }
+    body:not(.debug) .stage-bar { display: none; }
+    body:not(.debug),
+    body:not(.debug) .app,
+    body:not(.debug) .stage-wrap,
+    body:not(.debug) .stage-box {
+      background: #000;
+      border: 0;
+    }
+    body:not(.debug) .app {
+      grid-template-columns: minmax(0, 1fr);
+      place-items: center;
+      min-height: 100vh;
+    }
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: auto;
+    }
+    h1 { margin: 0; font-size: 17px; font-weight: 650; }
+    .sub { color: var(--muted); font-size: 12px; }
+    .banner {
+      border: 1px solid #854d0e;
+      background: #422006;
+      color: #fef3c7;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .banner.hidden { display: none; }
+    .hint {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+      margin-top: 4px;
+    }
+    .banner code { font-size: 11px; }
+    .banner strong { color: #fde68a; }
+    label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
+    input, textarea, select, button { font: inherit; }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #0d1018;
+      color: var(--text);
+      padding: 8px 9px;
+    }
+    textarea {
+      min-height: 120px;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 11px;
+      resize: vertical;
+    }
+    textarea.log {
+      min-height: 160px;
+      white-space: pre-wrap;
+    }
+    button {
+      border: 1px solid var(--line);
+      background: #1c2433;
+      color: var(--text);
+      border-radius: 6px;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    button.primary { background: #7f1d1d; border-color: var(--accent); }
+    button:hover { border-color: #4b5563; }
+    .row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .stage-wrap {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      background: #050508;
+    }
+    .stage-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .stage-box {
+      display: grid;
+      place-items: center;
+      overflow: auto;
+      padding: 16px;
+      /* The stage must never be squeezed below its native 800px. */
+      min-width: 0;
+    }
+    canvas {
+      /* VMK is 800x600 pixel art with a 1px-stroke bitmap font. `max-width:100%`
+         let the browser downscale the stage to whatever the panel allowed (0.749x
+         in a normal window), and `pixelated` makes that a nearest-neighbour
+         *downscale* — it drops pixels and shreds the glyphs, which reads as
+         "the UI is broken" when the render is actually correct. Always present
+         1:1 and let the container scroll instead. */
+      image-rendering: pixelated;
+      background: #000;
+      box-shadow: 0 0 0 1px #000, 0 10px 40px rgba(0,0,0,.45);
+    }
+    /* The player calls `canvas.focus()` inside its own mousedown handler so the
+       stage can receive key events, so the browser paints its default focus
+       ring on every click — a white border around the whole game.
+       ⚠ `:focus-visible` does NOT exclude this: the focus is programmatic and
+       the canvas carries `tabindex="0"`, and Chrome counts programmatic focus
+       on a tabbable element as focus-visible (measured: the ring computes to
+       `outline: auto 1px` under a `:not(:focus-visible)` rule). The suppression
+       has to be unconditional. The deliberate 1px black `box-shadow` above is
+       what frames the stage; this only removes the browser ring. */
+    canvas:focus,
+    canvas:focus-visible {
+      outline: none;
+    }
+    .status-ok { color: var(--ok); }
+    .status-warn { color: var(--warn); }
+    .status-err { color: var(--danger); }
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!--
+    One page, two faces. Served from /play it is just the game; add ?debug=1 and
+    the sidebar (log, transport controls, advanced settings) appears. There is no
+    separate "prod" copy to drift out of sync -- the thing players use and the
+    thing that gets debugged are the same file.
+
+    The real Shockwave plugin route (/client) keeps its own page, because it
+    embeds the NPAPI/ActiveX control rather than the WASM player and shares
+    almost nothing with this one.
+  -->
+  <main class="app">
+    <section class="sidebar">
+      <div>
+        <h1>VMK × LibreShockwave</h1>
+        <div class="sub">Disney's original Virtual Magic Kingdom Shockwave client via WASM player. Socket events are logged for protocol research.</div>
+      </div>
+
+      <div id="zlib-banner" class="banner hidden">
+        <strong>WASM build missing zlib.</strong> VMK <code>.dcr</code>/<code>.cct</code> files use Afterburner compression and cannot load until WASM is rebuilt with zlib.<br><br>
+        <strong>Fix (pick one):</strong><br>
+        1. Desktop debugger (works now): <code>npm run tools:shockwave:debug -- vmk_core/core.cct</code><br>
+        2. Rebuild WASM in WSL: <code>wsl bash tools/shockwave/build-wasm-wsl.sh</code>
+      </div>
+
+      <div id="status" class="sub">Idle</div>
+
+      <div class="row">
+        <button type="button" id="load" class="primary">Load + Play</button>
+        <button type="button" id="pause">Pause</button>
+        <button type="button" id="stop">Stop</button>
+        <button type="button" id="clear-log">Clear log</button>
+      </div>
+
+      <label class="row" style="grid-auto-flow: column; align-items: center; justify-content: start;">
+        <input id="debug-playback" type="checkbox" checked>
+        <span>Debug playback (Lingo put/trace)</span>
+      </label>
+
+      <!--
+        The movie, preset and sw-param controls are settled: framework_disney.dcr
+        + core.old.cct with the server-supplied sw1-sw7 is the known-good
+        configuration, and the server fills the params in automatically. They are
+        kept (collapsed, and still driveable by URL) rather than deleted because
+        the preset picker is how the core.cst boot regression was caught --
+        framework_disney and vmk_8 failed differently, and that difference was
+        the diagnosis. A debug page that cannot vary the entry point cannot find
+        that class of bug again.
+
+        Overrides without opening this: ?movie=/shockwave/vmk_8.dcr
+      -->
+      <details>
+        <summary class="sub" style="cursor:pointer">Advanced — movie, presets, external params</summary>
+
+        <label>
+          Movie URL (served from /shockwave/)
+          <input id="movie-url" spellcheck="false">
+        </label>
+
+        <label>
+          Quick presets
+          <select id="preset">
+            <option value="framework_disney">framework.dcr — Disney's own loader (recommended: no later edits)</option>
+            <option value="vmk_8">vmk_8.dcr — later-modified Disney client (swapped logo, baked hosts)</option>
+            <option value="vmk_14">vmk_14.dcr — the re-saved entry point 10.1#11 (needs core.cct)</option>
+            <option value="framework">framework.dcr — space loader (try 2nd)</option>
+            <option value="core">core.cct — cast library (usually black alone)</option>
+            <option value="central">vmk_central.cct — room cast (not standalone)</option>
+          </select>
+        </label>
+        <p class="sub" style="margin:0">Only <strong>.dcr</strong> clients are real entry points. <strong>.cct</strong> files are asset libraries — black stage is normal. Match the eras: <code>vmk_8</code>+<code>core.old.cct</code> (Disney) or <code>vmk_14</code>+<code>core.cct</code> (re-save) — mixing them fails at <code>preIndexMembers</code>.</p>
+
+        <label>
+          External params (sw1–sw8, one key=value per line)
+          <textarea id="params" spellcheck="false"></textarea>
+        </label>
+
+        <div class="row">
+          <button type="button" id="apply-preset-params">Apply VMK server preset</button>
+        </div>
+      </details>
+
+      <label>
+        Event log (network, socket, Lingo debug)
+        <textarea id="log" class="log" readonly spellcheck="false"></textarea>
+      </label>
+      <p class="hint">Successful HTTP fetches appear as <code>NETWORK</code> lines after hard refresh. The terminal running <code>tools:shockwave:serve</code> also logs every request.</p>
+    </section>
+
+    <section class="stage-wrap">
+      <div class="stage-bar">
+        <span id="frame-info">No movie loaded</span>
+        <span id="size-info"></span>
+      </div>
+      <div class="stage-box">
+        <canvas id="stage" width="800" height="572"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script src="libreshockwave-cpp-player.js"></script>
+  <script>
+    const ORIGIN = location.origin;
+    const SHOCKWAVE = `${ORIGIN}/shockwave`;
+    const ZLIB_ERR = "built without zlib support";
+    const qs = new URLSearchParams(location.search);
+
+    async function resolveAssetConfig() {
+      const originOverride = qs.get("origin");
+      try {
+        const res = await fetch(`${ORIGIN}/vmk/config.json`, { cache: "no-store" });
+        if (res.ok) {
+          const config = await res.json();
+          return {
+            assetOrigin: originOverride || config.origin || ORIGIN,
+            loadingUrl: config.loadingUrl || `${ORIGIN}/vmk/loading.php`,
+          };
+        }
+      } catch {
+        // fall through
+      }
+      const assetOrigin = originOverride || ORIGIN;
+      return {
+        assetOrigin,
+        loadingUrl: `${assetOrigin}/vmk/loading.php`,
+      };
+    }
+
+    const PRESETS = {
+      // Disney's own 16 KB loader, recovered from the 2005-12-15 Wayback capture
+      // of download.virtualmagickingdom.com/client_u2_b1_5/framework.dcr. It is
+      // the only entry point in the project with no later modifications: it
+      // derives vmk_core/core.cct from `the moviePath` instead of hardcoding
+      // beta.myvmk.com, and it does not carry the swapped Logo bitmap.
+      framework_disney: `${SHOCKWAVE}/framework_disney.dcr`,
+      vmk_8: `${SHOCKWAVE}/vmk_8.dcr`,
+      vmk_14: `${SHOCKWAVE}/vmk_14.dcr`,
+      core: `${SHOCKWAVE}/vmk_core/core.cct`,
+      central: `${SHOCKWAVE}/vmk_spaces/vmk_central.cct`,
+      framework: `${SHOCKWAVE}/vmk_spaces/framework.dcr`,
+    };
+
+    const GAME_SERVER = "http://127.0.0.1:8080";
+    const DEV_USER_ID = 1;
+
+    // Server-injected boot config, present when this page is served from /play:
+    //   { ticket, username, debug }
+    // The ticket belongs to the signed-in user and is minted server-side by
+    // auth.ts::issueTicketFor. Only fall back to a locally generated one when
+    // the page is opened directly (the old /player route), because a ticket the
+    // page invents is bound to nobody.
+    const BOOT = window.__VMK_BOOT ?? null;
+
+    // Debug UI is opt-in: ?debug=1 on the URL, or the server asking for it.
+    // Opening this file directly (no BOOT) keeps the old behaviour of showing
+    // everything, so the standalone debug workflow is unchanged.
+    const DEBUG_UI = BOOT ? (BOOT.debug === true || qs.get("debug") === "1") : true;
+    document.body.classList.toggle("debug", DEBUG_UI);
+
+    function devTicket() {
+      if (BOOT?.ticket) {
+        return BOOT.ticket;
+      }
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function buildVmkParams(ticket, assetOrigin) {
+      return {
+        // siteref/client.php passes login ticket as sw1 (MD5 in PHP; hex here for dev)
+        sw1: ticket,
+        sw2: "connection.info.host=127.0.0.1;connection.info.port=8080",
+        sw3: `site.url=${assetOrigin};url.prefix=${assetOrigin}/shockwave`,
+        // Match the texts to the casts. Our cast set is the later re-saved build, so
+        // it references ~1900 keys Disney's 2938-key external_texts_473 never
+        // had (avatar.loading.*, roomqueue.*, modreasons). Measured overlap:
+        // 2780 of Disney's 2938 keys carry forward, 74% with identical values —
+        // so this is the same corpus, extended, not a different one.
+        // It also actually loads: the ".txt" extension keeps it out of the
+        // extensionless .cct/.cst fallback path (defect #13).
+        // Known cost: 8 OpenVMK-branded strings (login errors, play.openvmk.com
+        // URLs). Enumerable and overridable later; they are strings, not
+        // behaviour. Disney's originals remain at
+        // siteref/homepage/download/external_texts_473 and
+        // assets/external_texts_181_disney.txt for reference.
+        sw4: `external.texts.txt=${assetOrigin}/shockwave/external_texts.txt`,
+        // Distinct from sw4: variables and texts are different files. Pointing
+        // both at external_texts.txt left the client with no variables and it
+        // stalled forever in the "load_variables" state.
+        //
+        // ⚠ `?t=` is not optional -- keep it in step with handleClientEmbed() in
+        // server/src/assets.ts. The variables route only fills in
+        // username/password when the request carries BOTH a session cookie and a
+        // ticket that belongs to that session; without `t` it strips them, the
+        // client never sends CMD.LOGIN, and the connection just sits after
+        // `2002 _Hello` with no error anywhere. That is what made /play unable to
+        // log in while /client could.
+        sw5: `external.variables.txt=${assetOrigin}/external_variables.txt?t=${ticket}`,
+        sw6: `file.server=${assetOrigin}/file.php`,
+        sw7: "client.allow.cross.domain=1;client.notify.cross.domain=0",
+      };
+    }
+
+    const movieUrl = document.getElementById("movie-url");
+    const paramsBox = document.getElementById("params");
+    const preset = document.getElementById("preset");
+    const status = document.getElementById("status");
+    const frameInfo = document.getElementById("frame-info");
+    const sizeInfo = document.getElementById("size-info");
+    const logBox = document.getElementById("log");
+    const debugPlayback = document.getElementById("debug-playback");
+    const zlibBanner = document.getElementById("zlib-banner");
+
+    window.__vmkHarness = { sockets: [], debug: [], errors: [], frames: [] };
+
+    function paramsToText(params) {
+      return Object.entries(params).map(([k, v]) => `${k}=${v}`).join("\n");
+    }
+
+    function textToParams(text) {
+      const params = {};
+      for (const line of text.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const i = trimmed.indexOf("=");
+        if (i <= 0) continue;
+        params[trimmed.slice(0, i).trim()] = trimmed.slice(i + 1).trim();
+      }
+      return params;
+    }
+
+    // Debug playback can emit tens of thousands of lines per load. Concatenating
+    // onto textarea.value per message is O(n^2) and freezes the page, so buffer
+    // the lines, cap the backlog, and repaint once per frame.
+    // ?logmax=50000 raises the backlog when you need the whole bootstrap trace.
+    const LOG_MAX_LINES = Number(qs.get("logmax")) || 2000;
+    const logLines = [];
+    let logFlushQueued = false;
+
+    function flushLog() {
+      logFlushQueued = false;
+      logBox.value = logLines.join("\n");
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function trimBacklog(list) {
+      if (list.length > LOG_MAX_LINES) list.splice(0, list.length - LOG_MAX_LINES);
+    }
+
+    function appendLog(kind, message) {
+      logLines.push(`[${new Date().toISOString()}] ${kind.toUpperCase()} ${message}`);
+      trimBacklog(logLines);
+      if (!logFlushQueued) {
+        // setTimeout, not requestAnimationFrame: rAF is suspended while the tab
+        // is hidden, which would silently stop the log from ever repainting.
+        logFlushQueued = true;
+        setTimeout(flushLog, 100);
+      }
+      const debug = window.__vmkHarness.debug;
+      debug.push({ kind, message, time: Date.now() });
+      trimBacklog(debug);
+    }
+
+    function setStatus(text, cls) {
+      status.textContent = text;
+      status.className = `sub ${cls ?? ""}`;
+    }
+
+    function maybeShowZlibHelp(message) {
+      if (String(message).includes(ZLIB_ERR)) {
+        zlibBanner.classList.remove("hidden");
+      }
+    }
+
+    preset.addEventListener("change", () => {
+      movieUrl.value = PRESETS[preset.value] ?? PRESETS.framework_disney;
+    });
+
+    document.getElementById("apply-preset-params").addEventListener("click", () => {
+      paramsBox.value = paramsToText(buildVmkParams(devTicket()));
+    });
+
+    async function registerDevSession(ticket) {
+      try {
+        const res = await fetch(`${ORIGIN}/dev/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: DEV_USER_ID, ticket, loginName: "DevGuest" }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        appendLog("network", `registered dev session userId=${DEV_USER_ID} ticket=${ticket.slice(0, 8)}…`);
+      } catch (err) {
+        appendLog("warning", `Game server register failed (is tools:shockwave:game-server running?): ${err}`);
+      }
+    }
+
+    document.getElementById("clear-log").addEventListener("click", () => {
+      logLines.length = 0;
+      logBox.value = "";
+      window.__vmkHarness = { sockets: [], debug: [], errors: [], frames: [] };
+    });
+
+    const qsMovie = qs.get("movie");
+    movieUrl.value = qsMovie
+      ? (qsMovie.startsWith("http") ? qsMovie : `${ORIGIN}${qsMovie.startsWith("/") ? "" : "/"}${qsMovie}`)
+      : PRESETS.framework_disney;
+
+    let debugPlaybackEnabled = debugPlayback.checked;
+    let player = null;
+
+    void (async () => {
+      const assetConfig = await resolveAssetConfig();
+      appendLog(
+        "network",
+        `loading.php shim: http://beta.myvmk.com/vmk/loading.php -> ${assetConfig.loadingUrl}`,
+      );
+      paramsBox.value = paramsToText(buildVmkParams(devTicket(), assetConfig.assetOrigin));
+
+      player = LibreShockwavePlayer.create("stage", {
+        // Where the runtime finds its worker and .wasm.
+        //
+        // The player defaults to `new URL(".", document.currentScript.src)`,
+        // but currentScript is null by the time create() runs from this async
+        // block, so it falls back to location.href. At /player/ that happens to
+        // be right; served at /play it resolves the worker to the site root and
+        // it 404s -- the stage just sits on "No movie loaded". Pin it to the
+        // <base> (or this page's own directory) instead of relying on that.
+        basePath: document.querySelector("base")?.href ?? new URL(".", location.href).href,
+        assetOrigin: assetConfig.assetOrigin,
+        debugPlaybackEnabled,
+        slowHandlerWarningMs: 500,
+        websocketSsl: false,
+      onReady() {
+        setStatus("Player ready", "status-ok");
+        appendLog("ready", "LibreShockwave WASM runtime initialized");
+      },
+      onLoad(info) {
+        zlibBanner.classList.add("hidden");
+        setStatus("Loaded — playing", "status-ok");
+        appendLog("load", `${info.width}×${info.height} frames=${info.frameCount} tempo=${info.tempo}`);
+        frameInfo.textContent = `Frame ${info.currentFrame || 0} / ${info.frameCount || 0}`;
+        sizeInfo.textContent = `${info.width || 0}×${info.height || 0}`;
+      },
+      onFrame(info) {
+        frameInfo.textContent = `Frame ${info.currentFrame || 0} / ${info.frameCount || 0} · ${info.tempo || 0} fps`;
+        if (window.__vmkHarness.frames.length < 300) {
+          window.__vmkHarness.frames.push({ frame: info.currentFrame, tempo: info.tempo });
+        }
+      },
+      onSocket(event) {
+        window.__vmkHarness.sockets.push(event);
+        const preview = event.preview?.hex
+          ? ` ${event.byteLength || 0}b hex=${event.preview.hex} ascii=${event.preview.ascii || ""}`
+          : "";
+        appendLog("socket", `${event.phase || "event"} url=${event.url || event.host || "?"}${preview}`);
+      },
+      onDebug(event) {
+        const level = event.level || "debug";
+        appendLog(level === "network" ? "network" : level, event.message || "");
+      },
+      onWarning(message) {
+        setStatus(message, "status-warn");
+        window.__vmkHarness.errors.push(message);
+        appendLog("warning", message);
+      },
+      onError(message) {
+        maybeShowZlibHelp(message);
+        setStatus(message, "status-err");
+        window.__vmkHarness.errors.push(message);
+        appendLog("error", message);
+      },
+      onNavigation(event) {
+        appendLog("navigation", event.url || JSON.stringify(event));
+        return false;
+      },
+      onMessage(message) {
+        if (message.type === "load-start") {
+          appendLog("network", `load-start ${message.url || "?"}`);
+        }
+      },
+    });
+
+      window.__vmkPlayer = player;
+
+      document.getElementById("load").addEventListener("click", async () => {
+        setStatus("Loading…", "");
+        debugPlaybackEnabled = debugPlayback.checked;
+        player.setDebugPlaybackEnabled(debugPlaybackEnabled);
+        let url = movieUrl.value.trim();
+        if (url && !url.startsWith("http")) {
+          url = `${ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
+          movieUrl.value = url;
+        }
+        try {
+          const params = textToParams(paramsBox.value);
+          const ticket = params.sw1;
+          // Only when this page was opened standalone. With BOOT the ticket is
+          // already bound server-side to the signed-in user, and re-registering
+          // it here would rebind it to the hardcoded DEV_USER_ID -- GetSec would
+          // then answer for the wrong account.
+          if (ticket && !BOOT) await registerDevSession(ticket);
+          await player.load(url, {
+            params,
+            autoplay: true,
+            debugPlaybackEnabled,
+          });
+          await player.play();
+        } catch (err) {
+          maybeShowZlibHelp(err);
+          setStatus(String(err), "status-err");
+          appendLog("error", String(err));
+        }
+      });
+
+      document.getElementById("pause").addEventListener("click", () => player.pause());
+      document.getElementById("stop").addEventListener("click", () => player.stop());
+      debugPlayback.addEventListener("change", () => {
+        debugPlaybackEnabled = debugPlayback.checked;
+        player.setDebugPlaybackEnabled(debugPlaybackEnabled);
+      });
+
+      // Served as the game (/play, i.e. BOOT present) it should just start --
+      // "No movie loaded" with a hidden sidebar is a dead end for a player.
+      // Standalone/debug use keeps the explicit ?autoload=1 opt-in.
+      if (qs.get("autoload") === "1" || (BOOT && qs.get("autoload") !== "0")) {
+        document.getElementById("load").click();
+      }
+    })();
+  </script>
+</body>
+</html>

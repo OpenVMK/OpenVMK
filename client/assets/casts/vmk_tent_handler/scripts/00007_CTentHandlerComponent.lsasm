@@ -1,0 +1,66 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] extCall          49
+  [0004] setProp          67
+  [0006] pushSymb         69
+  [0008] getParam         0
+  [0010] pushArgList      1
+  [0012] objCall          14
+  [0014] pushSymb         66
+  [0016] pushArgListNoRet 3
+  [0018] extCall          68
+  [0020] pushInt8         1
+  [0022] pushArgListNoRet 1
+  [0024] extCall          11
+  [0026] ret             
+end
+
+on deconstruct
+  [0000] pushSymb         69
+  [0002] pushArgListNoRet 1
+  [0004] extCall          70
+  [0006] getProp          67
+  [0008] pushArgList      1
+  [0010] extCall          41
+  [0012] not             
+  [0013] jmpIfZ           13
+  [0016] getProp          67
+  [0018] pushArgList      1
+  [0020] objCall          14
+  [0022] pushArgListNoRet 1
+  [0024] extCall          71
+  [0026] pushInt8         1
+  [0028] pushArgListNoRet 1
+  [0030] extCall          11
+  [0032] ret             
+end
+
+on GetSpline
+  [0000] getProp          67
+  [0002] pushArgList      1
+  [0004] objCall          72
+  [0006] pushArgListNoRet 1
+  [0008] extCall          11
+  [0010] ret             
+end
+
+on RoomReady
+  [0000] pushCons         0
+  [0002] pushCons         1
+  [0004] pushArgList      2
+  [0006] extCall          73
+  [0008] setProp          67
+  [0010] getProp          67
+  [0012] pushCons         2
+  [0014] pushArgListNoRet 2
+  [0016] objCall          74
+  [0018] getParam         0
+  [0020] pushArgList      1
+  [0022] objCall          76
+  [0024] pushArgList      1
+  [0026] objCall          14
+  [0028] pushArgListNoRet 1
+  [0030] extCall          75
+  [0032] ret             
+end

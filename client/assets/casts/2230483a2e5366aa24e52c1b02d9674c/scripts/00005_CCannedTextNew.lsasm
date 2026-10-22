@@ -1,0 +1,260 @@
+-- Movie Script
+on TestPartialWord
+  [0000] pushInt8         1
+  [0002] pushArgListNoRet 1
+  [0004] extCall          36
+  [0006] ret             
+end
+
+on ParseCannedText
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          132
+  [0006] pushArgList      1
+  [0008] objCall          133
+  [0010] getParam         0
+  [0012] getParam         1
+  [0014] pushArgList      3
+  [0016] objCall          134
+  [0018] pushArgListNoRet 1
+  [0020] extCall          36
+  [0022] ret             
+end
+
+on GetCannedWord
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          132
+  [0006] pushArgList      1
+  [0008] objCall          133
+  [0010] getParam         0
+  [0012] pushArgList      2
+  [0014] objCall          136
+  [0016] pushArgListNoRet 1
+  [0018] extCall          36
+  [0020] ret             
+end
+
+on SetCannedFreeWordList
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          132
+  [0006] pushArgList      1
+  [0008] objCall          133
+  [0010] getParam         0
+  [0012] pushArgListNoRet 2
+  [0014] objCall          138
+  [0016] ret             
+end
+
+on SetCannedFriendWordList
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          132
+  [0006] pushArgList      1
+  [0008] objCall          133
+  [0010] getParam         0
+  [0012] pushArgListNoRet 2
+  [0014] objCall          140
+  [0016] ret             
+end
+
+on SetCannedOwnNameWordList
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          132
+  [0006] pushArgList      1
+  [0008] objCall          133
+  [0010] getParam         0
+  [0012] pushArgListNoRet 2
+  [0014] objCall          141
+  [0016] ret             
+end
+
+on GetCannedFreeWordList
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          132
+  [0006] pushArgList      1
+  [0008] objCall          133
+  [0010] pushArgList      1
+  [0012] objCall          142
+  [0014] pushArgListNoRet 1
+  [0016] extCall          36
+  [0018] ret             
+end
+
+on GetCannedFriendWordList
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          132
+  [0006] pushArgList      1
+  [0008] objCall          133
+  [0010] pushArgList      1
+  [0012] objCall          143
+  [0014] pushArgListNoRet 1
+  [0016] extCall          36
+  [0018] ret             
+end
+
+on GetCannedOwnNameWordList
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          132
+  [0006] pushArgList      1
+  [0008] objCall          133
+  [0010] pushArgList      1
+  [0012] objCall          144
+  [0014] pushArgListNoRet 1
+  [0016] extCall          36
+  [0018] ret             
+end
+
+on TransformCannedToMsg
+  [0000] pushCons         1
+  [0002] getParam         0
+  [0004] joinPadStr      
+  [0005] getParam         1
+  [0007] joinPadStr      
+  [0008] pushArgListNoRet 1
+  [0010] extCall          145
+  [0012] pushCons         2
+  [0014] setLocal         0
+  [0016] pushInt8         1
+  [0018] setLocal         1
+  [0020] getLocal         1
+  [0022] getParam         0
+  [0024] getObjProp       76
+  [0026] ltEq            
+  [0027] jmpIfZ           160
+  [0030] getParam         0
+  [0032] getLocal         1
+  [0034] pushArgList      2
+  [0036] objCall          93
+  [0038] getObjProp       146
+  [0040] getParam         0
+  [0042] getLocal         1
+  [0044] pushArgList      2
+  [0046] objCall          93
+  [0048] getChainedProp   73
+  [0050] pushSymb         89
+  [0052] pushInt8         1
+  [0054] pushArgList      3
+  [0056] objCall          74
+  [0058] pushArgList      1
+  [0060] extCall          147
+  [0062] pushInt8         96
+  [0064] gt              
+  [0065] and             
+  [0066] getParam         0
+  [0068] getLocal         1
+  [0070] pushArgList      2
+  [0072] objCall          93
+  [0074] getChainedProp   73
+  [0076] pushSymb         89
+  [0078] pushInt8         1
+  [0080] pushArgList      3
+  [0082] objCall          74
+  [0084] pushArgList      1
+  [0086] extCall          147
+  [0088] pushInt8         123
+  [0090] lt              
+  [0091] and             
+  [0092] jmpIfZ           71
+  [0095] getLocal         0
+  [0097] getParam         0
+  [0099] getLocal         1
+  [0101] pushArgList      2
+  [0103] objCall          93
+  [0105] getChainedProp   73
+  [0107] pushSymb         89
+  [0109] pushInt8         1
+  [0111] pushArgList      3
+  [0113] objCall          74
+  [0115] pushArgList      1
+  [0117] extCall          147
+  [0119] pushInt8         32
+  [0121] sub             
+  [0122] pushArgList      1
+  [0124] extCall          148
+  [0126] joinStr         
+  [0127] getParam         0
+  [0129] getLocal         1
+  [0131] pushArgList      2
+  [0133] objCall          93
+  [0135] getChainedProp   73
+  [0137] pushSymb         89
+  [0139] pushInt8         2
+  [0141] getParam         0
+  [0143] getLocal         1
+  [0145] pushArgList      2
+  [0147] objCall          93
+  [0149] getChainedProp   73
+  [0151] getObjProp       88
+  [0153] pushArgList      4
+  [0155] objCall          74
+  [0157] joinStr         
+  [0158] setLocal         0
+  [0160] jmp              18
+  [0163] getLocal         0
+  [0165] getParam         0
+  [0167] getLocal         1
+  [0169] pushArgList      2
+  [0171] objCall          93
+  [0173] getObjProp       73
+  [0175] joinStr         
+  [0176] setLocal         0
+  [0178] pushInt8         1
+  [0180] getLocal         1
+  [0182] add             
+  [0183] setLocal         1
+  [0185] endRepeat        165
+  [0187] pushSymb         149
+  [0189] getLocal         0
+  [0191] pushArgList      2
+  [0193] extCall          77
+  [0195] pushArgListNoRet 1
+  [0197] extCall          36
+  [0199] ret             
+end
+
+on TransformCannedMsgToString
+  [0000] pushCons         3
+  [0002] getParam         0
+  [0004] joinPadStr      
+  [0005] pushArgListNoRet 1
+  [0007] extCall          145
+  [0009] pushCons         0
+  [0011] pushArgList      1
+  [0013] extCall          132
+  [0015] pushArgList      1
+  [0017] objCall          133
+  [0019] getParam         0
+  [0021] pushArgList      2
+  [0023] objCall          127
+  [0025] pushArgListNoRet 1
+  [0027] extCall          36
+  [0029] ret             
+end
+
+on GetDictionary
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          132
+  [0006] pushArgList      1
+  [0008] objCall          133
+  [0010] pushArgList      1
+  [0012] objCall          128
+  [0014] pushArgListNoRet 1
+  [0016] extCall          36
+  [0018] ret             
+end
+
+on CheckContent
+  [0000] pushCons         4
+  [0002] getParam         0
+  [0004] joinPadStr      
+  [0005] pushArgListNoRet 1
+  [0007] extCall          145
+  [0009] ret             
+end

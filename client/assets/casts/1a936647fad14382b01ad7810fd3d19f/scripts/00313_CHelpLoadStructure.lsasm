@@ -1,0 +1,104 @@
+-- Parent Script
+on construct
+  [0000] pushZero        
+  [0001] setProp          257
+  [0004] pushArgList      0
+  [0006] extCall          380
+  [0009] setProp          258
+  [0012] pushArgList      0
+  [0014] extCall          21
+  [0016] setProp          383
+  [0019] pushArgList      0
+  [0021] extCall          21
+  [0023] setProp          384
+  [0026] pushInt8         1
+  [0028] pushArgListNoRet 1
+  [0030] extCall          30
+  [0032] ret             
+end
+
+on deconstruct
+  [0000] pushZero        
+  [0001] setProp          257
+  [0004] pushArgList      0
+  [0006] extCall          21
+  [0008] setProp          258
+  [0011] pushArgList      0
+  [0013] extCall          21
+  [0015] setProp          383
+  [0018] pushInt8         1
+  [0020] pushArgListNoRet 1
+  [0022] extCall          30
+  [0024] ret             
+end
+
+on setNotifyObject
+  [0000] getParam         1
+  [0002] setProp          384
+  [0005] ret             
+end
+
+on IsReady
+  [0000] getProp          257
+  [0003] pushArgListNoRet 1
+  [0005] extCall          30
+  [0007] ret             
+end
+
+on LoadMapFile
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          386
+  [0007] jmpIfZ           53
+  [0010] pushCons         0
+  [0012] pushArgList      1
+  [0014] extCall          195
+  [0016] setLocal         0
+  [0018] pushCons         1
+  [0020] setLocal         1
+  [0022] getLocal         0
+  [0024] getLocal         1
+  [0026] pushSymb         45
+  [0028] pushArgList      3
+  [0030] extCall          387
+  [0033] setLocal         2
+  [0035] getLocal         2
+  [0037] pushSymb         382
+  [0040] getParam         0
+  [0042] pushArgList      1
+  [0044] objCall          25
+  [0046] getLocal         1
+  [0048] pushArgListNoRet 4
+  [0050] extCall          388
+  [0053] pushZero        
+  [0054] setProp          257
+  [0057] jmp              19
+  [0060] getParam         0
+  [0062] pushCons         2
+  [0064] pushSymb         389
+  [0067] pushArgListNoRet 3
+  [0069] extCall          71
+  [0071] pushInt8         1
+  [0073] setProp          257
+  [0076] ret             
+end
+
+on _FileLoadCallback
+  [0000] getParam         1
+  [0002] pushArgList      1
+  [0004] extCall          393
+  [0007] getObjProp       45
+  [0009] pushArgList      1
+  [0011] extCall          380
+  [0014] setProp          258
+  [0017] pushInt8         1
+  [0019] setProp          257
+  [0022] getProp          384
+  [0025] getProp          258
+  [0028] pushArgListNoRet 2
+  [0030] objCall          207
+  [0032] getParam         1
+  [0034] pushArgListNoRet 1
+  [0036] extCall          274
+  [0039] ret             
+end

@@ -1,0 +1,95 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] pushPropList    
+  [0003] setProp          94
+  [0005] pushInt8         1
+  [0007] pushArgListNoRet 1
+  [0009] extCall          24
+  [0011] ret             
+end
+
+on deconstruct
+  [0000] pushArgList      0
+  [0002] extCall          14
+  [0004] setLocal         0
+  [0006] pushInt8         1
+  [0008] pushArgListNoRet 1
+  [0010] extCall          24
+  [0012] ret             
+end
+
+on _RequestItemList
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          96
+  [0006] jmpIfZ           18
+  [0009] pushCons         0
+  [0011] pushArgList      1
+  [0013] extCall          42
+  [0015] pushCons         1
+  [0017] pushArgListNoRet 2
+  [0019] objCall          44
+  [0021] jmp              13
+  [0024] getParam         0
+  [0026] pushCons         2
+  [0028] pushSymb         89
+  [0030] pushArgListNoRet 3
+  [0032] extCall          97
+  [0034] ret             
+end
+
+on _UpdateProductList
+  [0000] getParam         2
+  [0002] pushCons         3
+  [0004] eq              
+  [0005] jmpIfZ           8
+  [0008] pushArgList      0
+  [0010] pushPropList    
+  [0011] setProp          94
+  [0013] getProp          94
+  [0015] getParam         2
+  [0017] pushArgList      2
+  [0019] objCall          98
+  [0021] setLocal         0
+  [0023] getLocal         0
+  [0025] pushArgList      1
+  [0027] extCall          37
+  [0029] jmpIfZ           16
+  [0032] getProp          94
+  [0034] getParam         2
+  [0036] getParam         1
+  [0038] pushArgListNoRet 3
+  [0040] objCall          99
+  [0042] jmp              13
+  [0045] getProp          94
+  [0047] getParam         2
+  [0049] getParam         1
+  [0051] pushArgListNoRet 3
+  [0053] objCall          100
+  [0055] getParam         0
+  [0057] getChainedProp   101
+  [0059] getProp          94
+  [0061] getParam         2
+  [0063] pushArgListNoRet 3
+  [0065] objCall          11
+  [0067] ret             
+end
+
+on GetItemList
+  [0000] getProp          94
+  [0002] pushArgListNoRet 1
+  [0004] extCall          24
+  [0006] ret             
+end
+
+on GetProductList
+  [0000] getProp          94
+  [0002] pushArgListNoRet 1
+  [0004] extCall          24
+  [0006] ret             
+end
+
+on _UpdateCreditBalance
+  [0000] ret             
+end

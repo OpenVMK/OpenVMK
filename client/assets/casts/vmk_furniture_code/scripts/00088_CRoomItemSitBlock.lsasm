@@ -1,0 +1,39 @@
+-- Parent Script
+on construct
+  [0000] pushZero        
+  [0001] setProp          38
+  [0003] pushInt8         1
+  [0005] pushArgListNoRet 1
+  [0007] extCall          7
+  [0009] ret             
+end
+
+on update
+  [0000] getProp          38
+  [0002] not             
+  [0003] jmpIfZ           9
+  [0006] getParam         0
+  [0008] pushArgListNoRet 1
+  [0010] objCall          36
+  [0012] ret             
+end
+
+on _Init
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          98
+  [0006] setLocal         0
+  [0008] getLocal         0
+  [0010] pushArgList      1
+  [0012] extCall          47
+  [0014] not             
+  [0015] jmpIfZ           17
+  [0018] getLocal         0
+  [0020] pushCons         0
+  [0022] pushCons         1
+  [0024] pushArgListNoRet 3
+  [0026] objCall          99
+  [0028] pushInt8         1
+  [0030] setProp          38
+  [0032] ret             
+end

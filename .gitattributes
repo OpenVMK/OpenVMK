@@ -1,0 +1,56 @@
+# Deterministic line endings across every clone / CI / release checkout.
+# The client SERVES many of these files straight from the working tree and
+# parses them (.tsv manifests, .json, .xml/.dtd), so a stray CR from a Windows
+# CRLF checkout can corrupt the last column of a row or a trailing token. Pin
+# text to LF everywhere — that is exactly what the extractor writes and what the
+# client is proven to work with. Detected-binary files are left byte-exact.
+* text=auto eol=lf
+# --- Source / data that must stay LF (explicit for clarity) ---
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.mjs   text eol=lf
+*.cjs   text eol=lf
+*.json  text eol=lf
+*.tsv   text eol=lf
+*.csv   text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.xml   text eol=lf
+*.dtd   text eol=lf
+*.svg   text eol=lf
+*.ls    text eol=lf
+# --- Binary: never touched, kept byte-identical ---
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.bmp   binary
+*.wav   binary
+*.mp3   binary
+*.ogg   binary
+*.ttf   binary
+*.otf   binary
+*.woff  binary
+*.woff2 binary
+*.wasm  binary
+*.zip   binary
+*.db    binary
+*.bin   binary
+*.cct   binary
+*.cxt   binary
+*.cst   binary
+*.dcr   binary
+*.dir   binary
+*.dxr   binary
+
+
+# cmd.exe expects CRLF in batch files.
+*.bat text eol=crlf
+
+# --- Game data: byte-for-byte as extracted, never line-ending converted ---
+client/assets/** -text
+assets/** -text

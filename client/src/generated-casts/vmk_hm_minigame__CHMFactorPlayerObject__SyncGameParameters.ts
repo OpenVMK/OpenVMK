@@ -1,0 +1,18 @@
+// vmk_hm_minigame.cct / CHMFactorPlayerObject / SyncGameParameters
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function SyncGameParameters(_me: LingoMe) {
+  var t_params = new LingoList([]);
+  t_params[1] = meProp(_me, "m_score");
+  t_params[2] = meProp(_me, "m_i_statebits");
+  callMethod("SetParam", callMethod("getObject", _me), "GameParams", t_params)
+}
+

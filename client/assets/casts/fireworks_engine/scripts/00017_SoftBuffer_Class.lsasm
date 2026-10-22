@@ -1,0 +1,201 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] extCall          48
+  [0004] setProp          409
+  [0007] pushArgList      0
+  [0009] extCall          48
+  [0011] setProp          410
+  [0014] pushZero        
+  [0015] pushZero        
+  [0016] pushArgList      2
+  [0018] extCall          412
+  [0021] setProp          411
+  [0024] pushSymb         414
+  [0027] setProp          413
+  [0030] pushZero        
+  [0031] pushZero        
+  [0032] pushZero        
+  [0033] pushArgList      3
+  [0035] extCall          416
+  [0038] setProp          415
+  [0041] pushArgList      0
+  [0043] extCall          48
+  [0045] setProp          417
+  [0048] ret             
+end
+
+on deconstruct
+  [0000] ret             
+end
+
+on clear
+  [0000] getProp          409
+  [0003] not             
+  [0004] jmpIfZ           13
+  [0007] pushCons         0
+  [0009] pushArgListNoRet 1
+  [0011] extCall          43
+  [0013] pushArgListNoRet 0
+  [0015] extCall          36
+  [0017] getProp          413
+  [0020] peek             0
+  [0022] pushSymb         414
+  [0025] eq              
+  [0026] jmpIfZ           37
+  [0029] getProp          409
+  [0032] pushZero        
+  [0033] pushZero        
+  [0034] getProp          409
+  [0037] getObjProp       418
+  [0040] getProp          409
+  [0043] getObjProp       419
+  [0046] pushSymb         416
+  [0049] getProp          415
+  [0052] pushArgList      2
+  [0054] pushPropList    
+  [0055] pushArgListNoRet 6
+  [0057] objCall          414
+  [0060] jmp              64
+  [0063] peek             0
+  [0065] pushSymb         420
+  [0068] eq              
+  [0069] jmpIfZ           55
+  [0072] getProp          409
+  [0075] getProp          410
+  [0078] pushZero        
+  [0079] pushZero        
+  [0080] getProp          409
+  [0083] getObjProp       418
+  [0086] getProp          409
+  [0089] getObjProp       419
+  [0092] pushArgList      4
+  [0094] extCall          421
+  [0097] pushZero        
+  [0098] pushZero        
+  [0099] getProp          410
+  [0102] getObjProp       418
+  [0105] getProp          410
+  [0108] getObjProp       419
+  [0111] pushArgList      4
+  [0113] extCall          421
+  [0116] getProp          417
+  [0119] pushArgListNoRet 5
+  [0121] objCall          422
+  [0124] pop              1
+  [0126] ret             
+end
+
+on setBuffer
+  [0000] getParam         1
+  [0002] pushSymb         423
+  [0005] pushArgList      2
+  [0007] extCall          80
+  [0009] not             
+  [0010] jmpIfZ           14
+  [0013] pushCons         1
+  [0015] pushArgListNoRet 1
+  [0017] extCall          43
+  [0019] pushZero        
+  [0020] pushArgListNoRet 1
+  [0022] extCall          36
+  [0024] getParam         1
+  [0026] setProp          409
+  [0029] pushInt8         1
+  [0031] pushArgListNoRet 1
+  [0033] extCall          36
+  [0035] ret             
+end
+
+on useOpaqueFillClear
+  [0000] pushSymb         414
+  [0003] setProp          413
+  [0006] pushArgList      0
+  [0008] extCall          48
+  [0010] setProp          417
+  [0013] getParam         1
+  [0015] setProp          415
+  [0018] ret             
+end
+
+on useTransparentFillClear
+  [0000] pushSymb         420
+  [0003] setProp          413
+  [0006] pushArgList      0
+  [0008] extCall          48
+  [0010] setProp          415
+  [0013] getProp          409
+  [0016] getObjProp       418
+  [0019] getProp          409
+  [0022] getObjProp       419
+  [0025] getProp          409
+  [0028] getObjProp       426
+  [0031] pushArgList      3
+  [0033] extCall          423
+  [0036] setProp          410
+  [0039] getProp          410
+  [0042] pushZero        
+  [0043] pushZero        
+  [0044] getProp          409
+  [0047] getObjProp       418
+  [0050] getProp          409
+  [0053] getObjProp       419
+  [0056] pushSymb         416
+  [0059] getParam         1
+  [0061] pushArgList      2
+  [0063] pushPropList    
+  [0064] pushArgListNoRet 6
+  [0066] objCall          414
+  [0069] pushSymb         427
+  [0072] pushInt8         1
+  [0074] pushSymb         428
+  [0077] pushInt8         32
+  [0079] pushSymb         429
+  [0082] getParam         2
+  [0084] pushArgList      6
+  [0086] pushPropList    
+  [0087] setProp          417
+  [0090] ret             
+end
+
+on useOpaqueCopyClear
+  [0000] pushSymb         420
+  [0003] setProp          413
+  [0006] getParam         1
+  [0008] setProp          410
+  [0011] pushSymb         427
+  [0014] pushInt8         1
+  [0016] pushSymb         428
+  [0019] pushZero        
+  [0020] pushArgList      4
+  [0022] pushPropList    
+  [0023] setProp          417
+  [0026] ret             
+end
+
+on useTransparentCopyClear
+  [0000] pushSymb         420
+  [0003] setProp          413
+  [0006] pushArgList      0
+  [0008] extCall          48
+  [0010] setProp          415
+  [0013] getParam         1
+  [0015] setProp          410
+  [0018] pushSymb         427
+  [0021] pushInt8         1
+  [0023] pushSymb         428
+  [0026] pushInt8         32
+  [0028] pushSymb         429
+  [0031] getParam         2
+  [0033] pushArgList      6
+  [0035] pushPropList    
+  [0036] setProp          417
+  [0039] ret             
+end
+
+on getImage
+  [0000] getProp          409
+  [0003] pushArgListNoRet 1
+  [0005] extCall          36
+  [0007] ret             
+end

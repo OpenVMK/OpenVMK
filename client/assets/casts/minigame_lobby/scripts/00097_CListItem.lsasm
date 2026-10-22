@@ -1,0 +1,146 @@
+-- Parent Script
+on construct
+  [0000] pushZero        
+  [0001] setProp          299
+  [0004] pushArgList      0
+  [0006] extCall          12
+  [0008] setProp          270
+  [0011] pushCons         0
+  [0013] getMovieProp     262
+  [0016] joinStr         
+  [0017] setProp          300
+  [0020] pushCons         1
+  [0022] pushArgList      1
+  [0024] extCall          301
+  [0027] setLocal         0
+  [0029] pushCons         2
+  [0031] pushArgList      1
+  [0033] extCall          301
+  [0036] setLocal         1
+  [0038] pushCons         3
+  [0040] pushArgList      1
+  [0042] extCall          301
+  [0045] setLocal         2
+  [0047] pushSymb         302
+  [0050] getLocal         0
+  [0052] pushSymb         302
+  [0055] pushArgList      2
+  [0057] objCall          157
+  [0059] pushSymb         303
+  [0062] getLocal         0
+  [0064] pushSymb         303
+  [0067] pushArgList      2
+  [0069] objCall          157
+  [0071] pushSymb         280
+  [0074] pushCons         4
+  [0076] pushArgList      1
+  [0078] extCall          275
+  [0081] pushSymb         304
+  [0084] pushCons         5
+  [0086] pushArgList      1
+  [0088] extCall          275
+  [0091] pushSymb         305
+  [0094] pushInt8         15
+  [0096] pushArgList      10
+  [0098] pushPropList    
+  [0099] setLocal         3
+  [0101] getProp          300
+  [0104] getLocal         3
+  [0106] pushArgListNoRet 2
+  [0108] extCall          306
+  [0111] ret             
+end
+
+on deconstruct
+  [0000] getProp          300
+  [0003] pushArgListNoRet 1
+  [0005] extCall          311
+  [0008] ret             
+end
+
+on render
+  [0000] getProp          300
+  [0003] pushArgList      1
+  [0005] extCall          312
+  [0008] setLocal         0
+  [0010] getLocal         0
+  [0012] getProp          313
+  [0015] pushArgList      2
+  [0017] objCall          54
+  [0019] setProp          270
+  [0022] getProp          299
+  [0025] jmpIfZ           92
+  [0028] getProp          270
+  [0031] getObjProp       42
+  [0033] getProp          270
+  [0036] getObjProp       314
+  [0039] getProp          270
+  [0042] getObjProp       315
+  [0045] pushArgList      3
+  [0047] extCall          277
+  [0050] setLocal         1
+  [0052] getLocal         1
+  [0054] getLocal         1
+  [0056] getObjProp       278
+  [0059] pushSymb         279
+  [0062] pushSymb         278
+  [0065] pushSymb         280
+  [0068] pushCons         6
+  [0070] pushArgList      1
+  [0072] extCall          275
+  [0075] pushArgList      4
+  [0077] pushPropList    
+  [0078] pushArgListNoRet 3
+  [0080] objCall          281
+  [0083] getProp          270
+  [0086] getLocal         1
+  [0088] getProp          270
+  [0091] getObjProp       278
+  [0094] getLocal         1
+  [0096] getObjProp       278
+  [0099] pushSymb         316
+  [0102] pushInt8         1
+  [0104] pushSymb         317
+  [0107] pushInt8         50
+  [0109] pushArgList      4
+  [0111] pushPropList    
+  [0112] pushArgListNoRet 5
+  [0114] objCall          285
+  [0117] ret             
+end
+
+on setText
+  [0000] getParam         1
+  [0002] setProp          313
+  [0005] getParam         0
+  [0007] pushArgListNoRet 1
+  [0009] objCall          54
+  [0011] ret             
+end
+
+on select
+  [0000] getParam         1
+  [0002] setProp          299
+  [0005] ret             
+end
+
+on getText
+  [0000] getProp          313
+  [0003] pushArgListNoRet 1
+  [0005] extCall          20
+  [0007] ret             
+end
+
+on getImage
+  [0000] getProp          270
+  [0003] pushArgListNoRet 1
+  [0005] extCall          20
+  [0007] ret             
+end
+
+on GetSelected
+  [0000] getProp          299
+  [0003] pushArgListNoRet 1
+  [0005] extCall          20
+  [0007] ret             
+end

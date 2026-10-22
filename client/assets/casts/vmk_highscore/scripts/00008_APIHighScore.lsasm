@@ -1,0 +1,79 @@
+-- Movie Script
+on DisplayHighscore
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          2
+  [0006] pushArgList      1
+  [0008] objCall          3
+  [0010] getParam         1
+  [0012] pushArgListNoRet 2
+  [0014] objCall          4
+  [0016] getParam         2
+  [0018] pushArgList      1
+  [0020] extCall          5
+  [0022] not             
+  [0023] jmpIfZ           19
+  [0026] pushCons         0
+  [0028] pushArgList      1
+  [0030] extCall          2
+  [0032] pushArgList      1
+  [0034] objCall          3
+  [0036] getParam         2
+  [0038] pushArgListNoRet 2
+  [0040] objCall          6
+  [0042] getParam         0
+  [0044] peek             0
+  [0046] pushInt8         5
+  [0048] eq              
+  [0049] jmpIfZ           48
+  [0052] getParam         3
+  [0054] pushArgList      1
+  [0056] extCall          5
+  [0058] jmpIfZ           6
+  [0061] pushZero        
+  [0062] setParam         3
+  [0064] pushCons         1
+  [0066] pushCons         2
+  [0068] pushArgList      2
+  [0070] extCall          8
+  [0072] pushArgList      1
+  [0074] extCall          7
+  [0076] pushInt16        661
+  [0079] pushSymb         9
+  [0081] getParam         0
+  [0083] pushSymb         9
+  [0085] getParam         3
+  [0087] pushArgList      4
+  [0089] pushPropList    
+  [0090] pushArgListNoRet 3
+  [0092] objCall          10
+  [0094] jmp              29
+  [0097] pushCons         1
+  [0099] pushCons         2
+  [0101] pushArgList      2
+  [0103] extCall          8
+  [0105] pushArgList      1
+  [0107] extCall          7
+  [0109] pushInt16        660
+  [0112] pushSymb         9
+  [0114] getParam         0
+  [0116] pushArgList      2
+  [0118] pushPropList    
+  [0119] pushArgListNoRet 3
+  [0121] objCall          10
+  [0123] pop              1
+  [0125] ret             
+end
+
+on DisableHighScore
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          2
+  [0006] pushArgList      1
+  [0008] objCall          3
+  [0010] pushArgList      0
+  [0012] extCall          15
+  [0014] pushArgListNoRet 2
+  [0016] objCall          4
+  [0018] ret             
+end

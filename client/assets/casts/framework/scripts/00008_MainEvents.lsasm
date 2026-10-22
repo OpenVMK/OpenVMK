@@ -1,0 +1,150 @@
+-- Movie Script
+on prepareMovie
+  [0000] getTopLevelProp  126
+  [0002] pushInt8         9
+  [0004] setObjProp       127
+  [0006] pushCons         0
+  [0008] pushArgList      1
+  [0010] extCall          51
+  [0012] pushCons         1
+  [0014] eq              
+  [0015] jmpIfZ           21
+  [0018] pushCons         2
+  [0020] pushArgList      1
+  [0022] extCall          24
+  [0024] pushCons         3
+  [0026] setObjProp       173
+  [0028] getTopLevelProp  45
+  [0030] pushZero        
+  [0031] setObjProp       46
+  [0033] jmp              8
+  [0036] getTopLevelProp  45
+  [0038] pushZero        
+  [0039] setObjProp       46
+  [0041] getTopLevelProp  45
+  [0043] pushCons         4
+  [0045] pushArgList      1
+  [0047] extCall          65
+  [0049] setObjProp       117
+  [0051] pushCons         5
+  [0053] pushArgList      1
+  [0055] extCall          65
+  [0057] pushArgList      1
+  [0059] extCall          129
+  [0061] setGlobal        128
+  [0063] getGlobal        128
+  [0065] pushArgListNoRet 1
+  [0067] objCall          130
+  [0069] pushZero        
+  [0070] setLocal         0
+  [0072] ret             
+end
+
+on alertHook
+  [0000] getGlobal        131
+  [0002] pushInt8         1
+  [0004] add             
+  [0005] setGlobal        131
+  [0007] pushZero        
+  [0008] setMovieProp     22
+  [0010] pushInt8         1
+  [0012] pushArgListNoRet 1
+  [0014] extCall          19
+  [0016] ret             
+end
+
+on stopMovie
+  [0000] getGlobal        128
+  [0002] pushArgList      1
+  [0004] extCall          137
+  [0006] jmpIfZ           15
+  [0009] getGlobal        128
+  [0011] pushArgListNoRet 1
+  [0013] objCall          138
+  [0015] pushArgList      0
+  [0017] extCall          44
+  [0019] setGlobal        128
+  [0021] pushArgListNoRet 0
+  [0023] extCall          139
+  [0025] ret             
+end
+
+on exitFrame
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] extCall          52
+  [0006] jmpIfZ           11
+  [0009] pushArgList      0
+  [0011] theBuiltin       140
+  [0013] pushArgListNoRet 1
+  [0015] extCall          141
+  [0017] getTopLevelProp  45
+  [0019] pushCons         4
+  [0021] pushArgList      1
+  [0023] extCall          65
+  [0025] setObjProp       117
+  [0027] ret             
+end
+
+on streamStatus
+  [0000] pushCons         6
+  [0002] getParam         0
+  [0004] getParam         1
+  [0006] getParam         2
+  [0008] getParam         3
+  [0010] pushArgList      5
+  [0012] pushList        
+  [0013] pushArgListNoRet 1
+  [0015] extCall          118
+  [0017] getParam         1
+  [0019] pushCons         7
+  [0021] eq              
+  [0022] jmpIfZ           12
+  [0025] getParam         0
+  [0027] pushCons         8
+  [0029] joinPadStr      
+  [0030] pushArgListNoRet 1
+  [0032] extCall          118
+  [0034] ret             
+end
+
+on ExportStageDescriptions
+  [0000] ret             
+end
+
+on stageRight
+  [0000] pushInt16        1067
+  [0003] pushArgListNoRet 1
+  [0005] extCall          19
+  [0007] ret             
+end
+
+on stageBottom
+  [0000] pushInt16        600
+  [0003] pushArgListNoRet 1
+  [0005] extCall          19
+  [0007] ret             
+end
+
+on GetLockState
+  [0000] pushZero        
+  [0001] pushArgListNoRet 1
+  [0003] extCall          19
+  [0005] ret             
+end
+
+on handlers
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] pushArgListNoRet 1
+  [0005] extCall          19
+  [0007] ret             
+end
+
+on tracea
+  [0000] ret             
+end
+
+on puta
+  [0000] ret             
+end

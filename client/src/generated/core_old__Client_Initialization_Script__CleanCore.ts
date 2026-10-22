@@ -1,0 +1,19 @@
+// core.old.cct / Client Initialization Script / CleanCore
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function CleanCore(_me: LingoMe) {
+  if (callNamed("closeExistingThreads")) {
+  callNamed("resetCastLibs", 1, 1)
+  callNamed("stopClient")
+  }
+
+}
+

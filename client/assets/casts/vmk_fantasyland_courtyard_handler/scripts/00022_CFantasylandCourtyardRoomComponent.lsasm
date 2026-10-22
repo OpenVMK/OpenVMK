@@ -1,0 +1,101 @@
+-- Parent Script
+on construct
+  [0000] pushCons         0
+  [0002] setProp          84
+  [0004] pushSymb         37
+  [0006] getParam         0
+  [0008] pushArgList      1
+  [0010] objCall          5
+  [0012] pushSymb         91
+  [0014] pushArgListNoRet 3
+  [0016] extCall          33
+  [0018] pushInt8         1
+  [0020] pushArgListNoRet 1
+  [0022] extCall          15
+  [0024] ret             
+end
+
+on deconstruct
+  [0000] pushSymb         37
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          5
+  [0008] pushArgListNoRet 2
+  [0010] extCall          36
+  [0012] pushInt8         1
+  [0014] pushArgListNoRet 1
+  [0016] extCall          15
+  [0018] ret             
+end
+
+on attachAnimation
+  [0000] pushSymb         49
+  [0002] pushArgList      1
+  [0004] extCall          48
+  [0006] pushArgList      1
+  [0008] objCall          50
+  [0010] pushArgList      1
+  [0012] objCall          51
+  [0014] setLocal         0
+  [0016] pushCons         1
+  [0018] pushArgList      1
+  [0020] extCall          77
+  [0022] setLocal         1
+  [0024] getLocal         0
+  [0026] pushCons         2
+  [0028] getProp          84
+  [0030] pushArgList      3
+  [0032] objCall          53
+  [0034] setLocal         2
+  [0036] getLocal         2
+  [0038] pushArgList      1
+  [0040] objCall          77
+  [0042] pushArgList      1
+  [0044] objCall          78
+  [0046] setLocal         3
+  [0048] getLocal         1
+  [0050] getLocal         3
+  [0052] getProp          84
+  [0054] pushCons         3
+  [0056] pushArgListNoRet 4
+  [0058] objCall          80
+  [0060] pushInt8         1
+  [0062] setProp          32
+  [0064] ret             
+end
+
+on SwordIdle
+  [0000] getProp          32
+  [0002] jmpIfZ           15
+  [0005] pushSymb         40
+  [0007] getProp          84
+  [0009] pushSymb         76
+  [0011] pushCons         4
+  [0013] pushArgListNoRet 4
+  [0015] extCall          39
+  [0017] ret             
+end
+
+on SwordSuccess
+  [0000] getProp          32
+  [0002] jmpIfZ           15
+  [0005] pushSymb         40
+  [0007] getProp          84
+  [0009] pushSymb         76
+  [0011] pushCons         5
+  [0013] pushArgListNoRet 4
+  [0015] extCall          39
+  [0017] ret             
+end
+
+on SwordFailure
+  [0000] getProp          32
+  [0002] jmpIfZ           15
+  [0005] pushSymb         40
+  [0007] getProp          84
+  [0009] pushSymb         76
+  [0011] pushCons         6
+  [0013] pushArgListNoRet 4
+  [0015] extCall          39
+  [0017] ret             
+end

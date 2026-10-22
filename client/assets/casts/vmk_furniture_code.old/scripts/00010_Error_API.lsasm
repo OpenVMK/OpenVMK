@@ -1,0 +1,132 @@
+-- Movie Script
+on CreateErrorManager
+  [0000] getGlobal        195
+  [0002] pushArgList      1
+  [0004] extCall          171
+  [0006] jmpIfZ           12
+  [0009] getGlobal        195
+  [0011] pushArgListNoRet 1
+  [0013] extCall          6
+  [0015] jmp              71
+  [0018] pushCons         0
+  [0020] pushZero        
+  [0021] getField        
+  [0022] pushCons         1
+  [0024] pushArgList      2
+  [0026] extCall          172
+  [0028] pushCons         2
+  [0030] pushArgList      2
+  [0032] objCall          65
+  [0034] pushArgList      1
+  [0036] extCall          39
+  [0038] pushInt8         1
+  [0040] pushArgList      2
+  [0042] objCall          10
+  [0044] setLocal         0
+  [0046] getLocal         0
+  [0048] pushArgList      1
+  [0050] extCall          173
+  [0052] pushArgList      1
+  [0054] objCall          174
+  [0056] setGlobal        195
+  [0058] getGlobal        195
+  [0060] pushArgListNoRet 1
+  [0062] objCall          0
+  [0064] pushArgListNoRet 0
+  [0066] extCall          196
+  [0068] pushSymb         197
+  [0070] getGlobal        195
+  [0072] pushArgListNoRet 2
+  [0074] extCall          152
+  [0076] pushArgListNoRet 0
+  [0078] extCall          198
+  [0080] getGlobal        195
+  [0082] pushArgListNoRet 1
+  [0084] extCall          6
+  [0086] ret             
+end
+
+on RemoveErrorManager
+  [0000] getGlobal        195
+  [0002] pushArgList      1
+  [0004] extCall          171
+  [0006] not             
+  [0007] jmpIfZ           11
+  [0010] pushZero        
+  [0011] pushArgListNoRet 1
+  [0013] extCall          6
+  [0015] jmp              21
+  [0018] getGlobal        195
+  [0020] pushArgListNoRet 1
+  [0022] objCall          176
+  [0024] pushArgList      0
+  [0026] extCall          177
+  [0028] setGlobal        195
+  [0030] pushInt8         1
+  [0032] pushArgListNoRet 1
+  [0034] extCall          6
+  [0036] ret             
+end
+
+on getErrorManager
+  [0000] getGlobal        195
+  [0002] pushArgList      1
+  [0004] extCall          171
+  [0006] jmpIfZ           12
+  [0009] getGlobal        195
+  [0011] pushArgListNoRet 1
+  [0013] extCall          6
+  [0015] jmp              11
+  [0018] pushArgList      0
+  [0020] localCall        0
+  [0022] pushArgListNoRet 1
+  [0024] extCall          6
+  [0026] ret             
+end
+
+on error
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] pushArgList      4
+  [0012] objCall          12
+  [0014] pushArgListNoRet 1
+  [0016] extCall          6
+  [0018] ret             
+end
+
+on SystemAlert
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] pushArgList      4
+  [0012] objCall          192
+  [0014] pushArgListNoRet 1
+  [0016] extCall          6
+  [0018] ret             
+end
+
+on setDebugLevel
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          193
+  [0010] pushArgListNoRet 1
+  [0012] extCall          6
+  [0014] ret             
+end
+
+on printErrors
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          185
+  [0008] pushArgListNoRet 1
+  [0010] extCall          6
+  [0012] ret             
+end

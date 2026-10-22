@@ -1,0 +1,110 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] extCall          4
+  [0004] pushCons         0
+  [0006] pushArgList      2
+  [0008] extCall          3
+  [0010] setProp          437
+  [0013] pushArgList      0
+  [0015] pushList        
+  [0016] setProp          512
+  [0019] pushInt8         1
+  [0021] pushArgListNoRet 1
+  [0023] extCall          6
+  [0025] ret             
+end
+
+on deconstruct
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          11
+  [0006] pushArgListNoRet 1
+  [0008] extCall          225
+  [0010] getProp          437
+  [0013] pushArgList      1
+  [0015] extCall          8
+  [0017] jmpIfZ           21
+  [0020] getProp          437
+  [0023] pushArgList      1
+  [0025] objCall          11
+  [0027] pushArgListNoRet 1
+  [0029] extCall          10
+  [0031] pushArgList      0
+  [0033] extCall          12
+  [0035] setProp          437
+  [0038] pushInt8         1
+  [0040] pushArgListNoRet 1
+  [0042] extCall          6
+  [0044] ret             
+end
+
+on start
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          11
+  [0006] pushArgListNoRet 1
+  [0008] extCall          224
+  [0010] ret             
+end
+
+on update
+  [0000] getProp          361
+  [0003] pushArgList      1
+  [0005] extCall          8
+  [0007] jmpIfZ           35
+  [0010] getProp          437
+  [0013] pushArgList      1
+  [0015] extCall          8
+  [0017] jmpIfZ           25
+  [0020] getProp          437
+  [0023] pushArgList      1
+  [0025] objCall          438
+  [0028] not             
+  [0029] jmpIfZ           13
+  [0032] getParam         0
+  [0034] pushArgList      1
+  [0036] objCall          11
+  [0038] pushArgListNoRet 1
+  [0040] extCall          10
+  [0042] ret             
+end
+
+on SetPiece
+  [0000] getParam         1
+  [0002] setProp          361
+  [0005] ret             
+end
+
+on GetPiece
+  [0000] getProp          361
+  [0003] pushArgListNoRet 1
+  [0005] extCall          6
+  [0007] ret             
+end
+
+on SetParams
+  [0000] getParam         1
+  [0002] setProp          512
+  [0005] ret             
+end
+
+on GetParams
+  [0000] getProp          512
+  [0003] pushArgListNoRet 1
+  [0005] extCall          6
+  [0007] ret             
+end
+
+on setAnimation
+  [0000] getParam         1
+  [0002] setProp          437
+  [0005] ret             
+end
+
+on getAnimation
+  [0000] getProp          437
+  [0003] pushArgListNoRet 1
+  [0005] extCall          6
+  [0007] ret             
+end

@@ -1,0 +1,97 @@
+-- Parent Script
+on setup
+  [0000] getParam         1
+  [0002] setProp          847
+  [0005] getParam         2
+  [0007] setProp          848
+  [0010] ret             
+end
+
+on mouseEnter
+  [0000] getProp          848
+  [0003] pushSymb         835
+  [0006] getProp          847
+  [0009] pushArgList      3
+  [0011] objCall          826
+  [0014] not             
+  [0015] jmpIfZ           8
+  [0018] pushArgListNoRet 0
+  [0020] extCall          850
+  [0023] ret             
+end
+
+on mouseLeave
+  [0000] getProp          848
+  [0003] pushSymb         836
+  [0006] getProp          847
+  [0009] pushArgList      3
+  [0011] objCall          826
+  [0014] not             
+  [0015] jmpIfZ           8
+  [0018] pushArgListNoRet 0
+  [0020] extCall          850
+  [0023] ret             
+end
+
+on mouseWithin
+  [0000] getProp          848
+  [0003] pushSymb         845
+  [0006] getProp          847
+  [0009] pushArgList      3
+  [0011] objCall          826
+  [0014] not             
+  [0015] jmpIfZ           8
+  [0018] pushArgListNoRet 0
+  [0020] extCall          850
+  [0023] ret             
+end
+
+on mouseDown
+  [0000] getParam         0
+  [0002] getObjProp       475
+  [0005] pushArgList      1
+  [0007] extCall          472
+  [0010] setLocal         0
+  [0012] getProp          848
+  [0015] pushSymb         837
+  [0018] getProp          847
+  [0021] pushArgList      3
+  [0023] objCall          826
+  [0026] jmpIfZ           11
+  [0029] pushArgListNoRet 0
+  [0031] extCall          851
+  [0034] jmp              8
+  [0037] pushArgListNoRet 0
+  [0039] extCall          850
+  [0042] ret             
+end
+
+on mouseUp
+  [0000] getProp          848
+  [0003] pushSymb         31
+  [0005] getProp          847
+  [0008] pushArgList      3
+  [0010] objCall          826
+  [0013] jmpIfZ           11
+  [0016] pushArgListNoRet 0
+  [0018] extCall          851
+  [0021] jmp              8
+  [0024] pushArgListNoRet 0
+  [0026] extCall          850
+  [0029] ret             
+end
+
+on mouseUpOutSide
+  [0000] getProp          848
+  [0003] pushSymb         846
+  [0006] getProp          847
+  [0009] pushArgList      3
+  [0011] objCall          826
+  [0014] jmpIfZ           11
+  [0017] pushArgListNoRet 0
+  [0019] extCall          851
+  [0022] jmp              8
+  [0025] pushArgListNoRet 0
+  [0027] extCall          850
+  [0030] ret             
+end

@@ -1,0 +1,99 @@
+-- Movie Script
+on CreateWriterManager
+  [0000] pushSymb         434
+  [0003] pushCons         0
+  [0005] pushArgList      1
+  [0007] extCall          213
+  [0009] pushArgList      2
+  [0011] extCall          157
+  [0013] pushArgListNoRet 1
+  [0015] extCall          6
+  [0017] ret             
+end
+
+on RemoveWriterManager
+  [0000] pushSymb         434
+  [0003] pushArgList      1
+  [0005] extCall          158
+  [0007] pushArgListNoRet 1
+  [0009] extCall          6
+  [0011] ret             
+end
+
+on getWriterManager
+  [0000] pushArgList      0
+  [0002] extCall          151
+  [0004] setLocal         0
+  [0006] getLocal         0
+  [0008] pushSymb         434
+  [0011] pushArgList      2
+  [0013] objCall          160
+  [0015] jmpIfZ           19
+  [0018] getLocal         0
+  [0020] pushSymb         434
+  [0023] pushArgList      2
+  [0025] objCall          159
+  [0027] pushArgListNoRet 1
+  [0029] extCall          6
+  [0031] jmp              11
+  [0034] pushArgList      0
+  [0036] localCall        0
+  [0038] pushArgListNoRet 1
+  [0040] extCall          6
+  [0042] ret             
+end
+
+on createWriter
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] pushArgList      3
+  [0010] objCall          137
+  [0012] pushArgListNoRet 1
+  [0014] extCall          6
+  [0016] ret             
+end
+
+on removeWriter
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          184
+  [0010] pushArgListNoRet 1
+  [0012] extCall          6
+  [0014] ret             
+end
+
+on getWriter
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          147
+  [0010] pushArgListNoRet 1
+  [0012] extCall          6
+  [0014] ret             
+end
+
+on writerExists
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          59
+  [0010] pushArgListNoRet 1
+  [0012] extCall          6
+  [0014] ret             
+end
+
+on printWriters
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          185
+  [0008] pushArgListNoRet 1
+  [0010] extCall          6
+  [0012] ret             
+end

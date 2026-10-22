@@ -1,0 +1,164 @@
+-- Parent Script
+on construct
+  [0000] pushCons         0
+  [0002] pushCons         1
+  [0004] pushArgList      2
+  [0006] extCall          222
+  [0008] setProp          248
+  [0010] pushCons         2
+  [0012] pushCons         1
+  [0014] pushArgList      2
+  [0016] extCall          222
+  [0018] setProp          249
+  [0020] pushCons         3
+  [0022] pushCons         1
+  [0024] pushArgList      2
+  [0026] extCall          222
+  [0028] setProp          250
+  [0030] pushCons         4
+  [0032] pushCons         1
+  [0034] pushArgList      2
+  [0036] extCall          222
+  [0038] setProp          251
+  [0040] pushCons         5
+  [0042] pushCons         6
+  [0044] pushArgList      2
+  [0046] extCall          222
+  [0048] setProp          252
+  [0050] pushCons         7
+  [0052] pushCons         8
+  [0054] pushArgList      2
+  [0056] extCall          222
+  [0058] setProp          253
+  [0060] pushInt8         1
+  [0062] pushArgListNoRet 1
+  [0064] extCall          12
+  [0066] ret             
+end
+
+on deconstruct
+  [0000] getProp          253
+  [0002] pushArgList      1
+  [0004] objCall          61
+  [0006] pushArgListNoRet 1
+  [0008] extCall          66
+  [0010] getProp          252
+  [0012] pushArgList      1
+  [0014] objCall          61
+  [0016] pushArgListNoRet 1
+  [0018] extCall          66
+  [0020] getProp          249
+  [0022] pushArgList      1
+  [0024] objCall          61
+  [0026] pushArgListNoRet 1
+  [0028] extCall          66
+  [0030] getProp          250
+  [0032] pushArgList      1
+  [0034] objCall          61
+  [0036] pushArgListNoRet 1
+  [0038] extCall          66
+  [0040] getProp          251
+  [0042] pushArgList      1
+  [0044] objCall          61
+  [0046] pushArgListNoRet 1
+  [0048] extCall          66
+  [0050] getProp          248
+  [0052] pushArgList      1
+  [0054] objCall          61
+  [0056] pushArgListNoRet 1
+  [0058] extCall          66
+  [0060] pushInt8         1
+  [0062] pushArgListNoRet 1
+  [0064] extCall          12
+  [0066] ret             
+end
+
+on add
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] setLocal         0
+  [0005] getProp          253
+  [0007] getParam         1
+  [0009] getLocal         0
+  [0011] pushArgList      3
+  [0013] objCall          254
+  [0015] jmpIfZ           28
+  [0018] getProp          252
+  [0020] getLocal         0
+  [0022] pushArgListNoRet 2
+  [0024] objCall          255
+  [0026] getProp          248
+  [0028] getLocal         0
+  [0030] pushArgListNoRet 2
+  [0032] objCall          172
+  [0034] pushInt8         1
+  [0036] pushArgListNoRet 1
+  [0038] extCall          12
+  [0040] jmp              47
+  [0043] getParam         0
+  [0045] pushArgList      1
+  [0047] objCall          61
+  [0049] pushCons         9
+  [0051] pushInt8         1
+  [0053] pushZero        
+  [0054] pushArgList      4
+  [0056] extCall          220
+  [0058] setLocal         1
+  [0060] getLocal         1
+  [0062] pushArgListNoRet 1
+  [0064] objCall          131
+  [0066] pushCons         10
+  [0068] setLocal         2
+  [0070] getLocal         1
+  [0072] getLocal         2
+  [0074] pushCons         11
+  [0076] pushCons         12
+  [0078] pushArgListNoRet 4
+  [0080] objCall          221
+  [0082] pushZero        
+  [0083] pushArgListNoRet 1
+  [0085] extCall          12
+  [0087] ret             
+end
+
+on GetWordListObj
+  [0000] getProp          252
+  [0002] pushArgListNoRet 1
+  [0004] extCall          12
+  [0006] ret             
+end
+
+on GetExpander
+  [0000] getProp          253
+  [0002] pushArgListNoRet 1
+  [0004] extCall          12
+  [0006] ret             
+end
+
+on GetDictionaryWordTree
+  [0000] getProp          248
+  [0002] pushArgListNoRet 1
+  [0004] extCall          12
+  [0006] ret             
+end
+
+on GetFreeWordTree
+  [0000] getProp          249
+  [0002] pushArgListNoRet 1
+  [0004] extCall          12
+  [0006] ret             
+end
+
+on GetFriendListWordTree
+  [0000] getProp          250
+  [0002] pushArgListNoRet 1
+  [0004] extCall          12
+  [0006] ret             
+end
+
+on GetOwnNameWordTree
+  [0000] getProp          251
+  [0002] pushArgListNoRet 1
+  [0004] extCall          12
+  [0006] ret             
+end

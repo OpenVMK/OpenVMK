@@ -1,0 +1,81 @@
+-- Movie Script
+on AddFolderToClothCasts
+  [0000] getParam         1
+  [0002] pushSymb         873
+  [0005] getParam         1
+  [0007] getObjProp       874
+  [0010] pushArgList      3
+  [0012] objCall          403
+  [0015] pushCons         0
+  [0017] ntEq            
+  [0018] jmpIfZ           10
+  [0021] getParam         1
+  [0023] pushCons         0
+  [0025] joinStr         
+  [0026] setParam         1
+  [0028] getParam         0
+  [0030] pushArgList      1
+  [0032] extCall          74
+  [0034] setLocal         0
+  [0036] pushArgList      0
+  [0038] pushPropList    
+  [0039] setLocal         1
+  [0041] getLocal         0
+  [0043] getObjProp       70
+  [0045] setLocal         2
+  [0047] pushInt8         1
+  [0049] setLocal         3
+  [0051] getLocal         3
+  [0053] getLocal         2
+  [0055] ltEq            
+  [0056] jmpIfZ           89
+  [0059] getLocal         0
+  [0061] getLocal         3
+  [0063] pushArgList      2
+  [0065] objCall          71
+  [0067] setLocal         4
+  [0069] pushArgList      0
+  [0071] pushList        
+  [0072] setLocal         5
+  [0074] pushInt8         1
+  [0076] setLocal         6
+  [0078] getLocal         6
+  [0080] getLocal         0
+  [0082] getLocal         3
+  [0084] pushArgList      2
+  [0086] objCall          72
+  [0088] getObjProp       70
+  [0090] ltEq            
+  [0091] jmpIfZ           35
+  [0094] getLocal         5
+  [0096] getParam         1
+  [0098] getLocal         0
+  [0100] getLocal         3
+  [0102] pushArgList      2
+  [0104] objCall          72
+  [0106] getLocal         6
+  [0108] pushArgList      2
+  [0110] objCall          72
+  [0112] joinStr         
+  [0113] pushArgListNoRet 2
+  [0115] objCall          78
+  [0117] pushInt8         1
+  [0119] getLocal         6
+  [0121] add             
+  [0122] setLocal         6
+  [0124] endRepeat        46
+  [0126] getLocal         1
+  [0128] getLocal         4
+  [0130] getLocal         5
+  [0132] pushArgListNoRet 3
+  [0134] objCall          108
+  [0136] pushInt8         1
+  [0138] getLocal         3
+  [0140] add             
+  [0141] setLocal         3
+  [0143] endRepeat        92
+  [0145] getLocal         1
+  [0147] pushArgListNoRet 1
+  [0149] extCall          44
+  [0151] ret             
+end

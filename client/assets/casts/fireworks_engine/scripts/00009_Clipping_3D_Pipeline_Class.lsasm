@@ -1,0 +1,71 @@
+-- Parent Script
+on new
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          29
+  [0006] pushArgList      1
+  [0008] objCall          0
+  [0010] setProp          201
+  [0012] getParam         0
+  [0014] pushArgListNoRet 1
+  [0016] extCall          36
+  [0018] ret             
+end
+
+on setView
+  [0000] getParam         1
+  [0002] setProp          201
+  [0004] ret             
+end
+
+on getView
+  [0000] getProp          201
+  [0002] pushArgListNoRet 1
+  [0004] extCall          36
+  [0006] ret             
+end
+
+on Process
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] setLocal         0
+  [0005] getParam         1
+  [0007] peek             0
+  [0009] pushArgList      1
+  [0011] extCall          79
+  [0013] pushInt8         1
+  [0015] peek             0
+  [0017] peek             2
+  [0019] ltEq            
+  [0020] jmpIfZ           53
+  [0023] peek             2
+  [0025] peek             1
+  [0027] pushArgList      2
+  [0029] extCall          35
+  [0031] setLocal         1
+  [0033] getProp          201
+  [0035] getLocal         1
+  [0037] pushArgList      2
+  [0039] objCall          89
+  [0041] setLocal         2
+  [0043] getProp          201
+  [0045] getLocal         2
+  [0047] pushArgList      2
+  [0049] objCall          91
+  [0051] jmpIfZ           17
+  [0054] getLocal         0
+  [0056] getProp          201
+  [0058] getLocal         2
+  [0060] pushArgList      2
+  [0062] objCall          90
+  [0064] pushArgListNoRet 2
+  [0066] objCall          123
+  [0068] pushInt8         1
+  [0070] add             
+  [0071] endRepeat        56
+  [0073] pop              3
+  [0075] getLocal         0
+  [0077] pushArgListNoRet 1
+  [0079] extCall          36
+  [0081] ret             
+end

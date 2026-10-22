@@ -1,0 +1,38 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] pushPropList    
+  [0003] setProp          12
+  [0005] pushInt8         1
+  [0007] pushArgListNoRet 1
+  [0009] extCall          3
+  [0011] ret             
+end
+
+on CreateNewTextScroller
+  [0000] pushArgList      0
+  [0002] extCall          165
+  [0004] pushCons         0
+  [0006] pushArgList      2
+  [0008] extCall          14
+  [0010] setLocal         0
+  [0012] getLocal         0
+  [0014] pushZero        
+  [0015] ntEq            
+  [0016] jmpIfZ           11
+  [0019] getLocal         0
+  [0021] getParam         1
+  [0023] pushArgListNoRet 2
+  [0025] objCall          16
+  [0027] getLocal         0
+  [0029] pushArgListNoRet 1
+  [0031] extCall          3
+  [0033] ret             
+end
+
+on deconstruct
+  [0000] pushInt8         1
+  [0002] pushArgListNoRet 1
+  [0004] extCall          3
+  [0006] ret             
+end

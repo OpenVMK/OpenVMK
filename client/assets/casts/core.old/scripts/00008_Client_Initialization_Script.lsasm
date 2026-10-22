@@ -1,0 +1,136 @@
+-- Movie Script
+on startClient
+  [0000] pushArgList      0
+  [0002] extCall          4
+  [0004] not             
+  [0005] jmpIfZ           8
+  [0008] pushZero        
+  [0009] pushArgListNoRet 1
+  [0011] extCall          5
+  [0013] pushCons         0
+  [0015] pushArgList      1
+  [0017] extCall          6
+  [0019] not             
+  [0020] jmpIfZ           11
+  [0023] pushArgList      0
+  [0025] localCall        1
+  [0027] pushArgListNoRet 1
+  [0029] extCall          5
+  [0031] pushZero        
+  [0032] pushZero        
+  [0033] pushArgList      2
+  [0035] extCall          7
+  [0037] not             
+  [0038] jmpIfZ           11
+  [0041] pushArgList      0
+  [0043] localCall        1
+  [0045] pushArgListNoRet 1
+  [0047] extCall          5
+  [0049] pushArgList      0
+  [0051] extCall          8
+  [0053] pushArgList      1
+  [0055] objCall          9
+  [0057] not             
+  [0058] jmpIfZ           11
+  [0061] pushArgList      0
+  [0063] localCall        1
+  [0065] pushArgListNoRet 1
+  [0067] extCall          5
+  [0069] pushCons         1
+  [0071] pushArgList      1
+  [0073] extCall          10
+  [0075] not             
+  [0076] jmpIfZ           11
+  [0079] pushArgList      0
+  [0081] localCall        1
+  [0083] pushArgListNoRet 1
+  [0085] extCall          5
+  [0087] pushArgList      0
+  [0089] extCall          11
+  [0091] pushSymb         12
+  [0093] pushSymb         12
+  [0095] pushArgList      3
+  [0097] objCall          13
+  [0099] not             
+  [0100] jmpIfZ           11
+  [0103] pushArgList      0
+  [0105] localCall        1
+  [0107] pushArgListNoRet 1
+  [0109] extCall          5
+  [0111] pushInt8         1
+  [0113] pushArgListNoRet 1
+  [0115] extCall          5
+  [0117] ret             
+end
+
+on stopClient
+  [0000] getGlobal        15
+  [0002] pushArgList      1
+  [0004] extCall          14
+  [0006] jmpIfZ           8
+  [0009] pushZero        
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] pushArgListNoRet 0
+  [0016] extCall          16
+  [0018] pushArgListNoRet 0
+  [0020] extCall          17
+  [0022] pushArgListNoRet 0
+  [0024] extCall          18
+  [0026] pushZero        
+  [0027] pushArgListNoRet 1
+  [0029] extCall          5
+  [0031] ret             
+end
+
+on resetClient
+  [0000] getMovieProp     19
+  [0002] pushCons         2
+  [0004] containsStr     
+  [0005] jmpIfZ           14
+  [0008] pushArgListNoRet 0
+  [0010] localCall        1
+  [0012] pushArgListNoRet 0
+  [0014] localCall        0
+  [0016] jmp              51
+  [0019] getMovieProp     20
+  [0021] setLocal         0
+  [0023] pushSymb         22
+  [0025] pushArgList      1
+  [0027] extCall          21
+  [0029] jmpIfZ           32
+  [0032] pushSymb         22
+  [0034] pushArgList      1
+  [0036] extCall          23
+  [0038] pushCons         3
+  [0040] pushArgList      2
+  [0042] objCall          24
+  [0044] jmpIfZ           17
+  [0047] pushSymb         22
+  [0049] pushArgList      1
+  [0051] extCall          23
+  [0053] pushCons         3
+  [0055] pushArgList      2
+  [0057] objCall          25
+  [0059] setLocal         0
+  [0061] getLocal         0
+  [0063] pushArgListNoRet 1
+  [0065] extCall          26
+  [0067] pushInt8         1
+  [0069] pushArgListNoRet 1
+  [0071] extCall          5
+  [0073] ret             
+end
+
+on CleanCore
+  [0000] pushArgList      0
+  [0002] extCall          28
+  [0004] jmpIfZ           15
+  [0007] pushInt8         1
+  [0009] pushInt8         1
+  [0011] pushArgListNoRet 2
+  [0013] extCall          7
+  [0015] pushArgListNoRet 0
+  [0017] localCall        1
+  [0019] ret             
+end

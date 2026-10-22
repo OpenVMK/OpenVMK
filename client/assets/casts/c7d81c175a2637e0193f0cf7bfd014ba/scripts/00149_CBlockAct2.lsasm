@@ -1,0 +1,79 @@
+-- Parent Script
+on construct
+  [0000] pushZero        
+  [0001] setProp          38
+  [0003] pushInt8         1
+  [0005] pushArgListNoRet 1
+  [0007] extCall          7
+  [0009] ret             
+end
+
+on select
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          21
+  [0006] setLocal         0
+  [0008] getLocal         0
+  [0010] pushZero        
+  [0011] ntEq            
+  [0012] jmpIfZ           9
+  [0015] getLocal         0
+  [0017] pushArgListNoRet 1
+  [0019] objCall          28
+  [0021] ret             
+end
+
+on update
+  [0000] getProp          38
+  [0002] not             
+  [0003] jmpIfZ           9
+  [0006] getParam         0
+  [0008] pushArgListNoRet 1
+  [0010] objCall          36
+  [0012] ret             
+end
+
+on _Init
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          21
+  [0006] setLocal         0
+  [0008] getLocal         0
+  [0010] pushArgList      1
+  [0012] objCall          59
+  [0014] pushArgList      1
+  [0016] objCall          79
+  [0018] jmpIfZ           64
+  [0021] getParam         0
+  [0023] pushArgList      1
+  [0025] objCall          21
+  [0027] pushArgList      1
+  [0029] objCall          56
+  [0031] pushArgList      1
+  [0033] objCall          57
+  [0035] peek             0
+  [0037] pushArgList      1
+  [0039] extCall          58
+  [0041] pushInt8         1
+  [0043] peek             0
+  [0045] peek             2
+  [0047] ltEq            
+  [0048] jmpIfZ           28
+  [0051] peek             2
+  [0053] peek             1
+  [0055] pushArgList      2
+  [0057] extCall          54
+  [0059] setLocal         1
+  [0061] getLocal         1
+  [0063] pushCons         1
+  [0065] pushCons         2
+  [0067] pushArgListNoRet 3
+  [0069] objCall          99
+  [0071] pushInt8         1
+  [0073] add             
+  [0074] endRepeat        31
+  [0076] pop              3
+  [0078] pushInt8         1
+  [0080] setProp          38
+  [0082] ret             
+end

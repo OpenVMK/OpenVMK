@@ -1,6 +1,6 @@
 # OpenVMK — Virtual Magic Kingdom Server
 
-> **[Download the latest release](https://github.com/OpenVMK/OpenVMK/releases/latest)**, unzip it, and start it — no plugin, no installs. It's a GitHub Release for now: the full source code will be published here once it's been cleaned up.
+> **Just want to play or host?** **[Download the latest release](https://github.com/OpenVMK/OpenVMK/releases/latest)**, unzip it, and start it — no plugin, no installs. This repository is the full source code; see [Running from source](#running-from-source) to work on it.
 
 An open source server implementation for **Virtual Magic Kingdom (VMK)**, the Disney virtual world that ran from 2005 to 2008.
 
@@ -47,6 +47,44 @@ You need about **6 GB of free disk space** (a 1.9 GB download that unpacks to 5.
 
 **Uninstalling:** stop the server and delete the folder. Nothing is installed anywhere else.
 
+## Running from source
+
+For working on OpenVMK. To play or run a server for people, **use the [release](https://github.com/OpenVMK/OpenVMK/releases/latest)**: it is built, optimised (recompressed art, packed casts, bundled servers) and loads much faster.
+
+You need [Node.js](https://nodejs.org/) 22.5 or newer and about 4 GB of disk. The clone is large (about a 600 MB download that checks out to 2.9 GB and 143,000 files) because it carries the game's extracted art in `client/assets`, exactly as it was extracted.
+
+On Windows, clone into a short path such as `C:\OpenVMK` or `Documents\OpenVMK`: some asset paths are long, and a deeply nested folder can pass Windows' 260-character limit. If checkout fails with "Filename too long", run `git config --global core.longpaths true` and clone again.
+
+```bash
+git clone https://github.com/OpenVMK/OpenVMK.git
+cd OpenVMK
+npm install
+npx vite build --config client/vite.config.ts
+node start.mjs
+```
+
+The game opens at `http://127.0.0.1:5199/`. The first account you create becomes the admin (`/hk`).
+
+**Build before you play.** `client/dist` is not in the repository; the servers serve the built client, and `start.mjs` refuses to start without it. Rebuild after changing anything under `client/src`. The Vite dev server (`npx vite --config client/vite.config.ts`, port 5180) works for quick iteration, but transforms ~13,000 generated modules on first load, so it is slow.
+
+**Optional: cast packs.** The release bundles each cast's bitmaps into one `bitmaps.pack` download. They are derived files and not committed; without them the client batches its requests instead. To build them locally:
+
+```bash
+node tools/pack-cast-bitmaps.mjs
+```
+
+### Developer tools
+
+These act directly on your local database (`data/vmk.db`), so only someone who can already edit that file can use them:
+
+- `node tools/dev-account.mjs [name] [--new-user | --existing]` creates a password-less test account (default `devtest`) that can only log in with a minted ticket.
+- `node tools/mint-ticket.mjs [name] [--new-user | --existing]` issues a 10-minute login ticket for an existing account and prints a client URL that skips the login page. `--new-user` sends it through avatar creation again.
+- `node tools/set-admin.mjs <name>` grants staff permissions (`--revoke`, `--list`).
+
+### Re-extracting the game files
+
+`client/assets` was produced from the original Shockwave files (`.dcr` / `.cct`) by `tools/extract-casts.mjs`, using [LibreShockwave](https://github.com/LibreShockwave/LibreShockwave). The originals are not in this repository (they are available on request, see [Game Files](#game-files)). With them in `shockwave/` (or `VMK_SHOCKWAVE` pointing at them) and a LibreShockwave build (see [tools/shockwave/README.md](tools/shockwave/README.md)), `node tools/extract-casts.mjs` regenerates the casts. Re-extracting is only needed when changing the extractor.
+
 ## Progress
 
 **Working**
@@ -72,7 +110,6 @@ You need about **6 GB of free disk space** (a 1.9 GB download that unpacks to 5.
 - [ ] Mini games: Magic Shop Checkers (the last one)
 - [ ] Haunted Mansion public rooms with NPC ghosts
 - [ ] Quests and Hidden Mickeys
-- [ ] Publish the full source code once it's cleaned up
 - [ ] Docker deployment: a Compose setup ships with the release but is still early; reports welcome
 
 **Known issues**
@@ -104,7 +141,7 @@ The original Shockwave files (`.dcr` / `.cct` casts) are not included, but are *
 4. ~~Rooms, furniture, and inventory~~
 5. Mini games: five of six done, Checkers in progress
 6. ~~First release on GitHub Releases: October 18, 2026~~
-7. Publish the full source code once it's cleaned up
+7. ~~Publish the full source code~~
 8. Quests and Hidden Mickeys
 9. Docker packaging
 
@@ -116,7 +153,7 @@ For bugs and feature requests, use [GitHub Issues](https://github.com/OpenVMK/Op
 
 ## Contributing
 
-Code contributions will open up once the source code is published. In the meantime, these are all useful:
+Pull requests are welcome. For anything bigger than a fix, say hello in the Discord or open an issue first so work isn't duplicated. Other contributions are just as useful:
 
 - **Game files.** Archived client files, casts, and text files, especially rare or late versions.
 - **Research.** Packet captures, protocol notes, screenshots, videos, and recollections of how rooms, items, and games worked.
@@ -124,10 +161,23 @@ Code contributions will open up once the source code is published. In the meanti
 
 Open an issue or drop into the Discord if you want to get involved.
 
+## Special Thanks
+
+OpenVMK's browser client wouldn't be possible without two open source Shockwave projects:
+
+- **[LibreShockwave](https://github.com/LibreShockwave/LibreShockwave)**: its Director file reader and Lingo decompiler extracted every cast and translated VMK's original Lingo scripts to TypeScript, and its player is the reference for much of how the runtime draws, inks and lays out text.
+- **[DirPlayer](https://github.com/igorlira/dirplayer-rs)**: its Director player was the second reference for compositing, colour and Lingo behaviour, and settled many questions where the original's behaviour wasn't obvious.
+
+Years of reverse-engineering Director and Shockwave went into both. Thank you.
+
 ## Disclaimer
 
 This project is not affiliated with, endorsed by, or associated with The Walt Disney Company or any of its subsidiaries. Virtual Magic Kingdom, Disney, and all related names and marks are the property of their respective owners.
 
 ## License
 
-TBD — will be published with the source code.
+OpenVMK's own code is licensed under the **GNU Affero General Public License v3.0 or later** ([LICENSE](LICENSE)). If you run a modified OpenVMK server for other people, the AGPL requires you to offer them your modified source.
+
+Parts of the browser runtime (`client/src/lingo`) are ported from [LibreShockwave](https://github.com/LibreShockwave/LibreShockwave) (AGPL-3.0) and [DirPlayer](https://github.com/igorlira/dirplayer-rs) (GPL-3.0); the comments mark where. See [Special Thanks](#special-thanks).
+
+The game content is not covered by this license: the art, sounds and texts in `client/assets` and `assets`, and the original client scripts translated into `client/src/generated*`, remain the property of their respective owners and are included for preservation.

@@ -1,0 +1,106 @@
+-- Parent Script
+on construct
+  [0000] pushSymb         100
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          30
+  [0008] pushSymb         97
+  [0010] pushArgListNoRet 3
+  [0012] extCall          99
+  [0014] pushSymb         101
+  [0016] getParam         0
+  [0018] pushArgList      1
+  [0020] objCall          30
+  [0022] pushSymb         96
+  [0024] pushArgListNoRet 3
+  [0026] extCall          99
+  [0028] pushSymb         102
+  [0030] getParam         0
+  [0032] pushArgList      1
+  [0034] objCall          30
+  [0036] pushSymb         98
+  [0038] pushArgListNoRet 3
+  [0040] extCall          99
+  [0042] pushInt8         1
+  [0044] pushArgListNoRet 1
+  [0046] extCall          24
+  [0048] ret             
+end
+
+on deconstruct
+  [0000] pushSymb         100
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          30
+  [0008] pushArgListNoRet 2
+  [0010] extCall          103
+  [0012] pushSymb         101
+  [0014] getParam         0
+  [0016] pushArgList      1
+  [0018] objCall          30
+  [0020] pushArgListNoRet 2
+  [0022] extCall          103
+  [0024] pushSymb         102
+  [0026] getParam         0
+  [0028] pushArgList      1
+  [0030] objCall          30
+  [0032] pushArgListNoRet 2
+  [0034] extCall          103
+  [0036] pushInt8         1
+  [0038] pushArgListNoRet 1
+  [0040] extCall          24
+  [0042] ret             
+end
+
+on ShowLogin
+  [0000] getMovieProp     104
+  [0002] pushCons         0
+  [0004] eq              
+  [0005] getMovieProp     104
+  [0007] pushCons         1
+  [0009] eq              
+  [0010] or              
+  [0011] jmpIfZ           11
+  [0014] pushCons         2
+  [0016] pushCons         3
+  [0018] pushArgListNoRet 2
+  [0020] extCall          105
+  [0022] ret             
+end
+
+on closeLoginWindow
+  [0000] pushCons         2
+  [0002] pushArgListNoRet 1
+  [0004] extCall          106
+  [0006] pushCons         4
+  [0008] pushArgList      1
+  [0010] extCall          107
+  [0012] jmpIfZ           7
+  [0015] pushArgListNoRet 0
+  [0017] extCall          108
+  [0019] ret             
+end
+
+on ShowConnectionFailed
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          30
+  [0006] getMovieProp     16
+  [0008] joinStr         
+  [0009] pushCons         5
+  [0011] pushInt8         1
+  [0013] pushInt8         1
+  [0015] pushArgList      4
+  [0017] extCall          110
+  [0019] setLocal         0
+  [0021] getLocal         0
+  [0023] pushArgListNoRet 1
+  [0025] objCall          111
+  [0027] getLocal         0
+  [0029] pushCons         6
+  [0031] pushCons         7
+  [0033] pushCons         8
+  [0035] pushArgListNoRet 4
+  [0037] objCall          112
+  [0039] ret             
+end

@@ -1,0 +1,173 @@
+-- Parent Script
+on construct
+  [0000] pushSymb         6
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          7
+  [0008] pushSymb         2
+  [0010] pushArgListNoRet 3
+  [0012] extCall          5
+  [0014] pushArgList      0
+  [0016] pushList        
+  [0017] setProp          8
+  [0019] pushInt8         1
+  [0021] pushArgListNoRet 1
+  [0023] extCall          9
+  [0025] ret             
+end
+
+on deconstruct
+  [0000] pushSymb         6
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          7
+  [0008] pushSymb         2
+  [0010] pushArgListNoRet 3
+  [0012] extCall          11
+  [0014] getProp          8
+  [0016] peek             0
+  [0018] pushArgList      1
+  [0020] extCall          12
+  [0022] pushInt8         1
+  [0024] peek             0
+  [0026] peek             2
+  [0028] ltEq            
+  [0029] jmpIfZ           26
+  [0032] peek             2
+  [0034] peek             1
+  [0036] pushArgList      2
+  [0038] extCall          13
+  [0040] setLocal         0
+  [0042] getLocal         0
+  [0044] getObjProp       15
+  [0046] pushArgListNoRet 1
+  [0048] extCall          14
+  [0050] pushInt8         1
+  [0052] add             
+  [0053] endRepeat        29
+  [0055] pop              3
+  [0057] pushInt8         1
+  [0059] pushArgListNoRet 1
+  [0061] extCall          9
+  [0063] ret             
+end
+
+on initCashRegisters
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] setProp          8
+  [0005] pushCons         0
+  [0007] pushCons         1
+  [0009] pushCons         2
+  [0011] pushArgList      3
+  [0013] pushList        
+  [0014] setLocal         0
+  [0016] getLocal         0
+  [0018] peek             0
+  [0020] pushArgList      1
+  [0022] extCall          12
+  [0024] pushInt8         1
+  [0026] peek             0
+  [0028] peek             2
+  [0030] ltEq            
+  [0031] jmpIfZ           28
+  [0034] peek             2
+  [0036] peek             1
+  [0038] pushArgList      2
+  [0040] extCall          13
+  [0042] setLocal         1
+  [0044] getParam         0
+  [0046] getLocal         1
+  [0048] pushSymb         4
+  [0050] pushArgListNoRet 3
+  [0052] objCall          3
+  [0054] pushInt8         1
+  [0056] add             
+  [0057] endRepeat        31
+  [0059] pop              3
+  [0061] ret             
+end
+
+on createProcedure
+  [0000] pushSymb         19
+  [0002] pushArgList      1
+  [0004] extCall          18
+  [0006] pushArgList      1
+  [0008] objCall          20
+  [0010] pushArgList      1
+  [0012] objCall          21
+  [0014] setLocal         0
+  [0016] getLocal         0
+  [0018] pushCons         3
+  [0020] getParam         1
+  [0022] pushArgList      3
+  [0024] objCall          22
+  [0026] setLocal         1
+  [0028] getLocal         1
+  [0030] pushZero        
+  [0031] ntEq            
+  [0032] jmpIfZ           76
+  [0035] getLocal         1
+  [0037] pushArgList      1
+  [0039] objCall          23
+  [0041] pushArgList      1
+  [0043] objCall          24
+  [0045] setLocal         2
+  [0047] getProp          8
+  [0049] getLocal         2
+  [0051] pushArgListNoRet 2
+  [0053] objCall          25
+  [0055] getLocal         2
+  [0057] pushArgList      1
+  [0059] extCall          26
+  [0061] setLocal         3
+  [0063] getLocal         3
+  [0065] getObjProp       15
+  [0067] getParam         1
+  [0069] pushArgListNoRet 2
+  [0071] extCall          27
+  [0073] getLocal         3
+  [0075] getParam         2
+  [0077] getParam         0
+  [0079] pushArgList      1
+  [0081] objCall          7
+  [0083] pushSymb         28
+  [0085] pushArgListNoRet 4
+  [0087] objCall          29
+  [0089] getLocal         3
+  [0091] pushCons         4
+  [0093] pushArgList      1
+  [0095] extCall          30
+  [0097] pushCons         5
+  [0099] pushArgList      1
+  [0101] extCall          30
+  [0103] pushArgList      2
+  [0105] pushList        
+  [0106] setObjProp       31
+  [0108] ret             
+end
+
+on eventProcCashRegister
+  [0000] getParam         1
+  [0002] pushSymb         28
+  [0004] eq              
+  [0005] jmpIfZ           36
+  [0008] pushArgList      0
+  [0010] theBuiltin       37
+  [0012] jmpIfZ           29
+  [0015] pushCons         6
+  [0017] getParam         1
+  [0019] getParam         2
+  [0021] getParam         3
+  [0023] pushArgList      3
+  [0025] pushList        
+  [0026] joinPadStr      
+  [0027] pushArgListNoRet 1
+  [0029] extCall          38
+  [0031] getParam         0
+  [0033] pushArgList      1
+  [0035] objCall          39
+  [0037] pushArgListNoRet 1
+  [0039] objCall          40
+  [0041] ret             
+end

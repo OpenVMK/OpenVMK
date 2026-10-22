@@ -1,0 +1,231 @@
+-- Movie Script
+on ProjectAxonometricPosition
+  [0000] pushFloat32      1065353216
+  [0005] pushFloat32      1065353216
+  [0010] pushFloat32      0
+  [0015] pushArgList      3
+  [0017] extCall          43
+  [0019] setLocal         0
+  [0021] pushFloat32      1065353216
+  [0026] inv             
+  [0027] pushFloat32      1065353216
+  [0032] pushFloat32      0
+  [0037] pushArgList      3
+  [0039] extCall          43
+  [0041] setLocal         1
+  [0043] pushInt16        400
+  [0046] pushInt16        300
+  [0049] pushArgList      2
+  [0051] extCall          125
+  [0053] setLocal         2
+  [0055] getLocal         0
+  [0057] getParam         0
+  [0059] getObjProp       272
+  [0062] mul             
+  [0063] getLocal         1
+  [0065] getParam         0
+  [0067] getObjProp       273
+  [0070] mul             
+  [0071] add             
+  [0072] setLocal         3
+  [0074] getLocal         3
+  [0076] getLocal         3
+  [0078] getObjProp       133
+  [0080] pushFloat32      1056964608
+  [0085] mul             
+  [0086] setObjProp       133
+  [0088] getLocal         3
+  [0090] getObjProp       132
+  [0092] getLocal         2
+  [0094] getObjProp       272
+  [0097] add             
+  [0098] getLocal         3
+  [0100] getObjProp       133
+  [0102] getLocal         2
+  [0104] getObjProp       273
+  [0107] add             
+  [0108] pushArgList      2
+  [0110] extCall          125
+  [0112] pushArgListNoRet 1
+  [0114] extCall          11
+  [0116] ret             
+end
+
+on InverseAxonometricPosition
+  [0000] pushInt16        400
+  [0003] pushInt16        300
+  [0006] pushArgList      2
+  [0008] extCall          125
+  [0010] setLocal         0
+  [0012] getParam         0
+  [0014] getObjProp       272
+  [0017] getLocal         0
+  [0019] getObjProp       272
+  [0022] sub             
+  [0023] getParam         0
+  [0025] getObjProp       273
+  [0028] getLocal         0
+  [0030] getObjProp       273
+  [0033] sub             
+  [0034] pushInt8         2
+  [0036] mul             
+  [0037] pushZero        
+  [0038] pushArgList      3
+  [0040] extCall          43
+  [0042] setLocal         1
+  [0044] pushFloat32      1065353216
+  [0049] pushFloat32      1065353216
+  [0054] pushFloat32      0
+  [0059] pushArgList      3
+  [0061] extCall          43
+  [0063] setLocal         2
+  [0065] pushFloat32      1065353216
+  [0070] inv             
+  [0071] pushFloat32      1065353216
+  [0076] pushFloat32      0
+  [0081] pushArgList      3
+  [0083] extCall          43
+  [0085] setLocal         3
+  [0087] getLocal         2
+  [0089] getLocal         1
+  [0091] pushArgList      2
+  [0093] objCall          278
+  [0096] getLocal         2
+  [0098] getObjProp       279
+  [0101] getLocal         2
+  [0103] getObjProp       279
+  [0106] mul             
+  [0107] div             
+  [0108] setLocal         4
+  [0110] getLocal         3
+  [0112] getLocal         1
+  [0114] pushArgList      2
+  [0116] objCall          278
+  [0119] getLocal         3
+  [0121] getObjProp       279
+  [0124] getLocal         3
+  [0126] getObjProp       279
+  [0129] mul             
+  [0130] div             
+  [0131] setLocal         5
+  [0133] getLocal         4
+  [0135] pushArgList      1
+  [0137] extCall          135
+  [0139] getLocal         5
+  [0141] pushArgList      1
+  [0143] extCall          135
+  [0145] pushArgList      2
+  [0147] extCall          125
+  [0149] pushArgListNoRet 1
+  [0151] extCall          11
+  [0153] ret             
+end
+
+on arcCos
+  [0000] pushArgList      0
+  [0002] extCall          284
+  [0005] pushInt8         2
+  [0007] div             
+  [0008] getParam         0
+  [0010] pushFloat32      1065353216
+  [0015] getParam         0
+  [0017] getParam         0
+  [0019] mul             
+  [0020] sub             
+  [0021] pushArgList      1
+  [0023] extCall          286
+  [0026] div             
+  [0027] pushArgList      1
+  [0029] extCall          285
+  [0032] sub             
+  [0033] pushArgListNoRet 1
+  [0035] extCall          11
+  [0037] ret             
+end
+
+on DirectionFromVector
+  [0000] getParam         0
+  [0002] setLocal         0
+  [0004] getLocal         0
+  [0006] pushArgListNoRet 1
+  [0008] objCall          259
+  [0011] pushFloat32      0
+  [0016] pushFloat32      1065353216
+  [0021] inv             
+  [0022] pushFloat32      0
+  [0027] pushArgList      3
+  [0029] extCall          43
+  [0031] setLocal         1
+  [0033] getLocal         0
+  [0035] getLocal         1
+  [0037] pushArgList      2
+  [0039] objCall          278
+  [0042] setLocal         2
+  [0044] pushFloat32      1065353216
+  [0049] pushFloat32      0
+  [0054] pushFloat32      0
+  [0059] pushArgList      3
+  [0061] extCall          43
+  [0063] setLocal         3
+  [0065] pushFloat32      0
+  [0070] setLocal         4
+  [0072] getLocal         0
+  [0074] getLocal         3
+  [0076] pushArgList      2
+  [0078] objCall          278
+  [0081] pushFloat32      0
+  [0086] gt              
+  [0087] jmpIfZ           26
+  [0090] getLocal         2
+  [0092] pushArgList      1
+  [0094] localCall        2
+  [0096] pushFloat32      1127481344
+  [0101] pushArgList      0
+  [0103] extCall          284
+  [0106] div             
+  [0107] mul             
+  [0108] setLocal         4
+  [0110] jmp              29
+  [0113] pushFloat32      1135869952
+  [0118] getLocal         2
+  [0120] pushArgList      1
+  [0122] localCall        2
+  [0124] pushFloat32      1127481344
+  [0129] pushArgList      0
+  [0131] extCall          284
+  [0134] div             
+  [0135] mul             
+  [0136] sub             
+  [0137] setLocal         4
+  [0139] getLocal         4
+  [0141] pushArgList      1
+  [0143] extCall          135
+  [0145] pushArgListNoRet 1
+  [0147] extCall          11
+  [0149] ret             
+end
+
+on floor
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] extCall          135
+  [0006] setLocal         0
+  [0008] getLocal         0
+  [0010] getParam         0
+  [0012] gt              
+  [0013] jmpIfZ           19
+  [0016] getLocal         0
+  [0018] pushInt8         1
+  [0020] sub             
+  [0021] pushArgList      1
+  [0023] extCall          186
+  [0025] pushArgListNoRet 1
+  [0027] extCall          11
+  [0029] jmp              13
+  [0032] getLocal         0
+  [0034] pushArgList      1
+  [0036] extCall          186
+  [0038] pushArgListNoRet 1
+  [0040] extCall          11
+  [0042] ret             
+end

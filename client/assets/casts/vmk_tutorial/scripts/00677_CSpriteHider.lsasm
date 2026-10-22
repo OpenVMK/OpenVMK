@@ -1,0 +1,94 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] setProp          333
+  [0006] pushInt8         1
+  [0008] pushArgListNoRet 1
+  [0010] extCall          52
+  [0012] ret             
+end
+
+on deconstruct
+  [0000] pushInt8         1
+  [0002] pushArgListNoRet 1
+  [0004] extCall          52
+  [0006] ret             
+end
+
+on AddHideable
+  [0000] getProp          333
+  [0003] getParam         1
+  [0005] pushArgListNoRet 2
+  [0007] objCall          234
+  [0009] ret             
+end
+
+on RemoveHideable
+  [0000] getProp          333
+  [0003] getParam         1
+  [0005] pushArgListNoRet 2
+  [0007] objCall          711
+  [0010] ret             
+end
+
+on ClearHideables
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] setProp          333
+  [0006] ret             
+end
+
+on HideSprites
+  [0000] getProp          333
+  [0003] peek             0
+  [0005] pushArgList      1
+  [0007] extCall          171
+  [0009] pushInt8         1
+  [0011] peek             0
+  [0013] peek             2
+  [0015] ltEq            
+  [0016] jmpIfZ           28
+  [0019] peek             2
+  [0021] peek             1
+  [0023] pushArgList      2
+  [0025] extCall          115
+  [0027] setLocal         0
+  [0029] getLocal         0
+  [0031] pushArgList      1
+  [0033] extCall          95
+  [0035] pushZero        
+  [0036] setObjProp       289
+  [0039] pushInt8         1
+  [0041] add             
+  [0042] endRepeat        31
+  [0044] pop              3
+  [0046] ret             
+end
+
+on ShowSprites
+  [0000] getProp          333
+  [0003] peek             0
+  [0005] pushArgList      1
+  [0007] extCall          171
+  [0009] pushInt8         1
+  [0011] peek             0
+  [0013] peek             2
+  [0015] ltEq            
+  [0016] jmpIfZ           29
+  [0019] peek             2
+  [0021] peek             1
+  [0023] pushArgList      2
+  [0025] extCall          115
+  [0027] setLocal         0
+  [0029] getLocal         0
+  [0031] pushArgList      1
+  [0033] extCall          95
+  [0035] pushInt8         1
+  [0037] setObjProp       289
+  [0040] pushInt8         1
+  [0042] add             
+  [0043] endRepeat        32
+  [0045] pop              3
+  [0047] ret             
+end

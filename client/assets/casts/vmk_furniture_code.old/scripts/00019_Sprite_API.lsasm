@@ -1,0 +1,100 @@
+-- Movie Script
+on CreateSpriteManager
+  [0000] pushSymb         283
+  [0003] pushCons         0
+  [0005] pushArgList      1
+  [0007] extCall          213
+  [0009] pushArgList      2
+  [0011] extCall          157
+  [0013] pushArgListNoRet 1
+  [0015] extCall          6
+  [0017] ret             
+end
+
+on RemoveSpriteManager
+  [0000] pushSymb         283
+  [0003] pushArgList      1
+  [0005] extCall          158
+  [0007] pushArgListNoRet 1
+  [0009] extCall          6
+  [0011] ret             
+end
+
+on getSpriteManager
+  [0000] pushArgList      0
+  [0002] extCall          151
+  [0004] setLocal         0
+  [0006] getLocal         0
+  [0008] pushSymb         283
+  [0011] pushArgList      2
+  [0013] objCall          160
+  [0015] jmpIfZ           19
+  [0018] getLocal         0
+  [0020] pushSymb         283
+  [0023] pushArgList      2
+  [0025] objCall          159
+  [0027] pushArgListNoRet 1
+  [0029] extCall          6
+  [0031] jmp              11
+  [0034] pushArgList      0
+  [0036] localCall        0
+  [0038] pushArgListNoRet 1
+  [0040] extCall          6
+  [0042] ret             
+end
+
+on reserveSprite
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          278
+  [0011] pushArgListNoRet 1
+  [0013] extCall          6
+  [0015] ret             
+end
+
+on releaseSprite
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          279
+  [0011] pushArgListNoRet 1
+  [0013] extCall          6
+  [0015] ret             
+end
+
+on setEventBroker
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] pushArgList      3
+  [0010] objCall          280
+  [0013] pushArgListNoRet 1
+  [0015] extCall          6
+  [0017] ret             
+end
+
+on removeEventBroker
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          281
+  [0011] pushArgListNoRet 1
+  [0013] extCall          6
+  [0015] ret             
+end
+
+on printSprites
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          185
+  [0010] pushArgListNoRet 1
+  [0012] extCall          6
+  [0014] ret             
+end

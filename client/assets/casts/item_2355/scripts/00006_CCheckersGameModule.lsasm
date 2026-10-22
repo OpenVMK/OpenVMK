@@ -1,0 +1,160 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] extCall          4
+  [0004] setProp          520
+  [0007] getParam         0
+  [0009] pushInt8         1
+  [0011] setObjProp       19
+  [0013] getParam         0
+  [0015] pushCons         0
+  [0017] pushArgList      1
+  [0019] extCall          5
+  [0021] setObjProp       20
+  [0023] pushCons         1
+  [0025] getParam         0
+  [0027] pushArgListNoRet 2
+  [0029] extCall          21
+  [0031] pushInt8         1
+  [0033] pushArgListNoRet 1
+  [0035] extCall          6
+  [0037] ret             
+end
+
+on deconstruct
+  [0000] getProp          520
+  [0003] pushArgList      1
+  [0005] extCall          519
+  [0008] jmpIfZ           10
+  [0011] getProp          520
+  [0014] pushArgListNoRet 1
+  [0016] extCall          10
+  [0018] pushCons         2
+  [0020] setLocal         0
+  [0022] getLocal         0
+  [0024] pushArgList      1
+  [0026] extCall          519
+  [0029] jmpIfZ           9
+  [0032] getLocal         0
+  [0034] pushArgListNoRet 1
+  [0036] extCall          10
+  [0038] pushSymb         1
+  [0040] getParam         0
+  [0042] pushArgList      2
+  [0044] extCall          22
+  [0046] pushArgListNoRet 1
+  [0048] extCall          6
+  [0050] ret             
+end
+
+on getInterface
+  [0000] getProp          520
+  [0003] pushArgList      1
+  [0005] extCall          131
+  [0007] pushArgListNoRet 1
+  [0009] extCall          6
+  [0011] ret             
+end
+
+on ShowInterface
+  [0000] getProp          520
+  [0003] pushArgList      1
+  [0005] extCall          519
+  [0008] not             
+  [0009] jmpIfZ           12
+  [0012] getProp          520
+  [0015] pushCons         3
+  [0017] pushArgListNoRet 2
+  [0019] extCall          3
+  [0021] getProp          520
+  [0024] pushArgList      1
+  [0026] extCall          131
+  [0028] getParam         1
+  [0030] pushArgListNoRet 2
+  [0032] objCall          23
+  [0034] ret             
+end
+
+on GetGameListInterface
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          518
+  [0007] pushArgListNoRet 1
+  [0009] extCall          6
+  [0011] ret             
+end
+
+on GetHighScoreInterface
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          518
+  [0007] pushArgListNoRet 1
+  [0009] extCall          6
+  [0011] ret             
+end
+
+on OnGameDetails
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          518
+  [0007] getParam         1
+  [0009] pushArgListNoRet 2
+  [0011] objCall          428
+  [0014] ret             
+end
+
+on OnPlayerDetails
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          518
+  [0007] getParam         1
+  [0009] pushArgListNoRet 2
+  [0011] objCall          429
+  [0014] ret             
+end
+
+on OnNextGameStarting
+  [0000] pushCons         2
+  [0002] setLocal         0
+  [0004] getLocal         0
+  [0006] pushArgList      1
+  [0008] extCall          519
+  [0011] jmpIfZ           14
+  [0014] getLocal         0
+  [0016] pushArgList      1
+  [0018] extCall          131
+  [0020] setLocal         1
+  [0022] jmp              13
+  [0025] getLocal         0
+  [0027] pushCons         4
+  [0029] pushArgList      2
+  [0031] extCall          3
+  [0033] setLocal         1
+  [0035] getLocal         1
+  [0037] getParam         1
+  [0039] pushArgListNoRet 2
+  [0041] objCall          564
+  [0044] getParam         1
+  [0046] pushInt8         1
+  [0048] eq              
+  [0049] jmpIfZ           16
+  [0052] getLocal         1
+  [0054] pushInt16        1000
+  [0057] pushSymb         484
+  [0060] pushArgListNoRet 3
+  [0062] objCall          490
+  [0065] ret             
+end
+
+on OnNextGameCanceled
+  [0000] pushCons         2
+  [0002] setLocal         0
+  [0004] getLocal         0
+  [0006] pushArgList      1
+  [0008] extCall          519
+  [0011] jmpIfZ           9
+  [0014] getLocal         0
+  [0016] pushArgListNoRet 1
+  [0018] extCall          10
+  [0020] ret             
+end
