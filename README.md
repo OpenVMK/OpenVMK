@@ -15,14 +15,14 @@ Virtual Magic Kingdom launched in 2005 as part of Disneyland's 50th anniversary 
 ## What OpenVMK is
 
 - **Faithful.** OpenVMK runs the original VMK client, not a remake. Rooms, furni, clothing, and games come from preserved game files, and the server is rebuilt message by message from what that client sends and expects back.
-- **No plugin needed.** VMK's own Lingo scripts (the framework plus all 40 game casts, roughly 5,000 handlers) are ported to TypeScript and run in a modern browser on a Lingo runtime. It's the same game logic, without Shockwave.
+- **No plugin needed.** VMK's own Lingo scripts (the framework and the game's casts, about 13,800 handlers) are ported to TypeScript and run in a modern browser on a Lingo runtime. It's the same game logic, without Shockwave.
 - **Self-hostable and documented.** TypeScript on Node.js with SQLite, so it runs on pretty much any machine. Protocol messages, rooms, and assets are documented as they are worked out.
 
 ## Getting Started
 
-You need about **6 GB of free disk space** (a 1.9 GB download that unpacks to 5.2 GB).
+You need about **5 GB of free disk space** (a 1.8 GB download that unpacks to about 3 GB).
 
-1. Open the **[latest release](https://github.com/OpenVMK/OpenVMK/releases/latest)** and, under **Assets**, download **`vmk-release.zip`**. Skip the "Source code" archives GitHub adds automatically; they don't contain the game.
+1. Open the **[latest release](https://github.com/OpenVMK/OpenVMK/releases/latest)** and, under **Assets**, download **`vmk-release.zip`**. Skip the "Source code" archives GitHub adds automatically; they are the unbuilt source (see [Running from source](#running-from-source)), not the ready-to-run game.
 2. *(Optional)* Check the download against the **SHA-256** in the release notes:
    - Windows (PowerShell): `Get-FileHash vmk-release.zip`
    - macOS / Linux: `shasum -a 256 vmk-release.zip`
@@ -51,7 +51,7 @@ You need about **6 GB of free disk space** (a 1.9 GB download that unpacks to 5.
 
 For working on OpenVMK. To play or run a server for people, **use the [release](https://github.com/OpenVMK/OpenVMK/releases/latest)**: it is built, optimised (recompressed art, packed casts, bundled servers) and loads much faster.
 
-You need [Node.js](https://nodejs.org/) 22.5 or newer and about 4 GB of disk. The clone is large (about a 600 MB download that checks out to 2.9 GB and 143,000 files) because it carries the game's extracted art in `client/assets`, exactly as it was extracted.
+You need [Node.js](https://nodejs.org/) 22.5 or newer and about 4.5 GB of disk. The clone is large (about a 600 MB download that checks out to about 3 GB and 143,000 files) because it carries the game's extracted art in `client/assets`, exactly as it was extracted.
 
 On Windows, clone into a short path such as `C:\OpenVMK` or `Documents\OpenVMK`: some asset paths are long, and a deeply nested folder can pass Windows' 260-character limit. If checkout fails with "Filename too long", run `git config --global core.longpaths true` and clone again.
 
@@ -65,7 +65,7 @@ node start.mjs
 
 The game opens at `http://127.0.0.1:5199/`. The first account you create becomes the admin (`/hk`).
 
-**Build before you play.** `client/dist` is not in the repository; the servers serve the built client, and `start.mjs` refuses to start without it. Rebuild after changing anything under `client/src`. The Vite dev server (`npx vite --config client/vite.config.ts`, port 5180) works for quick iteration, but transforms ~13,000 generated modules on first load, so it is slow.
+**Build before you play.** `client/dist` is not in the repository; the servers serve the built client, and `start.mjs` refuses to start without it. Rebuild after changing anything under `client/src`. The Vite dev server (`npx vite --config client/vite.config.ts`, port 5180) works for quick iteration, but transforms ~13,800 generated modules on first load, so it is slow.
 
 **Optional: cast packs.** The release bundles each cast's bitmaps into one `bitmaps.pack` download. They are derived files and not committed; without them the client batches its requests instead. To build them locally:
 
@@ -129,7 +129,7 @@ These act directly on your local database (`data/vmk.db`), so only someone who c
 
 ## Game Files
 
-The release ships with the game files the browser client needs, so you won't have to track down an archive to run a server.
+The release and this repository both include the game files the browser client needs (extracted art, sounds and texts in `client/assets`), so you won't have to track down an archive to run a server.
 
 The original Shockwave files (`.dcr` / `.cct` casts) are not included, but are **available on request** for preservation and research. Ask in the [Discord](https://discord.gg/WG9ch4exd5).
 
