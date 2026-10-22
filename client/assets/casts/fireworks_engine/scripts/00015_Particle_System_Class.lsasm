@@ -1,0 +1,332 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] setProp          380
+  [0006] pushArgList      0
+  [0008] pushList        
+  [0009] setProp          381
+  [0012] pushArgList      0
+  [0014] pushList        
+  [0015] setProp          382
+  [0018] pushArgList      0
+  [0020] pushList        
+  [0021] setProp          383
+  [0024] pushInt16        1000
+  [0027] setProp          384
+  [0030] pushInt8         10
+  [0032] setProp          385
+  [0035] pushCons         0
+  [0037] pushArgList      1
+  [0039] extCall          29
+  [0041] setProp          386
+  [0044] pushSymb         213
+  [0046] pushCons         1
+  [0048] pushArgList      2
+  [0050] extCall          193
+  [0052] setProp          387
+  [0055] getProp          387
+  [0058] pushArgListNoRet 1
+  [0060] objCall          134
+  [0062] ret             
+end
+
+on deconstruct
+  [0000] getProp          387
+  [0003] pushArgList      1
+  [0005] objCall          165
+  [0007] pushArgListNoRet 1
+  [0009] extCall          198
+  [0011] ret             
+end
+
+on initParticleSystem
+  [0000] getMovieProp     192
+  [0002] setProp          243
+  [0004] pushZero        
+  [0005] pushCons         2
+  [0007] inv             
+  [0008] pushZero        
+  [0009] pushArgList      3
+  [0011] extCall          56
+  [0013] setProp          388
+  [0016] getParam         0
+  [0018] pushArgList      1
+  [0020] objCall          165
+  [0022] pushArgListNoRet 1
+  [0024] extCall          242
+  [0026] ret             
+end
+
+on requestNewParticle
+  [0000] pushArgList      0
+  [0002] extCall          48
+  [0004] setLocal         0
+  [0006] getProp          380
+  [0009] pushArgList      1
+  [0011] objCall          79
+  [0013] getProp          382
+  [0016] pushArgList      1
+  [0018] objCall          79
+  [0020] add             
+  [0021] getProp          384
+  [0024] lt              
+  [0025] jmpIfZ           31
+  [0028] getProp          386
+  [0031] getParam         1
+  [0033] getParam         2
+  [0035] getParam         3
+  [0037] getParam         4
+  [0039] getParam         5
+  [0041] pushArgList      6
+  [0043] objCall          0
+  [0045] setLocal         0
+  [0047] getProp          382
+  [0050] getLocal         0
+  [0052] pushArgListNoRet 2
+  [0054] objCall          123
+  [0056] getLocal         0
+  [0058] pushArgListNoRet 1
+  [0060] extCall          36
+  [0062] ret             
+end
+
+on requestNewEmitter
+  [0000] pushArgList      0
+  [0002] extCall          48
+  [0004] setLocal         0
+  [0006] getProp          381
+  [0009] pushArgList      1
+  [0011] objCall          79
+  [0013] getProp          383
+  [0016] pushArgList      1
+  [0018] objCall          79
+  [0020] add             
+  [0021] getProp          385
+  [0024] lt              
+  [0025] jmpIfZ           72
+  [0028] pushSymb         213
+  [0030] pushCons         1
+  [0032] pushCons         3
+  [0034] pushArgList      3
+  [0036] extCall          193
+  [0038] setLocal         0
+  [0040] getLocal         0
+  [0042] not             
+  [0043] jmpIfZ           13
+  [0046] pushCons         4
+  [0048] pushArgListNoRet 1
+  [0050] extCall          43
+  [0052] pushArgListNoRet 0
+  [0054] extCall          36
+  [0056] getLocal         0
+  [0058] pushArgListNoRet 1
+  [0060] objCall          134
+  [0062] getLocal         0
+  [0064] getProp          387
+  [0067] pushArgListNoRet 2
+  [0069] objCall          141
+  [0071] getLocal         0
+  [0073] getParam         1
+  [0075] getParam         2
+  [0077] getParam         3
+  [0079] getParam         4
+  [0081] getParam         5
+  [0083] pushArgListNoRet 6
+  [0085] objCall          344
+  [0088] getProp          381
+  [0091] getLocal         0
+  [0093] pushArgListNoRet 2
+  [0095] objCall          123
+  [0097] getLocal         0
+  [0099] pushArgListNoRet 1
+  [0101] extCall          36
+  [0103] ret             
+end
+
+on update
+  [0000] getMovieProp     192
+  [0002] setLocal         0
+  [0004] getLocal         0
+  [0006] getProp          243
+  [0008] sub             
+  [0009] pushArgList      1
+  [0011] extCall          270
+  [0014] pushFloat32      1148846080
+  [0019] div             
+  [0020] setLocal         1
+  [0022] getLocal         0
+  [0024] setProp          243
+  [0026] pushArgList      0
+  [0028] pushList        
+  [0029] setLocal         2
+  [0031] pushInt8         1
+  [0033] setLocal         3
+  [0035] getLocal         3
+  [0037] getProp          380
+  [0040] pushArgList      1
+  [0042] objCall          79
+  [0044] ltEq            
+  [0045] jmpIfZ           45
+  [0048] getProp          380
+  [0051] getLocal         3
+  [0053] pushArgList      2
+  [0055] objCall          35
+  [0057] pushArgList      1
+  [0059] objCall          308
+  [0062] not             
+  [0063] jmpIfZ           18
+  [0066] getLocal         2
+  [0068] getProp          380
+  [0071] getLocal         3
+  [0073] pushArgList      2
+  [0075] objCall          35
+  [0077] pushArgListNoRet 2
+  [0079] objCall          123
+  [0081] pushInt8         1
+  [0083] getLocal         3
+  [0085] add             
+  [0086] setLocal         3
+  [0088] endRepeat        53
+  [0090] getLocal         2
+  [0092] setProp          380
+  [0095] pushArgList      0
+  [0097] pushList        
+  [0098] setLocal         4
+  [0100] pushInt8         1
+  [0102] setLocal         3
+  [0104] getLocal         3
+  [0106] getProp          381
+  [0109] pushArgList      1
+  [0111] objCall          79
+  [0113] ltEq            
+  [0114] jmpIfZ           45
+  [0117] getProp          381
+  [0120] getLocal         3
+  [0122] pushArgList      2
+  [0124] objCall          35
+  [0126] pushArgList      1
+  [0128] objCall          308
+  [0131] not             
+  [0132] jmpIfZ           18
+  [0135] getLocal         4
+  [0137] getProp          381
+  [0140] getLocal         3
+  [0142] pushArgList      2
+  [0144] objCall          35
+  [0146] pushArgListNoRet 2
+  [0148] objCall          123
+  [0150] pushInt8         1
+  [0152] getLocal         3
+  [0154] add             
+  [0155] setLocal         3
+  [0157] endRepeat        53
+  [0159] getLocal         4
+  [0161] setProp          381
+  [0164] pushInt8         1
+  [0166] setLocal         3
+  [0168] getLocal         3
+  [0170] getProp          382
+  [0173] pushArgList      1
+  [0175] objCall          79
+  [0177] ltEq            
+  [0178] jmpIfZ           28
+  [0181] getProp          380
+  [0184] getProp          382
+  [0187] getLocal         3
+  [0189] pushArgList      2
+  [0191] objCall          35
+  [0193] pushArgListNoRet 2
+  [0195] objCall          123
+  [0197] pushInt8         1
+  [0199] getLocal         3
+  [0201] add             
+  [0202] setLocal         3
+  [0204] endRepeat        36
+  [0206] pushInt8         1
+  [0208] setLocal         3
+  [0210] getLocal         3
+  [0212] getProp          383
+  [0215] pushArgList      1
+  [0217] objCall          79
+  [0219] ltEq            
+  [0220] jmpIfZ           28
+  [0223] getProp          381
+  [0226] getProp          383
+  [0229] getLocal         3
+  [0231] pushArgList      2
+  [0233] objCall          35
+  [0235] pushArgListNoRet 2
+  [0237] objCall          123
+  [0239] pushInt8         1
+  [0241] getLocal         3
+  [0243] add             
+  [0244] setLocal         3
+  [0246] endRepeat        36
+  [0248] pushArgList      0
+  [0250] pushList        
+  [0251] setProp          382
+  [0254] pushArgList      0
+  [0256] pushList        
+  [0257] setProp          383
+  [0260] getProp          388
+  [0263] getLocal         1
+  [0265] mul             
+  [0266] setLocal         5
+  [0268] pushSymb         306
+  [0271] getProp          380
+  [0274] getLocal         1
+  [0276] getLocal         5
+  [0278] pushArgListNoRet 4
+  [0280] extCall          166
+  [0282] pushSymb         345
+  [0285] getProp          381
+  [0288] getLocal         1
+  [0290] getParam         0
+  [0292] pushArgListNoRet 4
+  [0294] extCall          166
+  [0296] ret             
+end
+
+on setParticleLimit
+  [0000] getParam         1
+  [0002] setProp          384
+  [0005] ret             
+end
+
+on setEmitterLimit
+  [0000] getParam         1
+  [0002] setProp          385
+  [0005] ret             
+end
+
+on setGravity
+  [0000] getParam         1
+  [0002] setProp          388
+  [0005] ret             
+end
+
+on getAllParticles
+  [0000] getProp          380
+  [0003] pushArgListNoRet 1
+  [0005] extCall          36
+  [0007] ret             
+end
+
+on getParticleCount
+  [0000] getProp          380
+  [0003] pushArgList      1
+  [0005] objCall          79
+  [0007] pushArgListNoRet 1
+  [0009] extCall          36
+  [0011] ret             
+end
+
+on getEmitterCount
+  [0000] getProp          381
+  [0003] pushArgList      1
+  [0005] objCall          79
+  [0007] pushArgListNoRet 1
+  [0009] extCall          36
+  [0011] ret             
+end

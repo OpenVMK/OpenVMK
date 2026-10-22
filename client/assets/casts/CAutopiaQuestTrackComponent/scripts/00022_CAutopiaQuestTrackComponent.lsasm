@@ -1,0 +1,109 @@
+-- Parent Script
+on construct
+  [0000] pushZero        
+  [0001] setProp          32
+  [0003] pushSymb         34
+  [0005] getParam         0
+  [0007] pushArgList      1
+  [0009] objCall          5
+  [0011] pushSymb         22
+  [0013] pushArgListNoRet 3
+  [0015] extCall          33
+  [0017] pushSymb         35
+  [0019] getParam         0
+  [0021] pushArgList      1
+  [0023] objCall          5
+  [0025] pushSymb         23
+  [0027] pushArgListNoRet 3
+  [0029] extCall          33
+  [0031] pushInt8         1
+  [0033] pushArgListNoRet 1
+  [0035] extCall          15
+  [0037] ret             
+end
+
+on deconstruct
+  [0000] pushSymb         37
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          5
+  [0008] pushSymb         22
+  [0010] pushArgListNoRet 3
+  [0012] extCall          36
+  [0014] pushSymb         35
+  [0016] getParam         0
+  [0018] pushArgList      1
+  [0020] objCall          5
+  [0022] pushSymb         23
+  [0024] pushArgListNoRet 3
+  [0026] extCall          36
+  [0028] pushInt8         1
+  [0030] pushArgListNoRet 1
+  [0032] extCall          15
+  [0034] ret             
+end
+
+on Init
+  [0000] pushInt8         1
+  [0002] setProp          32
+  [0004] getParam         0
+  [0006] pushArgListNoRet 1
+  [0008] objCall          67
+  [0010] ret             
+end
+
+on Release
+  [0000] ret             
+end
+
+on GateClosed
+  [0000] getProp          32
+  [0002] jmpIfZ           43
+  [0005] pushSymb         40
+  [0007] pushCons         0
+  [0009] pushSymb         47
+  [0011] pushArgListNoRet 3
+  [0013] extCall          39
+  [0015] pushSymb         40
+  [0017] pushCons         1
+  [0019] pushSymb         47
+  [0021] pushArgListNoRet 3
+  [0023] extCall          39
+  [0025] pushSymb         40
+  [0027] pushCons         2
+  [0029] pushSymb         41
+  [0031] pushArgListNoRet 3
+  [0033] extCall          39
+  [0035] pushSymb         40
+  [0037] pushCons         3
+  [0039] pushSymb         41
+  [0041] pushArgListNoRet 3
+  [0043] extCall          39
+  [0045] ret             
+end
+
+on GateOpen
+  [0000] getProp          32
+  [0002] jmpIfZ           43
+  [0005] pushSymb         40
+  [0007] pushCons         0
+  [0009] pushSymb         41
+  [0011] pushArgListNoRet 3
+  [0013] extCall          39
+  [0015] pushSymb         40
+  [0017] pushCons         1
+  [0019] pushSymb         41
+  [0021] pushArgListNoRet 3
+  [0023] extCall          39
+  [0025] pushSymb         40
+  [0027] pushCons         2
+  [0029] pushSymb         47
+  [0031] pushArgListNoRet 3
+  [0033] extCall          39
+  [0035] pushSymb         40
+  [0037] pushCons         3
+  [0039] pushSymb         47
+  [0041] pushArgListNoRet 3
+  [0043] extCall          39
+  [0045] ret             
+end

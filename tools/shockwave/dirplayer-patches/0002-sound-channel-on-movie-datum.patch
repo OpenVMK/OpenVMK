@@ -1,0 +1,29 @@
+﻿diff --git a/vm-rust/src/player/handlers/datum_handlers/mod.rs b/vm-rust/src/player/handlers/datum_handlers/mod.rs
+index f0e7ac1..ff395ca 100644
+--- a/vm-rust/src/player/handlers/datum_handlers/mod.rs
++++ b/vm-rust/src/player/handlers/datum_handlers/mod.rs
+@@ -340,6 +340,24 @@ pub async fn player_call_datum_handler(
+                 // both forms for updateStage, puppetSprite, stopEvent, preLoad,
+                 // …). Rather than re-listing each one here, fall through to the
+                 // built-in dispatcher; only a name it doesn't know is an error.
++                // `_sound.channel(n)` — Director 11.5 Scripting Dictionary,
++                // `channel` (Sound): "returns a reference to the specified sound
++                // channel", the object form of `sound(n)`. `_sound` resolves to
++                // the movie datum (get_set.rs: `BuiltInSymbol::_Sound =>
++                // Datum::MovieRef`, so that `_sound.soundDevice` reaches the
++                // movie props), which lands the CALL here — and `channel` is not
++                // in the built-in symbol table, so it fell through to the
++                // dispatcher below and raised "No handler channel for datum
++                // <_movie>". VMK's CSoundChannelObject.DefineChannel opens with
++                // `m_r_SndChannel = _sound.channel(a_iChannelNum)`, so every
++                // sound channel it allocated came back undefined.
++                //
++                // TypeHandlers::sound is the same code `sound(n)` uses and takes
++                // the channel number as args[0] (the receiver is not in `args`),
++                // including its channel-range validation.
++                None if handler_name.as_lower_str() == "channel" && !args.is_empty() => {
++                    crate::player::handlers::types::TypeHandlers::sound(&args)
++                }
+                 _ => {
+                     use crate::player::handlers::manager::BuiltInHandlerManager;
+                     if BuiltInHandlerManager::has_async_handler(handler_name) {

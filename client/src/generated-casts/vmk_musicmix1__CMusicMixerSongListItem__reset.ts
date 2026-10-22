@@ -1,0 +1,17 @@
+// vmk_musicmix1.cct / CMusicMixerSongListItem / reset
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function reset(_me: LingoMe) {
+  setMeProp(_me, "m_bUpdate", 1);
+  setMeProp(_me, "m_bSelected", 0);
+  callMethod("render", _me)
+}
+

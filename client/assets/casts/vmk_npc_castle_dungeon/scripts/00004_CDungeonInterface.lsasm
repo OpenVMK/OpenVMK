@@ -1,0 +1,151 @@
+-- Parent Script
+on construct
+  [0000] pushSymb         6
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          7
+  [0008] pushSymb         45
+  [0010] pushArgListNoRet 3
+  [0012] extCall          5
+  [0014] pushArgList      0
+  [0016] extCall          48
+  [0018] setProp          47
+  [0020] pushInt8         1
+  [0022] pushArgListNoRet 1
+  [0024] extCall          9
+  [0026] ret             
+end
+
+on deconstruct
+  [0000] pushSymb         6
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          7
+  [0008] pushSymb         45
+  [0010] pushArgListNoRet 3
+  [0012] extCall          11
+  [0014] getProp          47
+  [0016] pushArgList      1
+  [0018] extCall          105
+  [0020] not             
+  [0021] jmpIfZ           11
+  [0024] getProp          47
+  [0026] getObjProp       50
+  [0028] pushArgListNoRet 1
+  [0030] extCall          49
+  [0032] pushInt8         1
+  [0034] pushArgListNoRet 1
+  [0036] extCall          9
+  [0038] ret             
+end
+
+on findNode
+  [0000] pushSymb         51
+  [0002] pushArgList      1
+  [0004] extCall          14
+  [0006] pushArgList      1
+  [0008] objCall          15
+  [0010] pushArgList      1
+  [0012] objCall          52
+  [0014] setLocal         0
+  [0016] getLocal         0
+  [0018] pushCons         0
+  [0020] getParam         1
+  [0022] pushArgList      3
+  [0024] objCall          53
+  [0026] pushArgListNoRet 1
+  [0028] extCall          9
+  [0030] ret             
+end
+
+on initNPC
+  [0000] getParam         0
+  [0002] pushCons         1
+  [0004] pushArgList      2
+  [0006] objCall          139
+  [0008] setLocal         0
+  [0010] getLocal         0
+  [0012] pushArgList      1
+  [0014] extCall          141
+  [0016] jmpIfZ           77
+  [0019] getLocal         0
+  [0021] pushArgList      1
+  [0023] objCall          54
+  [0025] pushArgList      1
+  [0027] objCall          55
+  [0029] setLocal         1
+  [0031] getLocal         1
+  [0033] pushArgList      1
+  [0035] extCall          56
+  [0037] setProp          47
+  [0039] getProp          47
+  [0041] getObjProp       50
+  [0043] pushZero        
+  [0044] ntEq            
+  [0045] jmpIfZ           48
+  [0048] getProp          47
+  [0050] getObjProp       50
+  [0052] pushCons         2
+  [0054] pushArgListNoRet 2
+  [0056] extCall          57
+  [0058] getProp          47
+  [0060] pushSymb         46
+  [0062] getParam         0
+  [0064] pushArgList      1
+  [0066] objCall          7
+  [0068] pushSymb         58
+  [0070] pushArgListNoRet 4
+  [0072] objCall          59
+  [0074] getProp          47
+  [0076] pushCons         3
+  [0078] pushArgList      1
+  [0080] extCall          60
+  [0082] pushCons         4
+  [0084] pushArgList      1
+  [0086] extCall          60
+  [0088] pushArgList      2
+  [0090] pushList        
+  [0091] setObjProp       61
+  [0093] ret             
+end
+
+on eventProcNPC
+  [0000] getParam         1
+  [0002] pushSymb         58
+  [0004] eq              
+  [0005] jmpIfZ           70
+  [0008] pushArgList      0
+  [0010] theBuiltin       82
+  [0012] jmpIfZ           63
+  [0015] pushSymb         51
+  [0017] pushArgList      1
+  [0019] extCall          14
+  [0021] pushArgList      1
+  [0023] objCall          15
+  [0025] pushArgList      1
+  [0027] objCall          52
+  [0029] setLocal         0
+  [0031] getLocal         0
+  [0033] pushCons         5
+  [0035] pushCons         6
+  [0037] pushArgList      3
+  [0039] objCall          53
+  [0041] setLocal         1
+  [0043] getLocal         1
+  [0045] pushArgList      1
+  [0047] extCall          105
+  [0049] not             
+  [0050] jmpIfZ           25
+  [0053] getParam         0
+  [0055] pushArgList      1
+  [0057] objCall          83
+  [0059] getLocal         1
+  [0061] pushCons         7
+  [0063] pushArgList      2
+  [0065] objCall          92
+  [0067] pushArgList      1
+  [0069] extCall          91
+  [0071] pushArgListNoRet 2
+  [0073] objCall          68
+  [0075] ret             
+end

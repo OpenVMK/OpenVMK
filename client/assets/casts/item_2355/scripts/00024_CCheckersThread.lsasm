@@ -1,0 +1,39 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] extCall          4
+  [0004] pushCons         0
+  [0006] pushArgList      1
+  [0008] extCall          5
+  [0010] pushArgList      2
+  [0012] extCall          3
+  [0014] setProp          2
+  [0016] pushInt8         1
+  [0018] pushArgListNoRet 1
+  [0020] extCall          6
+  [0022] ret             
+end
+
+on deconstruct
+  [0000] getProp          2
+  [0002] pushArgList      1
+  [0004] extCall          8
+  [0006] jmpIfZ           29
+  [0009] getProp          2
+  [0011] getObjProp       9
+  [0013] pushInt8         1
+  [0015] eq              
+  [0016] jmpIfZ           19
+  [0019] getProp          2
+  [0021] pushArgList      1
+  [0023] objCall          11
+  [0025] pushArgListNoRet 1
+  [0027] extCall          10
+  [0029] pushArgList      0
+  [0031] extCall          12
+  [0033] setProp          2
+  [0035] pushInt8         1
+  [0037] pushArgListNoRet 1
+  [0039] extCall          6
+  [0041] ret             
+end

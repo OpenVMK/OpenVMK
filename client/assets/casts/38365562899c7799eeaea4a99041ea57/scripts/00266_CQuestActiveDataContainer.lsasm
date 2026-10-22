@@ -1,0 +1,107 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] extCall          128
+  [0004] pushCons         0
+  [0006] pushArgList      2
+  [0008] extCall          127
+  [0010] setProp          333
+  [0013] getProp          333
+  [0016] pushArgList      1
+  [0018] objCall          133
+  [0020] pushCons         1
+  [0022] pushArgListNoRet 2
+  [0024] objCall          363
+  [0027] getProp          333
+  [0030] getParam         0
+  [0032] pushArgListNoRet 2
+  [0034] objCall          334
+  [0037] pushArgList      0
+  [0039] pushPropList    
+  [0040] setProp          394
+  [0043] pushInt8         1
+  [0045] pushArgListNoRet 1
+  [0047] extCall          9
+  [0049] ret             
+end
+
+on deconstruct
+  [0000] getProp          333
+  [0003] pushArgList      1
+  [0005] extCall          75
+  [0007] jmpIfZ           14
+  [0010] getProp          333
+  [0013] pushArgList      1
+  [0015] objCall          21
+  [0017] pushArgListNoRet 1
+  [0019] extCall          77
+  [0021] pushInt8         1
+  [0023] pushArgListNoRet 1
+  [0025] extCall          9
+  [0027] ret             
+end
+
+on getInterface
+  [0000] getProp          333
+  [0003] pushArgListNoRet 1
+  [0005] extCall          9
+  [0007] ret             
+end
+
+on getData
+  [0000] getProp          394
+  [0003] pushArgListNoRet 1
+  [0005] extCall          9
+  [0007] ret             
+end
+
+on ChangePageEvent
+  [0000] pushCons         2
+  [0002] getParam         1
+  [0004] joinPadStr      
+  [0005] getParam         2
+  [0007] joinPadStr      
+  [0008] pushArgListNoRet 1
+  [0010] extCall          79
+  [0012] ret             
+end
+
+on QuestDialogBroadcastEvent
+  [0000] pushCons         3
+  [0002] getParam         2
+  [0004] joinPadStr      
+  [0005] pushArgListNoRet 1
+  [0007] extCall          79
+  [0009] ret             
+end
+
+on CurrentTaskData
+  [0000] getParam         1
+  [0002] pushArgList      1
+  [0004] extCall          159
+  [0006] jmpIfZ           54
+  [0009] getParam         1
+  [0011] setProp          394
+  [0014] getProp          333
+  [0017] pushCons         4
+  [0019] pushArgList      1
+  [0021] pushList        
+  [0022] pushArgListNoRet 2
+  [0024] objCall          364
+  [0027] getProp          333
+  [0030] pushArgListNoRet 1
+  [0032] objCall          365
+  [0035] getProp          333
+  [0038] pushArgList      1
+  [0040] objCall          133
+  [0042] pushArgList      1
+  [0044] objCall          134
+  [0046] pushArgList      1
+  [0048] objCall          135
+  [0050] setLocal         0
+  [0052] getLocal         0
+  [0054] getParam         1
+  [0056] pushArgListNoRet 2
+  [0058] objCall          45
+  [0060] ret             
+end

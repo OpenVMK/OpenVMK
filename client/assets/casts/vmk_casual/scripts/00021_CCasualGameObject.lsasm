@@ -1,0 +1,31 @@
+-- Parent Script
+on construct
+  [0000] pushInt8         1
+  [0002] pushArgListNoRet 1
+  [0004] extCall          21
+  [0006] ret             
+end
+
+on deconstruct
+  [0000] pushSymb         1
+  [0002] getParam         0
+  [0004] pushArgListNoRet 2
+  [0006] extCall          138
+  [0008] pushInt8         1
+  [0010] pushArgListNoRet 1
+  [0012] extCall          21
+  [0014] ret             
+end
+
+on SetModule
+  [0000] getParam         1
+  [0002] setProp          139
+  [0004] ret             
+end
+
+on GetModule
+  [0000] getProp          139
+  [0002] pushArgListNoRet 1
+  [0004] extCall          21
+  [0006] ret             
+end

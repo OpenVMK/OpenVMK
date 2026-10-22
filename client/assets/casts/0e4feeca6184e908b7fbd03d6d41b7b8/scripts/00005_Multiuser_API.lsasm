@@ -1,0 +1,100 @@
+-- Movie Script
+on constructMultiuserManager
+  [0000] pushSymb         127
+  [0002] pushCons         0
+  [0004] pushArgList      1
+  [0006] extCall          114
+  [0008] pushArgList      2
+  [0010] extCall          112
+  [0012] pushArgListNoRet 1
+  [0014] extCall          43
+  [0016] ret             
+end
+
+on deconstructMultiuserManager
+  [0000] pushSymb         127
+  [0002] pushArgList      1
+  [0004] extCall          115
+  [0006] pushArgListNoRet 1
+  [0008] extCall          43
+  [0010] ret             
+end
+
+on getMultiuserManager
+  [0000] pushArgList      0
+  [0002] extCall          116
+  [0004] setLocal         0
+  [0006] getLocal         0
+  [0008] pushSymb         127
+  [0010] pushArgList      2
+  [0012] objCall          117
+  [0014] not             
+  [0015] jmpIfZ           11
+  [0018] pushArgList      0
+  [0020] localCall        0
+  [0022] pushArgListNoRet 1
+  [0024] extCall          43
+  [0026] getLocal         0
+  [0028] pushSymb         127
+  [0030] pushArgList      2
+  [0032] objCall          118
+  [0034] pushArgListNoRet 1
+  [0036] extCall          43
+  [0038] ret             
+end
+
+on createMultiuser
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] pushArgList      4
+  [0012] objCall          128
+  [0014] pushArgListNoRet 1
+  [0016] extCall          43
+  [0018] ret             
+end
+
+on removeMultiuser
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          131
+  [0010] pushArgListNoRet 1
+  [0012] extCall          43
+  [0014] ret             
+end
+
+on getMultiuser
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          81
+  [0010] pushArgListNoRet 1
+  [0012] extCall          43
+  [0014] ret             
+end
+
+on multiuserExists
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          132
+  [0010] pushArgListNoRet 1
+  [0012] extCall          43
+  [0014] ret             
+end
+
+on printMultiusers
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          133
+  [0008] pushArgListNoRet 1
+  [0010] extCall          43
+  [0012] ret             
+end

@@ -1,0 +1,114 @@
+-- Movie Script
+on ParseCannedField
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          5
+  [0006] setLocal         0
+  [0008] pushCons         0
+  [0010] pushArgList      1
+  [0012] extCall          7
+  [0014] pushArgList      1
+  [0016] objCall          8
+  [0018] getLocal         0
+  [0020] getParam         1
+  [0022] pushArgList      3
+  [0024] objCall          9
+  [0026] pushArgListNoRet 1
+  [0028] extCall          6
+  [0030] ret             
+end
+
+on CreateCannedField
+  [0000] pushArgList      0
+  [0002] theBuiltin       13
+  [0004] pushInt8         2
+  [0006] lt              
+  [0007] jmpIfZ           14
+  [0010] pushCons         1
+  [0012] pushArgListNoRet 1
+  [0014] extCall          14
+  [0016] pushZero        
+  [0017] pushArgListNoRet 1
+  [0019] extCall          6
+  [0021] pushInt8         1
+  [0023] pushArgList      1
+  [0025] extCall          15
+  [0027] setLocal         0
+  [0029] pushInt8         2
+  [0031] pushArgList      1
+  [0033] extCall          15
+  [0035] setLocal         1
+  [0037] pushArgList      0
+  [0039] theBuiltin       13
+  [0041] pushInt8         2
+  [0043] gt              
+  [0044] jmpIfZ           11
+  [0047] pushInt8         3
+  [0049] pushArgList      1
+  [0051] extCall          15
+  [0053] setLocal         2
+  [0055] pushArgList      0
+  [0057] theBuiltin       13
+  [0059] pushInt8         3
+  [0061] gt              
+  [0062] jmpIfZ           11
+  [0065] pushInt8         4
+  [0067] pushArgList      1
+  [0069] extCall          15
+  [0071] setLocal         3
+  [0073] pushCons         2
+  [0075] pushArgList      1
+  [0077] extCall          7
+  [0079] pushArgList      1
+  [0081] objCall          8
+  [0083] getLocal         0
+  [0085] getLocal         1
+  [0087] getLocal         2
+  [0089] getLocal         3
+  [0091] pushArgList      5
+  [0093] objCall          16
+  [0095] pushArgListNoRet 1
+  [0097] extCall          6
+  [0099] ret             
+end
+
+on removeCannedField
+  [0000] pushCons         2
+  [0002] pushArgList      1
+  [0004] extCall          7
+  [0006] pushArgList      1
+  [0008] objCall          8
+  [0010] getParam         0
+  [0012] getParam         1
+  [0014] pushArgList      3
+  [0016] objCall          2
+  [0018] pushArgListNoRet 1
+  [0020] extCall          6
+  [0022] ret             
+end
+
+on showCannedFields
+  [0000] pushCons         2
+  [0002] pushArgList      1
+  [0004] extCall          7
+  [0006] pushArgList      1
+  [0008] objCall          8
+  [0010] pushArgList      1
+  [0012] objCall          3
+  [0014] pushArgListNoRet 1
+  [0016] extCall          6
+  [0018] ret             
+end
+
+on removeAllCannedFields
+  [0000] pushCons         2
+  [0002] pushArgList      1
+  [0004] extCall          7
+  [0006] pushArgList      1
+  [0008] objCall          8
+  [0010] pushArgList      1
+  [0012] objCall          4
+  [0014] pushArgListNoRet 1
+  [0016] extCall          6
+  [0018] ret             
+end

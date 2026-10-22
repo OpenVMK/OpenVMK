@@ -1,0 +1,17 @@
+// 1cc3629b03705a2da146e4473dbbaac4.cct / CPhotoCatalogHandler / SuccessfullyPlacedPhotoOnWall
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function SuccessfullyPlacedPhotoOnWall(_me: LingoMe, tMsg: LingoValue) {
+  var tID = callMethod("GetIntFrom", tMsg.connection);
+  callMethod("removePhotoID", callMethod("getComponent", _me), tID)
+  callMethod("changeView", callMethod("getInterface", _me), symbol("thumbs"))
+}
+

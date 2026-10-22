@@ -1,0 +1,162 @@
+-- Parent Script
+on construct
+  [0000] pushInt8         1
+  [0002] setProp          1121
+  [0005] pushInt8         1
+  [0007] pushArgListNoRet 1
+  [0009] extCall          81
+  [0011] ret             
+end
+
+on deconstruct
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          34
+  [0006] pushArgList      1
+  [0008] objCall          370
+  [0011] pushZero        
+  [0012] pushArgListNoRet 2
+  [0014] objCall          1018
+  [0017] pushInt8         1
+  [0019] pushArgListNoRet 1
+  [0021] extCall          81
+  [0023] ret             
+end
+
+on SetConstants
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          34
+  [0006] pushCons         0
+  [0008] pushArgList      2
+  [0010] objCall          36
+  [0012] pushInt8         1
+  [0014] pushArgList      2
+  [0016] objCall          23
+  [0018] pushZero        
+  [0019] eq              
+  [0020] jmpIfZ           9
+  [0023] pushZero        
+  [0024] setProp          67
+  [0026] jmp              7
+  [0029] pushInt8         1
+  [0031] setProp          67
+  [0033] getParam         0
+  [0035] pushArgList      1
+  [0037] objCall          34
+  [0039] pushCons         1
+  [0041] pushZero        
+  [0042] pushArgListNoRet 3
+  [0044] objCall          638
+  [0047] getParam         0
+  [0049] pushArgList      1
+  [0051] objCall          34
+  [0053] pushCons         2
+  [0055] pushSymb         1115
+  [0058] pushArgListNoRet 3
+  [0060] objCall          638
+  [0063] getParam         0
+  [0065] pushArgList      1
+  [0067] objCall          34
+  [0069] pushCons         3
+  [0071] pushInt16        3000
+  [0074] pushArgListNoRet 3
+  [0076] objCall          638
+  [0079] getParam         0
+  [0081] pushArgList      1
+  [0083] objCall          34
+  [0085] pushCons         4
+  [0087] pushZero        
+  [0088] pushArgListNoRet 3
+  [0090] objCall          638
+  [0093] getParam         0
+  [0095] pushArgList      1
+  [0097] objCall          34
+  [0099] pushArgList      1
+  [0101] objCall          370
+  [0104] pushZero        
+  [0105] pushArgListNoRet 2
+  [0107] objCall          1018
+  [0110] ret             
+end
+
+on setCarryingFlag
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          34
+  [0006] pushCons         5
+  [0008] pushArgList      2
+  [0010] objCall          36
+  [0012] setLocal         0
+  [0014] getParam         1
+  [0016] jmpIfZ           10
+  [0019] pushInt8         1
+  [0021] setProp          67
+  [0023] jmp              6
+  [0026] pushZero        
+  [0027] setProp          67
+  [0029] ret             
+end
+
+on isCarryingFlag
+  [0000] getProp          67
+  [0002] pushArgListNoRet 1
+  [0004] extCall          81
+  [0006] ret             
+end
+
+on UpdateParameters
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          34
+  [0006] pushCons         0
+  [0008] pushArgList      2
+  [0010] objCall          36
+  [0012] pushInt8         1
+  [0014] pushArgList      2
+  [0016] objCall          23
+  [0018] pushZero        
+  [0019] eq              
+  [0020] jmpIfZ           9
+  [0023] pushZero        
+  [0024] setProp          67
+  [0026] jmp              7
+  [0029] pushInt8         1
+  [0031] setProp          67
+  [0033] ret             
+end
+
+on move
+  [0000] ret             
+end
+
+on HitByCannonball
+  [0000] ret             
+end
+
+on Kill
+  [0000] ret             
+end
+
+on SyncGameParameters
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] setLocal         0
+  [0005] getLocal         0
+  [0007] pushInt8         1
+  [0009] getParam         0
+  [0011] pushArgList      1
+  [0013] objCall          365
+  [0016] pushArgList      1
+  [0018] extCall          105
+  [0020] pushArgListNoRet 3
+  [0022] objCall          22
+  [0024] getParam         0
+  [0026] pushArgList      1
+  [0028] objCall          34
+  [0030] pushCons         0
+  [0032] getLocal         0
+  [0034] pushArgListNoRet 3
+  [0036] objCall          638
+  [0039] ret             
+end

@@ -1,0 +1,102 @@
+-- Parent Script
+on construct
+  [0000] pushZero        
+  [0001] setProp          179
+  [0003] pushArgList      0
+  [0005] pushList        
+  [0006] setProp          180
+  [0008] pushZero        
+  [0009] setProp          181
+  [0011] pushInt8         1
+  [0013] pushArgListNoRet 1
+  [0015] extCall          21
+  [0017] ret             
+end
+
+on deconstruct
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] setProp          180
+  [0005] pushInt8         1
+  [0007] pushArgListNoRet 1
+  [0009] extCall          21
+  [0011] ret             
+end
+
+on StartGame
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          169
+  [0006] pushInt16        952
+  [0009] pushSymb         170
+  [0011] getProp          179
+  [0013] pushArgList      2
+  [0015] pushPropList    
+  [0016] pushArgListNoRet 3
+  [0018] objCall          171
+  [0020] ret             
+end
+
+on WatchGame
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          178
+  [0006] getObjProp       77
+  [0008] setLocal         0
+  [0010] getLocal         0
+  [0012] pushInt8         1
+  [0014] inv             
+  [0015] gt              
+  [0016] jmpIfZ           27
+  [0019] pushCons         0
+  [0021] pushArgList      1
+  [0023] extCall          169
+  [0025] pushInt16        955
+  [0028] pushSymb         170
+  [0030] getProp          179
+  [0032] pushSymb         170
+  [0034] getLocal         0
+  [0036] pushArgList      4
+  [0038] pushPropList    
+  [0039] pushArgListNoRet 3
+  [0041] objCall          171
+  [0043] ret             
+end
+
+on SetGameList
+  [0000] getParam         1
+  [0002] setProp          180
+  [0004] ret             
+end
+
+on GetGameList
+  [0000] getProp          180
+  [0002] pushArgListNoRet 1
+  [0004] extCall          21
+  [0006] ret             
+end
+
+on GetSelectedGame
+  [0000] getProp          181
+  [0002] pushZero        
+  [0003] gt              
+  [0004] jmpIfZ           18
+  [0007] getProp          180
+  [0009] getProp          181
+  [0011] pushArgList      2
+  [0013] objCall          113
+  [0015] pushArgListNoRet 1
+  [0017] extCall          21
+  [0019] jmp              20
+  [0022] pushSymb         76
+  [0024] pushArgList      0
+  [0026] pushList        
+  [0027] pushSymb         77
+  [0029] pushInt8         1
+  [0031] inv             
+  [0032] pushArgList      4
+  [0034] pushPropList    
+  [0035] pushArgListNoRet 1
+  [0037] extCall          21
+  [0039] ret             
+end

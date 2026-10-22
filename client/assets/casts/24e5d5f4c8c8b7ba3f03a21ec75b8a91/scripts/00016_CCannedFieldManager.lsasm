@@ -1,0 +1,154 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] pushPropList    
+  [0003] setProp          24
+  [0005] pushInt8         1
+  [0007] pushArgListNoRet 1
+  [0009] extCall          6
+  [0011] ret             
+end
+
+on deconstruct
+  [0000] pushArgListNoRet 0
+  [0002] localCall        5
+  [0004] pushInt8         1
+  [0006] pushArgListNoRet 1
+  [0008] extCall          6
+  [0010] ret             
+end
+
+on Initialize
+  [0000] ret             
+end
+
+on createNewCannedField
+  [0000] getParam         1
+  [0002] pushArgList      1
+  [0004] extCall          27
+  [0006] setLocal         0
+  [0008] getLocal         0
+  [0010] pushZero        
+  [0011] ntEq            
+  [0012] jmpIfZ           78
+  [0015] getLocal         0
+  [0017] getParam         2
+  [0019] pushArgList      2
+  [0021] objCall          28
+  [0023] setLocal         1
+  [0025] getLocal         1
+  [0027] pushZero        
+  [0028] ntEq            
+  [0029] jmpIfZ           53
+  [0032] getParam         1
+  [0034] getParam         2
+  [0036] joinStr         
+  [0037] setLocal         2
+  [0039] pushSymb         30
+  [0041] pushCons         0
+  [0043] pushArgList      2
+  [0045] extCall          29
+  [0047] setLocal         3
+  [0049] getLocal         3
+  [0051] getParam         1
+  [0053] getParam         2
+  [0055] getParam         3
+  [0057] getParam         4
+  [0059] pushArgListNoRet 5
+  [0061] objCall          31
+  [0063] getProp          24
+  [0065] getLocal         2
+  [0067] getLocal         3
+  [0069] pushArgListNoRet 3
+  [0071] objCall          32
+  [0073] getLocal         3
+  [0075] pushArgListNoRet 1
+  [0077] extCall          6
+  [0079] jmp              8
+  [0082] pushZero        
+  [0083] pushArgListNoRet 1
+  [0085] extCall          6
+  [0087] jmp              8
+  [0090] pushZero        
+  [0091] pushArgListNoRet 1
+  [0093] extCall          6
+  [0095] ret             
+end
+
+on removeCannedField
+  [0000] getParam         1
+  [0002] getParam         2
+  [0004] joinStr         
+  [0005] setLocal         0
+  [0007] getProp          24
+  [0009] getLocal         0
+  [0011] pushArgList      2
+  [0013] objCall          38
+  [0015] pushArgList      1
+  [0017] extCall          37
+  [0019] not             
+  [0020] jmpIfZ           17
+  [0023] getProp          24
+  [0025] getLocal         0
+  [0027] pushArgListNoRet 2
+  [0029] objCall          39
+  [0031] pushInt8         1
+  [0033] pushArgListNoRet 1
+  [0035] extCall          6
+  [0037] pushZero        
+  [0038] pushArgListNoRet 1
+  [0040] extCall          6
+  [0042] ret             
+end
+
+on removeAllCannedFields
+  [0000] getProp          24
+  [0002] peek             0
+  [0004] pushArgList      1
+  [0006] extCall          40
+  [0008] pushInt8         1
+  [0010] peek             0
+  [0012] peek             2
+  [0014] ltEq            
+  [0015] jmpIfZ           28
+  [0018] peek             2
+  [0020] peek             1
+  [0022] pushArgList      2
+  [0024] extCall          41
+  [0026] setLocal         0
+  [0028] getLocal         0
+  [0030] pushArgList      1
+  [0032] objCall          43
+  [0034] pushArgListNoRet 1
+  [0036] extCall          42
+  [0038] pushInt8         1
+  [0040] add             
+  [0041] endRepeat        31
+  [0043] pop              3
+  [0045] getProp          24
+  [0047] pushArgListNoRet 1
+  [0049] objCall          44
+  [0051] ret             
+end
+
+on showCannedFields
+  [0000] getProp          24
+  [0002] peek             0
+  [0004] pushArgList      1
+  [0006] extCall          40
+  [0008] pushInt8         1
+  [0010] peek             0
+  [0012] peek             2
+  [0014] ltEq            
+  [0015] jmpIfZ           18
+  [0018] peek             2
+  [0020] peek             1
+  [0022] pushArgList      2
+  [0024] extCall          41
+  [0026] setLocal         0
+  [0028] pushInt8         1
+  [0030] add             
+  [0031] endRepeat        21
+  [0033] pop              3
+  [0035] ret             
+end

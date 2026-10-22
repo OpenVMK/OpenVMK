@@ -1,0 +1,131 @@
+-- Parent Script
+on construct
+  [0000] ret             
+end
+
+on deconstruct
+  [0000] ret             
+end
+
+on Init
+  [0000] pushCons         0
+  [0002] pushArgListNoRet 1
+  [0004] extCall          53
+  [0006] getParam         0
+  [0008] getParam         1
+  [0010] setObjProp       148
+  [0012] getParam         0
+  [0014] pushZero        
+  [0015] setObjProp       149
+  [0017] getParam         1
+  [0019] pushCons         1
+  [0021] pushArgList      1
+  [0023] extCall          79
+  [0025] setObjProp       79
+  [0027] getParam         1
+  [0029] getParam         1
+  [0031] getChainedProp   79
+  [0033] getObjProp       98
+  [0035] setObjProp       98
+  [0037] getParam         1
+  [0039] getParam         1
+  [0041] getChainedProp   79
+  [0043] getObjProp       99
+  [0045] setObjProp       99
+  [0047] ret             
+end
+
+on update
+  [0000] getParam         0
+  [0002] getParam         0
+  [0004] getObjProp       77
+  [0006] pushInt8         1
+  [0008] add             
+  [0009] setObjProp       77
+  [0011] getParam         0
+  [0013] getObjProp       77
+  [0015] pushInt8         4
+  [0017] mod             
+  [0018] pushZero        
+  [0019] eq              
+  [0020] jmpIfZ           99
+  [0023] getParam         0
+  [0025] getParam         0
+  [0027] getObjProp       149
+  [0029] pushInt8         1
+  [0031] add             
+  [0032] pushInt8         11
+  [0034] mod             
+  [0035] setObjProp       149
+  [0037] getParam         0
+  [0039] getObjProp       149
+  [0041] setLocal         0
+  [0043] getParam         0
+  [0045] getObjProp       149
+  [0047] pushInt8         10
+  [0049] lt              
+  [0050] jmpIfZ           10
+  [0053] pushCons         2
+  [0055] getLocal         0
+  [0057] joinStr         
+  [0058] setLocal         0
+  [0060] getParam         0
+  [0062] getChainedProp   148
+  [0064] pushCons         3
+  [0066] getLocal         0
+  [0068] joinStr         
+  [0069] pushArgList      1
+  [0071] extCall          79
+  [0073] setObjProp       79
+  [0075] getParam         0
+  [0077] getChainedProp   148
+  [0079] getParam         0
+  [0081] getChainedProp   148
+  [0083] getChainedProp   79
+  [0085] getObjProp       98
+  [0087] getParam         0
+  [0089] getObjProp       25
+  [0091] pushInt8         32
+  [0093] div             
+  [0094] mul             
+  [0095] setObjProp       98
+  [0097] getParam         0
+  [0099] getChainedProp   148
+  [0101] getParam         0
+  [0103] getChainedProp   148
+  [0105] getChainedProp   79
+  [0107] getObjProp       99
+  [0109] getParam         0
+  [0111] getObjProp       25
+  [0113] pushInt8         32
+  [0115] div             
+  [0116] mul             
+  [0117] setObjProp       99
+  [0119] ret             
+end
+
+on getOffsetZ
+  [0000] pushInt8         2
+  [0002] pushArgListNoRet 1
+  [0004] extCall          29
+  [0006] ret             
+end
+
+on SetParams
+  [0000] ret             
+end
+
+on SetAvatar
+  [0000] ret             
+end
+
+on endMagic
+  [0000] ret             
+end
+
+on SetTileSize
+  [0000] getParam         0
+  [0002] getParam         1
+  [0004] setObjProp       25
+  [0006] ret             
+end

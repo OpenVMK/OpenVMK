@@ -1,0 +1,76 @@
+-- Parent Script
+on construct
+  [0000] pushSymb         3
+  [0002] setProp          4
+  [0004] pushCons         0
+  [0006] getParam         0
+  [0008] pushArgList      1
+  [0010] objCall          6
+  [0012] pushSymb         3
+  [0014] pushArgListNoRet 3
+  [0016] extCall          5
+  [0018] pushInt8         1
+  [0020] pushArgListNoRet 1
+  [0022] extCall          7
+  [0024] ret             
+end
+
+on deconstruct
+  [0000] pushCons         0
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          6
+  [0008] pushArgListNoRet 2
+  [0010] extCall          142
+  [0012] ret             
+end
+
+on Init
+  [0000] getParam         1
+  [0002] setProp          9
+  [0004] getParam         2
+  [0006] setProp          4
+  [0008] ret             
+end
+
+on checkSoundSettings
+  [0000] pushInt8         1
+  [0002] setLocal         0
+  [0004] getProp          9
+  [0006] pushArgList      1
+  [0008] extCall          12
+  [0010] not             
+  [0011] jmpIfZ           9
+  [0014] pushZero        
+  [0015] setLocal         0
+  [0017] jmp              41
+  [0020] getProp          9
+  [0022] pushArgList      1
+  [0024] objCall          13
+  [0026] getProp          4
+  [0028] pushArgList      2
+  [0030] objCall          14
+  [0032] pushZero        
+  [0033] eq              
+  [0034] jmpIfZ           24
+  [0037] pushCons         1
+  [0039] getProp          9
+  [0041] joinStr         
+  [0042] pushCons         2
+  [0044] joinStr         
+  [0045] getProp          4
+  [0047] joinStr         
+  [0048] pushCons         3
+  [0050] joinStr         
+  [0051] pushArgListNoRet 1
+  [0053] extCall          15
+  [0055] pushZero        
+  [0056] setLocal         0
+  [0058] getLocal         0
+  [0060] jmpIfZ           11
+  [0063] getProp          4
+  [0065] getProp          9
+  [0067] pushArgListNoRet 2
+  [0069] extCall          16
+  [0071] ret             
+end

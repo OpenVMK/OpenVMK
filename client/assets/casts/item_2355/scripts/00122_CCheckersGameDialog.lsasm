@@ -1,0 +1,76 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] extCall          4
+  [0004] setProp          485
+  [0007] ret             
+end
+
+on deconstruct
+  [0000] getProp          485
+  [0003] pushArgList      1
+  [0005] extCall          486
+  [0008] jmpIfZ           10
+  [0011] getProp          485
+  [0014] pushArgListNoRet 1
+  [0016] extCall          158
+  [0018] ret             
+end
+
+on Destroy
+  [0000] getParam         0
+  [0002] getObjProp       9
+  [0004] jmpIfZ           13
+  [0007] getParam         0
+  [0009] pushArgList      1
+  [0011] objCall          11
+  [0013] pushArgListNoRet 1
+  [0015] extCall          10
+  [0017] ret             
+end
+
+on open
+  [0000] getProp          485
+  [0003] pushArgList      1
+  [0005] extCall          486
+  [0008] jmpIfZ           10
+  [0011] getProp          485
+  [0014] pushArgListNoRet 1
+  [0016] extCall          158
+  [0018] getProp          485
+  [0021] pushArgList      1
+  [0023] extCall          146
+  [0025] jmpIfZ           27
+  [0028] getProp          485
+  [0031] pushArgList      1
+  [0033] extCall          148
+  [0035] setLocal         0
+  [0037] getLocal         0
+  [0039] getParam         1
+  [0041] pushArgListNoRet 2
+  [0043] objCall          229
+  [0045] getLocal         0
+  [0047] pushArgListNoRet 1
+  [0049] objCall          487
+  [0052] ret             
+end
+
+on close
+  [0000] getProp          485
+  [0003] pushArgList      1
+  [0005] extCall          486
+  [0008] jmpIfZ           10
+  [0011] getProp          485
+  [0014] pushArgListNoRet 1
+  [0016] extCall          158
+  [0018] ret             
+end
+
+on GetWindowInstance
+  [0000] getProp          485
+  [0003] pushArgList      1
+  [0005] extCall          148
+  [0007] pushArgListNoRet 1
+  [0009] extCall          6
+  [0011] ret             
+end

@@ -1,0 +1,82 @@
+-- Parent Script
+on construct
+  [0000] pushZero        
+  [0001] setProp          38
+  [0003] pushInt8         1
+  [0005] pushArgListNoRet 1
+  [0007] extCall          7
+  [0009] ret             
+end
+
+on select
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          21
+  [0006] setLocal         0
+  [0008] getLocal         0
+  [0010] pushZero        
+  [0011] ntEq            
+  [0012] jmpIfZ           9
+  [0015] getLocal         0
+  [0017] pushArgListNoRet 1
+  [0019] objCall          28
+  [0021] ret             
+end
+
+on update
+  [0000] getProp          38
+  [0002] not             
+  [0003] jmpIfZ           9
+  [0006] getParam         0
+  [0008] pushArgListNoRet 1
+  [0010] objCall          36
+  [0012] ret             
+end
+
+on _Init
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          21
+  [0006] setLocal         0
+  [0008] getLocal         0
+  [0010] pushArgList      1
+  [0012] objCall          59
+  [0014] pushArgList      1
+  [0016] objCall          79
+  [0018] jmpIfZ           70
+  [0021] pushInt8         1
+  [0023] setLocal         1
+  [0025] getLocal         1
+  [0027] getParam         0
+  [0029] pushSymb         101
+  [0031] pushArgList      2
+  [0033] objCall          58
+  [0035] ltEq            
+  [0036] jmpIfZ           48
+  [0039] getParam         0
+  [0041] pushSymb         101
+  [0043] getLocal         1
+  [0045] pushArgList      3
+  [0047] objCall          102
+  [0049] setLocal         2
+  [0051] getLocal         0
+  [0053] pushArgList      1
+  [0055] objCall          103
+  [0057] getLocal         2
+  [0059] pushArgList      2
+  [0061] objCall          104
+  [0063] setLocal         3
+  [0065] getLocal         3
+  [0067] pushCons         1
+  [0069] pushCons         2
+  [0071] pushArgListNoRet 3
+  [0073] objCall          99
+  [0075] pushInt8         1
+  [0077] getLocal         1
+  [0079] add             
+  [0080] setLocal         1
+  [0082] endRepeat        57
+  [0084] pushInt8         1
+  [0086] setProp          38
+  [0088] ret             
+end

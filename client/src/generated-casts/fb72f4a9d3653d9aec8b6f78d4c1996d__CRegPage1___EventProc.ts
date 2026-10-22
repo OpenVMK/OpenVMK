@@ -1,0 +1,117 @@
+// fb72f4a9d3653d9aec8b6f78d4c1996d.cct / CRegPage1 / _EventProc
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function _EventProc(_me: LingoMe, _this: LingoValue, a_kEvent: LingoValue, a_sElem: LingoValue, a_vParam: LingoValue) {
+  switch (1) {
+case lingoBinary("eq", a_sElem, "reg.boy"):
+  callMethod("_ChooseSex", _this, 0)
+  break;
+case lingoBinary("eq", a_sElem, "reg.girl"):
+  callMethod("_ChooseSex", _this, 1)
+  break;
+case lingoBinary("eq", a_sElem, "reg.morenames.button"):
+  callMethod("GenerateNames", _this)
+  break;
+case lingoBinary("eq", a_sElem, "reg.namelist"):
+  var t_ar_event = new LingoPropList([symbol("found"), 0, symbol("event"), "", symbol("client"), undefined, symbol("route"), new LingoPropList([])]);
+  callMethod("EventProc", meProp(_me, "m_rComponentsPage"), a_vParam, t_ar_event)
+  if (t_ar_event.found) {
+  callMethod("GetActiveName", _this, t_ar_event.event)
+  }
+
+  break;
+case lingoBinary("and", lingoBinary("contains", a_sElem, "color"), lingoBinary("contains", a_sElem, "change")):
+  var tTempDelim = theProperty("itemDelimiter");
+  setTheProperty("itemDelimiter", ".");
+  var tPart = a_sElem.item[2];
+  var tButtonType = a_sElem.item[a_sElem.item.count];
+  setTheProperty("itemDelimiter", tTempDelim);
+  callMethod("ChangeColor", _this, tPart, tButtonType)
+  return 1;
+case lingoBinary("contains", a_sElem, "change"):
+  tTempDelim = theProperty("itemDelimiter");
+  setTheProperty("itemDelimiter", ".");
+  tPart = a_sElem.item[2];
+  tButtonType = a_sElem.item[a_sElem.item.count];
+  setTheProperty("itemDelimiter", tTempDelim);
+  callMethod("changePart", _this, tPart, tButtonType)
+  return 1;
+case lingoBinary("eq", a_sElem, "reg.next.button"):
+  callMethod("ChangeRoomSelection", _this, 1)
+  break;
+case lingoBinary("eq", a_sElem, "reg.previous.button"):
+  callMethod("ChangeRoomSelection", _this, -float(1))
+  break;
+  }
+
+  if (lingoBinary("eq", a_kEvent, symbol("keyDown"))) {
+  switch (a_sElem) {
+case "reg.username.input":
+  switch (theProperty("keyCode")) {
+case 123:
+case 124:
+case 125:
+case 126:
+  callNamed("pass")
+  break;
+case 117:
+case 51:
+  callNamed("pass")
+  break;
+case 36:
+  return 1;
+case 49:
+  return 1;
+  default:
+  callMethod("InactivateNameSelector", _this)
+  var t_sValidKeys = lingoBinary("join", " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!?.-_", "\"");
+  var t_iAscii = callNamed("charToNum", theProperty("key"));
+  var t_bAllow = 0;
+  if (lingoBinary("or", lingoBinary("contains", t_sValidKeys, theProperty("key")), lingoBinary("eq", t_sValidKeys, ""))) {
+  t_bAllow = 1;
+  }
+
+  if ((lingoTruthy(t_bAllow) ? 0 : 1)) {
+  var t = callNamed("createDialogWindow", callMethod("getID", _this), "CharNotAllowed", 1, 1);
+  callMethod("show", t)
+  var t_sMsg = callNamed("getText", "reg.char.not.allowed");
+  callMethod("setText", t, t_sMsg, "Error", "OK")
+  return 1;
+  }
+
+  var t_txt = callMethod("getText", callMethod("getElement", meProp(_me, "m_rWindow"), "reg.username.input"));
+  var t_iMaxlength = 18;
+  var tElem = callMethod("getElement", meProp(_me, "m_rWindow"), a_sElem);
+  if (lingoBinary("neq", tElem, 0)) {
+  if (lingoBinary("gte", tElem.pMember.text.char.count, t_iMaxlength)) {
+  setThePropOf(tElem.pMember, "text", tElem.pMember.char.range(1, t_iMaxlength));
+  t = callNamed("createDialogWindow", callMethod("getID", _this), "CheckNameLength", 1, 1);
+  callMethod("show", t)
+  t_sMsg = callNamed("getText", "reg.name.toolong");
+  callMethod("setText", t, t_sMsg, "Error", "OK")
+  return 1;
+  }
+
+  }
+
+  break;
+  break;
+  break;
+  break;
+  }
+
+  break;
+  }
+
+  }
+
+}
+

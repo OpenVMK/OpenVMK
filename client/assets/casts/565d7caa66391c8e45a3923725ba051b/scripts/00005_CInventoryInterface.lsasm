@@ -1,0 +1,212 @@
+-- Parent Script
+on construct
+  [0000] pushZero        
+  [0001] setProp          7
+  [0003] pushArgList      0
+  [0005] extCall          9
+  [0007] setProp          8
+  [0009] pushSymb         11
+  [0011] getParam         0
+  [0013] pushArgList      1
+  [0015] objCall          12
+  [0017] pushSymb         5
+  [0019] pushArgListNoRet 3
+  [0021] extCall          10
+  [0023] pushInt8         1
+  [0025] pushArgListNoRet 1
+  [0027] extCall          13
+  [0029] ret             
+end
+
+on deconstruct
+  [0000] getProp          8
+  [0002] pushArgList      1
+  [0004] extCall          15
+  [0006] jmpIfZ           35
+  [0009] pushCons         0
+  [0011] pushArgList      1
+  [0013] extCall          16
+  [0015] getChainedProp   17
+  [0017] pushInt8         1
+  [0019] pushArgList      2
+  [0021] objCall          18
+  [0023] getProp          8
+  [0025] pushSymb         19
+  [0027] pushArgListNoRet 3
+  [0029] objCall          20
+  [0031] getProp          8
+  [0033] pushArgList      1
+  [0035] objCall          12
+  [0037] pushArgListNoRet 1
+  [0039] extCall          21
+  [0041] pushInt8         1
+  [0043] pushArgListNoRet 1
+  [0045] extCall          13
+  [0047] ret             
+end
+
+on GetSelected
+  [0000] pushSymb         22
+  [0002] pushInt8         1
+  [0004] inv             
+  [0005] pushSymb         23
+  [0007] pushInt8         1
+  [0009] inv             
+  [0010] pushArgList      4
+  [0012] pushPropList    
+  [0013] pushArgListNoRet 1
+  [0015] extCall          13
+  [0017] ret             
+end
+
+on ShowSellRequest
+  [0000] pushCons         1
+  [0002] pushArgList      1
+  [0004] extCall          24
+  [0006] jmpIfZ           22
+  [0009] pushCons         1
+  [0011] pushArgList      1
+  [0013] extCall          25
+  [0015] getParam         1
+  [0017] getParam         2
+  [0019] getParam         3
+  [0021] pushArgListNoRet 4
+  [0023] objCall          26
+  [0025] jmp              21
+  [0028] pushCons         1
+  [0030] pushCons         2
+  [0032] pushArgList      2
+  [0034] extCall          27
+  [0036] getParam         1
+  [0038] getParam         2
+  [0040] getParam         3
+  [0042] pushArgListNoRet 4
+  [0044] objCall          26
+  [0046] ret             
+end
+
+on ShowSellConfirm
+  [0000] pushCons         3
+  [0002] pushArgList      1
+  [0004] extCall          24
+  [0006] jmpIfZ           22
+  [0009] pushCons         3
+  [0011] pushArgList      1
+  [0013] extCall          25
+  [0015] getParam         1
+  [0017] getParam         2
+  [0019] getParam         3
+  [0021] pushArgListNoRet 4
+  [0023] objCall          26
+  [0025] jmp              21
+  [0028] pushCons         3
+  [0030] pushCons         4
+  [0032] pushArgList      2
+  [0034] extCall          27
+  [0036] getParam         1
+  [0038] getParam         2
+  [0040] getParam         3
+  [0042] pushArgListNoRet 4
+  [0044] objCall          26
+  [0046] ret             
+end
+
+on ShowHideInventory
+  [0000] getProp          8
+  [0002] pushArgList      1
+  [0004] extCall          15
+  [0006] not             
+  [0007] jmpIfZ           74
+  [0010] pushArgList      0
+  [0012] extCall          31
+  [0014] pushCons         5
+  [0016] pushArgList      2
+  [0018] extCall          27
+  [0020] setProp          8
+  [0022] getProp          8
+  [0024] pushArgList      1
+  [0026] extCall          15
+  [0028] setProp          7
+  [0030] getProp          7
+  [0032] not             
+  [0033] jmpIfZ           17
+  [0036] getParam         0
+  [0038] pushCons         6
+  [0040] pushSymb         33
+  [0042] pushArgList      3
+  [0044] extCall          32
+  [0046] pushArgListNoRet 1
+  [0048] extCall          13
+  [0050] getProp          8
+  [0052] pushArgListNoRet 1
+  [0054] objCall          34
+  [0056] pushCons         0
+  [0058] pushArgList      1
+  [0060] extCall          16
+  [0062] getChainedProp   17
+  [0064] pushInt8         1
+  [0066] pushArgList      2
+  [0068] objCall          18
+  [0070] getProp          8
+  [0072] pushSymb         19
+  [0074] pushArgListNoRet 3
+  [0076] objCall          35
+  [0078] jmp              3
+  [0081] getProp          8
+  [0083] pushArgListNoRet 1
+  [0085] objCall          34
+  [0087] ret             
+end
+
+on ShowLevelRequiredScreen
+  [0000] pushCons         7
+  [0002] pushCons         8
+  [0004] pushArgList      2
+  [0006] extCall          36
+  [0008] setLocal         0
+  [0010] pushCons         9
+  [0012] pushCons         10
+  [0014] pushArgList      2
+  [0016] extCall          36
+  [0018] setLocal         1
+  [0020] pushCons         11
+  [0022] pushCons         10
+  [0024] pushArgList      2
+  [0026] extCall          36
+  [0028] setLocal         2
+  [0030] getLocal         0
+  [0032] pushCons         12
+  [0034] getParam         2
+  [0036] pushArgList      1
+  [0038] extCall          38
+  [0040] pushArgList      3
+  [0042] extCall          37
+  [0044] setLocal         0
+  [0046] getLocal         0
+  [0048] pushCons         13
+  [0050] getParam         3
+  [0052] pushArgList      1
+  [0054] extCall          38
+  [0056] pushArgList      3
+  [0058] extCall          37
+  [0060] setLocal         0
+  [0062] getParam         0
+  [0064] pushArgList      1
+  [0066] objCall          12
+  [0068] pushCons         14
+  [0070] pushInt8         1
+  [0072] pushInt8         1
+  [0074] pushArgList      4
+  [0076] extCall          39
+  [0078] setLocal         3
+  [0080] getLocal         3
+  [0082] pushArgListNoRet 1
+  [0084] objCall          40
+  [0086] getLocal         3
+  [0088] getLocal         0
+  [0090] getLocal         1
+  [0092] pushCons         15
+  [0094] pushArgListNoRet 4
+  [0096] objCall          41
+  [0098] ret             
+end

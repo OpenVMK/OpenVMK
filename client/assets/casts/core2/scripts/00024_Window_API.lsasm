@@ -1,0 +1,242 @@
+-- Movie Script
+on CreateWindowManager
+  [0000] pushSymb         263
+  [0003] pushCons         0
+  [0005] pushArgList      1
+  [0007] extCall          100
+  [0009] pushArgList      2
+  [0011] extCall          35
+  [0013] pushArgListNoRet 1
+  [0015] extCall          5
+  [0017] ret             
+end
+
+on RemoveWindowManager
+  [0000] pushSymb         263
+  [0003] pushArgList      1
+  [0005] extCall          36
+  [0007] pushArgListNoRet 1
+  [0009] extCall          5
+  [0011] ret             
+end
+
+on getWindowManager
+  [0000] pushArgList      0
+  [0002] extCall          29
+  [0004] setLocal         0
+  [0006] getLocal         0
+  [0008] pushSymb         263
+  [0011] pushArgList      2
+  [0013] objCall          38
+  [0015] jmpIfZ           19
+  [0018] getLocal         0
+  [0020] pushSymb         263
+  [0023] pushArgList      2
+  [0025] objCall          37
+  [0027] pushArgListNoRet 1
+  [0029] extCall          5
+  [0031] jmp              11
+  [0034] pushArgList      0
+  [0036] localCall        0
+  [0038] pushArgListNoRet 1
+  [0040] extCall          5
+  [0042] ret             
+end
+
+on createWindow
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] getParam         3
+  [0012] getParam         4
+  [0014] pushArgList      6
+  [0016] objCall          13
+  [0018] pushArgListNoRet 1
+  [0020] extCall          5
+  [0022] ret             
+end
+
+on removeWindow
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          70
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on getWindow
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          25
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on windowExists
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          24
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on mergeWindow
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] localCall        6
+  [0006] jmpIfZ           23
+  [0009] getParam         0
+  [0011] pushArgList      1
+  [0013] localCall        5
+  [0015] getParam         1
+  [0017] pushArgList      2
+  [0019] objCall          267
+  [0022] pushArgListNoRet 1
+  [0024] extCall          5
+  [0026] jmp              8
+  [0029] pushZero        
+  [0030] pushArgListNoRet 1
+  [0032] extCall          5
+  [0034] ret             
+end
+
+on activateWindow
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] extCall          15
+  [0006] jmpIfZ           11
+  [0009] pushZero        
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] jmp              18
+  [0017] pushArgList      0
+  [0019] localCall        2
+  [0021] getParam         0
+  [0023] pushArgList      2
+  [0025] objCall          268
+  [0028] pushArgListNoRet 1
+  [0030] extCall          5
+  [0032] ret             
+end
+
+on deactivateWindow
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] extCall          15
+  [0006] jmpIfZ           11
+  [0009] pushZero        
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] jmp              18
+  [0017] pushArgList      0
+  [0019] localCall        2
+  [0021] getParam         0
+  [0023] pushArgList      2
+  [0025] objCall          269
+  [0028] pushArgListNoRet 1
+  [0030] extCall          5
+  [0032] ret             
+end
+
+on registerClient
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] localCall        6
+  [0006] jmpIfZ           23
+  [0009] getParam         0
+  [0011] pushArgList      1
+  [0013] localCall        5
+  [0015] getParam         1
+  [0017] pushArgList      2
+  [0019] objCall          256
+  [0022] pushArgListNoRet 1
+  [0024] extCall          5
+  [0026] jmp              8
+  [0029] pushZero        
+  [0030] pushArgListNoRet 1
+  [0032] extCall          5
+  [0034] ret             
+end
+
+on registerProcedure
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] localCall        6
+  [0006] jmpIfZ           27
+  [0009] getParam         0
+  [0011] pushArgList      1
+  [0013] localCall        5
+  [0015] getParam         1
+  [0017] getParam         2
+  [0019] getParam         3
+  [0021] pushArgList      4
+  [0023] objCall          257
+  [0026] pushArgListNoRet 1
+  [0028] extCall          5
+  [0030] jmp              8
+  [0033] pushZero        
+  [0034] pushArgListNoRet 1
+  [0036] extCall          5
+  [0038] ret             
+end
+
+on showWindows
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          273
+  [0009] pushArgListNoRet 1
+  [0011] extCall          5
+  [0013] ret             
+end
+
+on hideWindows
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          274
+  [0009] pushArgListNoRet 1
+  [0011] extCall          5
+  [0013] ret             
+end
+
+on lockWindowLayering
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          275
+  [0009] pushArgListNoRet 1
+  [0011] extCall          5
+  [0013] ret             
+end
+
+on unlockWindowLayering
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          276
+  [0009] pushArgListNoRet 1
+  [0011] extCall          5
+  [0013] ret             
+end
+
+on printWindows
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          71
+  [0008] pushArgListNoRet 1
+  [0010] extCall          5
+  [0012] ret             
+end

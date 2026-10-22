@@ -1,0 +1,34 @@
+﻿diff --git a/vm-rust/src/director/file.rs b/vm-rust/src/director/file.rs
+index c71aa4f..e9ce8f4 100644
+--- a/vm-rust/src/director/file.rs
++++ b/vm-rust/src/director/file.rs
+@@ -927,10 +927,27 @@ fn read_after_burner_map(
+ 
+     while !ils_reader.eof() {
+         let res_id = ils_reader.read_var_int().unwrap() as u32;
+-        let info = chunk_info.get(&res_id).unwrap();
++
++        // The ILS may end in padding rather than exactly on a chunk boundary:
++        // VMK's messenger cast (0b6ee192….cct) inflates to 37333 bytes of which
++        // the last is a lone 0x00, and that reads back as resource id 0 — an id
++        // the ABMP never describes. Stop at the first unknown id instead of
++        // unwrapping None: with no map entry there is no length either, so the
++        // walk could not continue in any case. LibreShockwave's
++        // AfterburnerReader::readIlsChunk breaks here for the same reason.
++        let Some(info) = chunk_info.get(&res_id) else {
++            break;
++        };
++
++        // Same guard on the payload: a truncated tail yields what is left
++        // rather than panicking inside read_bytes.
++        let take = info.len.min(ils_reader.bytes_left());
++        let Ok(bytes) = ils_reader.read_bytes(take) else {
++            break;
++        };
+ 
+         // info!("Loading ILS resource {}: '{}', {} bytes", res_id, fourcc_to_string(info.fourcc), info.len);
+-        cached_chunk_views.insert(res_id, ils_reader.read_bytes(info.len).unwrap().to_vec());
++        cached_chunk_views.insert(res_id, bytes.to_vec());
+     }
+ 
+     return Ok(ils_body_offset);

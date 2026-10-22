@@ -1,0 +1,40 @@
+{
+  "name": "vmk-web",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "server",
+    "tools"
+  ],
+  "scripts": {
+    "start": "concurrently -n http,mus -c blue,magenta \"npm run start -w @vmk/server\" \"npm run start:mus -w @vmk/server\"",
+    "start:http": "npm run start -w @vmk/server",
+    "start:mus": "npm run start:mus -w @vmk/server",
+    "typecheck": "npm run typecheck -w @vmk/server",
+    "test": "npm run test -w @vmk/server",
+    "db:reset": "node tools/reset-db.mjs",
+    "db:wipe": "node tools/reset-db.mjs --wipe",
+    "tools:parse-texts": "npm run parse-texts -w @vmk/tools",
+    "tools:extract-strings": "npm run extract-strings -w @vmk/tools",
+    "tools:extract-protocol": "npm run extract-protocol -w @vmk/tools",
+    "tools:sync-assets": "npm run sync-assets -w @vmk/tools",
+    "tools:decrypt-texts": "npm run decrypt-texts -w @vmk/tools",
+    "tools:inventory": "npm run inventory -w @vmk/tools",
+    "tools:shockwave:setup": "npm run setup-libreshockwave -w @vmk/tools",
+    "tools:shockwave:serve": "npm run start -w @vmk/server",
+    "tools:shockwave:game-server": "npm run start:mus -w @vmk/server",
+    "tools:shockwave:debug": "npm run launch-debugger -w @vmk/tools",
+    "tools:shockwave:build-wasm": "powershell -ExecutionPolicy Bypass -File tools/shockwave/build-wasm-windows.ps1",
+    "tools:shockwave:build-wasm:wsl": "wsl bash tools/shockwave/build-wasm-wsl.sh",
+    "tools:shockwave:probe": "wsl bash tools/shockwave/build-probe-wsl.sh",
+    "tools:shockwave:export-lingo": "powershell -ExecutionPolicy Bypass -File tools/shockwave/build-lingo-export-windows.ps1",
+    "tools:shockwave:export-lingo:wsl": "wsl bash tools/shockwave/build-lingo-export-wsl.sh",
+    "tools:shockwave:build-getsec-cast": "powershell -ExecutionPolicy Bypass -File tools/shockwave/build-getsec-cast-windows.ps1",
+    "tools:all": "npm run tools:parse-texts && npm run tools:extract-strings && npm run tools:extract-protocol && npm run tools:inventory"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.8.2",
+    "vite": "^6.4.3"
+  }
+}

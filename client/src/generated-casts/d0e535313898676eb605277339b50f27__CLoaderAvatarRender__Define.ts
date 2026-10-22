@@ -1,0 +1,42 @@
+// d0e535313898676eb605277339b50f27.cct / CLoaderAvatarRender / Define
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function Define(_me: LingoMe, a_mp_AvatarData: LingoValue) {
+  setMeProp(_me, "m_arPartList", a_mp_AvatarData.objects);
+  setMeProp(_me, "m_iBdDir", a_mp_AvatarData.BodyDir);
+  setMeProp(_me, "m_iHeadDir", a_mp_AvatarData.HeadDir);
+  setMeProp(_me, "m_iMyRef", a_mp_AvatarData.MyRef);
+  setMeProp(_me, "m_bFlipped", a_mp_AvatarData.Flipped);
+  setMeProp(_me, "m_iTileSize", a_mp_AvatarData.tilesize);
+  setMeProp(_me, "m_sName", a_mp_AvatarData.avatarName);
+  setMeProp(_me, "m_sAvatarName", a_mp_AvatarData.avatarName);
+  callMethod("arrangeParts", _me)
+  callMethod("Refresh", _me, meProp(_me, "m_iBdDir"), meProp(_me, "m_iHeadDir"))
+  setMeProp(_me, "m_iSync", 0);
+  setMeProp(_me, "m_bChanges", 1);
+  setMeProp(_me, "m_iMagicCounter", 0);
+  if (callNamed("memberExists", "avatar.arrow.32.inside")) {
+  if (lingoBinary("neq", meProp(_me, "m_sName"), undefined)) {
+  var t_Img = callNamed("getMember", "avatar.arrow.32.inside").image;
+  var t_rImgArrow = callMethod("duplicate", t_Img);
+  var t_ShirtCol = callMethod("GetShirtColor", _me);
+  t_Img = callNamed("image", t_rImgArrow.width, t_rImgArrow.height, 32);
+  callMethod("copyPixels", t_Img, t_rImgArrow, t_rImgArrow.rect, t_rImgArrow.rect, new LingoPropList([symbol("bgColor"), t_ShirtCol]))
+  var t_rImgInside = callNamed("getMember", "avatar.arrow.32").image;
+  callMethod("copyPixels", t_Img, t_rImgInside, callNamed("rect", 2, 2, 28, 23), t_rImgInside.rect)
+  setMeProp(_me, "m_rImgArrow", t_Img);
+  setMeProp(_me, "m_rImgArrowAlpha", callMethod("extractAlpha", t_rImgArrow));
+  }
+
+  }
+
+}
+

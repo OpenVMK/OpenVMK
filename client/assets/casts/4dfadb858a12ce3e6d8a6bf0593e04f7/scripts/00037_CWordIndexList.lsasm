@@ -1,0 +1,176 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] setProp          262
+  [0006] pushInt8         1
+  [0008] pushArgListNoRet 1
+  [0010] extCall          12
+  [0012] ret             
+end
+
+on deconstruct
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] setProp          262
+  [0006] pushInt8         1
+  [0008] pushArgListNoRet 1
+  [0010] extCall          12
+  [0012] ret             
+end
+
+on importWords
+  [0000] getMovieProp     233
+  [0002] setLocal         0
+  [0004] getParam         1
+  [0006] pushArgList      1
+  [0008] extCall          264
+  [0011] pushArgList      1
+  [0013] extCall          263
+  [0016] getObjProp       265
+  [0019] setLocal         1
+  [0021] getLocal         1
+  [0023] pushInt8         2
+  [0025] get              1
+  [0027] setLocal         2
+  [0029] pushInt8         1
+  [0031] setLocal         3
+  [0033] getLocal         3
+  [0035] getLocal         2
+  [0037] ltEq            
+  [0038] jmpIfZ           31
+  [0041] getProp          262
+  [0044] pushZero        
+  [0045] pushZero        
+  [0046] getLocal         3
+  [0048] pushZero        
+  [0049] pushZero        
+  [0050] pushZero        
+  [0051] pushZero        
+  [0052] pushZero        
+  [0053] getLocal         1
+  [0055] getChunk        
+  [0056] pushArgListNoRet 2
+  [0058] objCall          78
+  [0060] pushInt8         1
+  [0062] getLocal         3
+  [0064] add             
+  [0065] setLocal         3
+  [0067] endRepeat        34
+  [0069] getMovieProp     233
+  [0071] getLocal         0
+  [0073] sub             
+  [0074] setLocal         0
+  [0076] ret             
+end
+
+on addWord
+  [0000] getProp          262
+  [0003] getParam         1
+  [0005] pushArgListNoRet 2
+  [0007] objCall          78
+  [0009] ret             
+end
+
+on addWords
+  [0000] getParam         1
+  [0002] peek             0
+  [0004] pushArgList      1
+  [0006] extCall          85
+  [0008] pushInt8         1
+  [0010] peek             0
+  [0012] peek             2
+  [0014] ltEq            
+  [0015] jmpIfZ           27
+  [0018] peek             2
+  [0020] peek             1
+  [0022] pushArgList      2
+  [0024] extCall          86
+  [0026] setLocal         0
+  [0028] getProp          262
+  [0031] getLocal         0
+  [0033] pushArgListNoRet 2
+  [0035] objCall          78
+  [0037] pushInt8         1
+  [0039] add             
+  [0040] endRepeat        30
+  [0042] pop              3
+  [0044] ret             
+end
+
+on wordListRef
+  [0000] getProp          262
+  [0003] pushArgListNoRet 1
+  [0005] extCall          12
+  [0007] ret             
+end
+
+on getIndexOfWord
+  [0000] getProp          262
+  [0003] getParam         1
+  [0005] pushArgList      2
+  [0007] objCall          100
+  [0009] pushArgListNoRet 1
+  [0011] extCall          12
+  [0013] ret             
+end
+
+on getWordOfIndex
+  [0000] getParam         1
+  [0002] getProp          262
+  [0005] getObjProp       85
+  [0007] ltEq            
+  [0008] getParam         1
+  [0010] pushInt8         1
+  [0012] gtEq            
+  [0013] and             
+  [0014] jmpIfZ           19
+  [0017] getProp          262
+  [0020] getParam         1
+  [0022] pushArgList      2
+  [0024] objCall          86
+  [0026] pushArgListNoRet 1
+  [0028] extCall          12
+  [0030] jmp              3
+  [0033] pushCons         0
+  [0035] pushArgListNoRet 1
+  [0037] extCall          12
+  [0039] ret             
+end
+
+on dumpListToMember
+  [0000] pushCons         0
+  [0002] setLocal         0
+  [0004] pushInt8         1
+  [0006] setLocal         1
+  [0008] getLocal         1
+  [0010] getProp          262
+  [0013] getObjProp       85
+  [0015] ltEq            
+  [0016] jmpIfZ           35
+  [0019] getLocal         0
+  [0021] getLocal         1
+  [0023] joinStr         
+  [0024] pushCons         1
+  [0026] joinStr         
+  [0027] getProp          262
+  [0030] getLocal         1
+  [0032] pushArgList      2
+  [0034] objCall          86
+  [0036] joinStr         
+  [0037] pushCons         2
+  [0039] joinStr         
+  [0040] setLocal         0
+  [0042] pushInt8         1
+  [0044] getLocal         1
+  [0046] add             
+  [0047] setLocal         1
+  [0049] endRepeat        41
+  [0051] getParam         1
+  [0053] getLocal         0
+  [0055] setObjProp       265
+  [0058] getParam         1
+  [0060] pushArgListNoRet 1
+  [0062] objCall          274
+  [0065] ret             
+end

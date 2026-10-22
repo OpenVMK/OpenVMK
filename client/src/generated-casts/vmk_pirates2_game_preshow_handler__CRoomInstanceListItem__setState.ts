@@ -1,0 +1,23 @@
+// vmk_pirates2_game_preshow_handler.cct / CRoomInstanceListItem / setState
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function setState(_me: LingoMe, a_bState: LingoValue) {
+  if (callNamed("voidp", a_bState)) {
+  setMeProp(_me, "m_bState", (lingoTruthy(meProp(_me, "m_bState")) ? 0 : 1));
+  callMethod("render", _me)
+  } else {
+  setMeProp(_me, "m_bState", a_bState);
+  callMethod("render", _me)
+  }
+
+  return 1;
+}
+

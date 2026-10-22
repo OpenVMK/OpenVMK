@@ -1,0 +1,16 @@
+// vmk_text_scroller.cct / CTextScroller / Init
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function Init(_me: LingoMe, t_Content: LingoValue) {
+  callMethod("reset", _me)
+  setMeProp(_me, "m_sContent", t_Content);
+}
+

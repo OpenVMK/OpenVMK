@@ -1,0 +1,34 @@
+-- Movie Script
+on trace
+  [0000] ret             
+end
+
+on put
+  [0000] getParam         1
+  [0002] pushCons         0
+  [0004] containsStr     
+  [0005] getParam         2
+  [0007] pushCons         0
+  [0009] containsStr     
+  [0010] or              
+  [0011] jmpIfZ           18
+  [0014] pushCons         1
+  [0016] pushArgListNoRet 1
+  [0018] localCall        0
+  [0020] getParam         0
+  [0022] getParam         1
+  [0024] joinPadStr      
+  [0025] pushArgListNoRet 1
+  [0027] localCall        0
+  [0029] ret             
+end
+
+on handlers
+  [0000] pushSymb         124
+  [0002] pushSymb         215
+  [0004] pushArgList      2
+  [0006] pushList        
+  [0007] pushArgListNoRet 1
+  [0009] extCall          18
+  [0011] ret             
+end

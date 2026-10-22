@@ -1,0 +1,105 @@
+-- Behavior
+on prepareMovie
+  [0000] getTopLevelProp  42
+  [0002] pushInt8         9
+  [0004] setObjProp       43
+  [0006] getTopLevelProp  44
+  [0008] pushInt8         1
+  [0010] setObjProp       45
+  [0012] getTopLevelProp  44
+  [0014] pushCons         0
+  [0016] pushArgList      1
+  [0018] extCall          46
+  [0020] setObjProp       37
+  [0022] pushCons         1
+  [0024] pushArgList      1
+  [0026] extCall          46
+  [0028] pushArgList      1
+  [0030] extCall          48
+  [0032] setGlobal        47
+  [0034] getGlobal        47
+  [0036] pushArgListNoRet 1
+  [0038] objCall          49
+  [0040] pushZero        
+  [0041] setLocal         0
+  [0043] ret             
+end
+
+on alertHook
+  [0000] getGlobal        50
+  [0002] pushInt8         50
+  [0004] gt              
+  [0005] jmpIfZ           9
+  [0008] pushInt8         1
+  [0010] pushArgListNoRet 1
+  [0012] extCall          7
+  [0014] getGlobal        50
+  [0016] pushInt8         1
+  [0018] add             
+  [0019] setGlobal        50
+  [0021] pushZero        
+  [0022] setMovieProp     51
+  [0024] pushZero        
+  [0025] pushArgListNoRet 1
+  [0027] extCall          7
+  [0029] ret             
+end
+
+on stopMovie
+  [0000] getGlobal        47
+  [0002] pushArgList      1
+  [0004] extCall          57
+  [0006] jmpIfZ           15
+  [0009] getGlobal        47
+  [0011] pushArgListNoRet 1
+  [0013] objCall          58
+  [0015] pushArgList      0
+  [0017] extCall          59
+  [0019] setGlobal        47
+  [0021] pushArgListNoRet 0
+  [0023] extCall          60
+  [0025] ret             
+end
+
+on exitFrame
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] extCall          13
+  [0006] jmpIfZ           21
+  [0009] pushArgList      0
+  [0011] theBuiltin       61
+  [0013] pushArgListNoRet 1
+  [0015] extCall          62
+  [0017] getTopLevelProp  44
+  [0019] pushCons         0
+  [0021] pushArgList      1
+  [0023] extCall          46
+  [0025] setObjProp       37
+  [0027] ret             
+end
+
+on streamStatus
+  [0000] pushCons         2
+  [0002] getParam         0
+  [0004] getParam         1
+  [0006] getParam         2
+  [0008] getParam         3
+  [0010] pushArgList      5
+  [0012] pushList        
+  [0013] pushArgListNoRet 1
+  [0015] extCall          33
+  [0017] getParam         1
+  [0019] pushCons         3
+  [0021] eq              
+  [0022] jmpIfZ           12
+  [0025] getParam         0
+  [0027] pushCons         4
+  [0029] joinPadStr      
+  [0030] pushArgListNoRet 1
+  [0032] extCall          33
+  [0034] ret             
+end
+
+on ExportStageDescriptions
+  [0000] ret             
+end

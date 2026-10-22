@@ -1,0 +1,98 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] extCall          31
+  [0004] setProp          587
+  [0007] pushInt8         1
+  [0009] pushArgListNoRet 1
+  [0011] extCall          53
+  [0013] ret             
+end
+
+on deconstruct
+  [0000] getProp          587
+  [0003] pushArgList      1
+  [0005] extCall          73
+  [0007] not             
+  [0008] jmpIfZ           14
+  [0011] getProp          587
+  [0014] pushArgList      1
+  [0016] objCall          62
+  [0018] pushArgListNoRet 1
+  [0020] extCall          67
+  [0022] pushInt8         1
+  [0024] pushArgListNoRet 1
+  [0026] extCall          53
+  [0028] ret             
+end
+
+on move
+  [0000] ret             
+end
+
+on setup
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          58
+  [0006] pushArgList      1
+  [0008] objCall          59
+  [0010] getChainedProp   296
+  [0013] pushArgList      1
+  [0015] objCall          435
+  [0018] setLocal         0
+  [0020] getLocal         0
+  [0022] pushZero        
+  [0023] ntEq            
+  [0024] jmpIfZ           8
+  [0027] getLocal         0
+  [0029] setProp          587
+  [0032] ret             
+end
+
+on rattle
+  [0000] getProp          587
+  [0003] pushArgList      1
+  [0005] extCall          73
+  [0007] jmpIfZ           10
+  [0010] getParam         0
+  [0012] pushArgListNoRet 1
+  [0014] objCall          585
+  [0017] getProp          587
+  [0020] pushArgList      1
+  [0022] extCall          73
+  [0024] not             
+  [0025] jmpIfZ           16
+  [0028] getProp          587
+  [0031] pushSymb         372
+  [0034] getParam         1
+  [0036] pushArgListNoRet 3
+  [0038] objCall          456
+  [0041] ret             
+end
+
+on tremble
+  [0000] getProp          587
+  [0003] pushArgList      1
+  [0005] extCall          73
+  [0007] jmpIfZ           10
+  [0010] getParam         0
+  [0012] pushArgListNoRet 1
+  [0014] objCall          585
+  [0017] getProp          587
+  [0020] pushArgList      1
+  [0022] extCall          73
+  [0024] not             
+  [0025] jmpIfZ           14
+  [0028] getProp          587
+  [0031] pushSymb         414
+  [0034] pushArgListNoRet 2
+  [0036] objCall          456
+  [0039] ret             
+end
+
+on GetRattler
+  [0000] getProp          587
+  [0003] pushArgListNoRet 1
+  [0005] extCall          53
+  [0007] ret             
+end

@@ -1,0 +1,34 @@
+-- Parent Script
+on construct
+  [0000] pushZero        
+  [0001] setProp          121
+  [0003] pushZero        
+  [0004] setProp          122
+  [0006] pushZero        
+  [0007] setProp          123
+  [0009] ret             
+end
+
+on deconstruct
+  [0000] ret             
+end
+
+on setQuestStatus
+  [0000] getParam         1
+  [0002] setProp          122
+  [0004] getParam         2
+  [0006] setProp          123
+  [0008] ret             
+end
+
+on getQuestStatus
+  [0000] pushSymb         126
+  [0002] getProp          122
+  [0004] pushSymb         127
+  [0006] getProp          123
+  [0008] pushArgList      4
+  [0010] pushPropList    
+  [0011] pushArgListNoRet 1
+  [0013] extCall          28
+  [0015] ret             
+end

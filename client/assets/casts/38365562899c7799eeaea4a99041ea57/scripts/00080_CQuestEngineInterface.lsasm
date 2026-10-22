@@ -1,0 +1,143 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] pushPropList    
+  [0003] setProp          8
+  [0005] pushInt8         1
+  [0007] pushArgListNoRet 1
+  [0009] extCall          9
+  [0011] ret             
+end
+
+on deconstruct
+  [0000] pushArgList      0
+  [0002] pushPropList    
+  [0003] setProp          8
+  [0005] pushInt8         1
+  [0007] pushArgListNoRet 1
+  [0009] extCall          9
+  [0011] ret             
+end
+
+on AddID
+  [0000] getProp          8
+  [0002] getParam         1
+  [0004] pushSymb         11
+  [0006] pushArgList      0
+  [0008] extCall          12
+  [0010] pushSymb         13
+  [0012] pushArgList      0
+  [0014] extCall          12
+  [0016] pushSymb         14
+  [0018] pushArgList      0
+  [0020] extCall          12
+  [0022] pushSymb         15
+  [0024] pushArgList      0
+  [0026] extCall          12
+  [0028] pushArgList      8
+  [0030] pushPropList    
+  [0031] pushArgListNoRet 3
+  [0033] objCall          16
+  [0035] ret             
+end
+
+on RequestQuestPhoto
+  [0000] getProp          8
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          18
+  [0008] setLocal         0
+  [0010] getLocal         0
+  [0012] pushArgList      1
+  [0014] extCall          19
+  [0016] jmpIfZ           11
+  [0019] getParam         0
+  [0021] getParam         1
+  [0023] pushArgListNoRet 2
+  [0025] objCall          2
+  [0027] pushArgList      0
+  [0029] extCall          20
+  [0031] getParam         1
+  [0033] getParam         0
+  [0035] pushArgList      1
+  [0037] objCall          21
+  [0039] pushArgListNoRet 3
+  [0041] objCall          22
+  [0043] ret             
+end
+
+on catalogPhotoInfo
+  [0000] getParam         1
+  [0002] getChainedProp   24
+  [0004] pushSymb         25
+  [0006] pushInt8         2
+  [0008] pushArgList      3
+  [0010] objCall          26
+  [0012] setLocal         0
+  [0014] getParam         1
+  [0016] getChainedProp   24
+  [0018] pushSymb         25
+  [0020] pushInt8         3
+  [0022] getParam         1
+  [0024] getChainedProp   24
+  [0026] pushSymb         25
+  [0028] pushArgList      2
+  [0030] objCall          27
+  [0032] pushArgList      4
+  [0034] objCall          26
+  [0036] setLocal         1
+  [0038] getProp          8
+  [0040] getParam         2
+  [0042] pushArgList      2
+  [0044] objCall          18
+  [0046] setLocal         2
+  [0048] getLocal         2
+  [0050] pushArgList      1
+  [0052] extCall          19
+  [0054] not             
+  [0055] jmpIfZ           15
+  [0058] getLocal         2
+  [0060] getLocal         1
+  [0062] setObjProp       14
+  [0064] getLocal         2
+  [0066] getLocal         0
+  [0068] setObjProp       15
+  [0070] ret             
+end
+
+on catalogPhotoData
+  [0000] getProp          8
+  [0002] getParam         2
+  [0004] pushArgList      2
+  [0006] objCall          18
+  [0008] setLocal         0
+  [0010] getLocal         0
+  [0012] pushArgList      1
+  [0014] extCall          19
+  [0016] not             
+  [0017] jmpIfZ           15
+  [0020] getLocal         0
+  [0022] getParam         1
+  [0024] setObjProp       13
+  [0026] pushSymb         32
+  [0028] pushArgListNoRet 1
+  [0030] extCall          31
+  [0032] ret             
+end
+
+on getPhoto
+  [0000] getProp          8
+  [0002] getParam         1
+  [0004] pushArgList      2
+  [0006] objCall          18
+  [0008] pushArgListNoRet 1
+  [0010] extCall          9
+  [0012] ret             
+end
+
+on GetPhotos
+  [0000] getProp          8
+  [0002] pushArgListNoRet 1
+  [0004] extCall          9
+  [0006] ret             
+end

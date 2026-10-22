@@ -1,0 +1,174 @@
+-- Parent Script
+on new
+  [0000] getParam         1
+  [0002] pushArgList      1
+  [0004] extCall          180
+  [0006] setProp          219
+  [0008] getParam         2
+  [0010] pushArgList      1
+  [0012] extCall          180
+  [0014] setProp          220
+  [0016] getParam         3
+  [0018] pushArgList      1
+  [0020] extCall          180
+  [0022] setProp          221
+  [0024] getParam         0
+  [0026] pushArgListNoRet 1
+  [0028] extCall          94
+  [0030] ret             
+end
+
+on ilk
+  [0000] pushSymb         272
+  [0003] pushArgListNoRet 1
+  [0005] extCall          94
+  [0007] ret             
+end
+
+on length
+  [0000] getProp          219
+  [0002] pushArgList      1
+  [0004] extCall          326
+  [0007] getProp          220
+  [0009] pushArgList      1
+  [0011] extCall          326
+  [0014] add             
+  [0015] getProp          221
+  [0017] pushArgList      1
+  [0019] extCall          326
+  [0022] add             
+  [0023] pushInt8         3
+  [0025] div             
+  [0026] pushArgListNoRet 1
+  [0028] extCall          94
+  [0030] ret             
+end
+
+on add
+  [0000] getProp          219
+  [0002] getParam         1
+  [0004] getObjProp       219
+  [0006] add             
+  [0007] getProp          220
+  [0009] getParam         1
+  [0011] getObjProp       220
+  [0013] add             
+  [0014] getProp          221
+  [0016] getParam         1
+  [0018] getObjProp       221
+  [0020] add             
+  [0021] pushArgList      3
+  [0023] extCall          272
+  [0026] pushArgListNoRet 1
+  [0028] extCall          94
+  [0030] ret             
+end
+
+on substract
+  [0000] getProp          219
+  [0002] getParam         1
+  [0004] getObjProp       219
+  [0006] sub             
+  [0007] getProp          220
+  [0009] getParam         1
+  [0011] getObjProp       220
+  [0013] sub             
+  [0014] getProp          221
+  [0016] getParam         1
+  [0018] getObjProp       221
+  [0020] sub             
+  [0021] pushArgList      3
+  [0023] extCall          272
+  [0026] pushArgListNoRet 1
+  [0028] extCall          94
+  [0030] ret             
+end
+
+on multiply
+  [0000] getProp          219
+  [0002] getParam         1
+  [0004] mul             
+  [0005] getProp          220
+  [0007] getParam         1
+  [0009] mul             
+  [0010] getProp          221
+  [0012] getParam         1
+  [0014] mul             
+  [0015] pushArgList      3
+  [0017] extCall          272
+  [0020] pushArgListNoRet 1
+  [0022] extCall          94
+  [0024] ret             
+end
+
+on divide
+  [0000] getProp          219
+  [0002] getParam         1
+  [0004] div             
+  [0005] getProp          220
+  [0007] getParam         1
+  [0009] div             
+  [0010] getProp          221
+  [0012] getParam         1
+  [0014] div             
+  [0015] pushArgList      3
+  [0017] extCall          272
+  [0020] pushArgListNoRet 1
+  [0022] extCall          94
+  [0024] ret             
+end
+
+on dot
+  [0000] getProp          219
+  [0002] getParam         1
+  [0004] getObjProp       219
+  [0006] mul             
+  [0007] getProp          220
+  [0009] getParam         1
+  [0011] getObjProp       220
+  [0013] mul             
+  [0014] add             
+  [0015] getProp          221
+  [0017] getParam         1
+  [0019] getObjProp       221
+  [0021] mul             
+  [0022] add             
+  [0023] pushArgListNoRet 1
+  [0025] extCall          94
+  [0027] ret             
+end
+
+on cross
+  [0000] getProp          220
+  [0002] getParam         1
+  [0004] getObjProp       221
+  [0006] mul             
+  [0007] getProp          221
+  [0009] getParam         1
+  [0011] getObjProp       220
+  [0013] mul             
+  [0014] sub             
+  [0015] getProp          221
+  [0017] getParam         1
+  [0019] getObjProp       219
+  [0021] mul             
+  [0022] getProp          219
+  [0024] getParam         1
+  [0026] getObjProp       221
+  [0028] mul             
+  [0029] sub             
+  [0030] getProp          219
+  [0032] getParam         1
+  [0034] getObjProp       220
+  [0036] mul             
+  [0037] getProp          220
+  [0039] getParam         1
+  [0041] getObjProp       219
+  [0043] mul             
+  [0044] sub             
+  [0045] pushArgList      3
+  [0047] extCall          272
+  [0050] pushArgListNoRet 1
+  [0052] extCall          94
+  [0054] ret             
+end

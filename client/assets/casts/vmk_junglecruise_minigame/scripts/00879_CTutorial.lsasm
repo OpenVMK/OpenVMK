@@ -1,0 +1,165 @@
+-- Parent Script
+on construct
+  [0000] getMovieProp     198
+  [0002] pushFloat32      1148846080
+  [0007] div             
+  [0008] setProp          849
+  [0011] pushArgList      0
+  [0013] pushPropList    
+  [0014] setProp          850
+  [0017] pushArgList      0
+  [0019] pushPropList    
+  [0020] setProp          851
+  [0023] pushFloat32      1259902592
+  [0028] setProp          852
+  [0031] pushFloat32      1232348160
+  [0036] setProp          853
+  [0039] pushZero        
+  [0040] pushZero        
+  [0041] pushZero        
+  [0042] pushArgList      3
+  [0044] extCall          156
+  [0046] setProp          854
+  [0049] getParam         0
+  [0051] pushArgList      1
+  [0053] objCall          89
+  [0055] pushArgListNoRet 1
+  [0057] extCall          98
+  [0059] pushInt8         1
+  [0061] pushArgListNoRet 1
+  [0063] extCall          52
+  [0065] ret             
+end
+
+on deconstruct
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          89
+  [0006] pushArgListNoRet 1
+  [0008] extCall          330
+  [0011] pushInt8         1
+  [0013] pushArgListNoRet 1
+  [0015] extCall          52
+  [0017] ret             
+end
+
+on ReadTutorial
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          125
+  [0006] pushArgListNoRet 1
+  [0008] extCall          676
+  [0011] pushCons         1
+  [0013] pushArgList      1
+  [0015] extCall          72
+  [0017] setProp          850
+  [0020] pushCons         2
+  [0022] pushArgList      1
+  [0024] extCall          72
+  [0026] setProp          852
+  [0029] pushCons         3
+  [0031] pushArgList      1
+  [0033] extCall          72
+  [0035] setProp          853
+  [0038] pushCons         4
+  [0040] pushArgList      1
+  [0042] extCall          72
+  [0044] setProp          854
+  [0047] getMovieProp     198
+  [0049] pushFloat32      1148846080
+  [0054] div             
+  [0055] setProp          855
+  [0058] getProp          855
+  [0061] setProp          849
+  [0064] ret             
+end
+
+on GetSomethingToSay
+  [0000] pushArgList      0
+  [0002] pushPropList    
+  [0003] setLocal         0
+  [0005] getProp          851
+  [0008] getObjProp       171
+  [0010] pushZero        
+  [0011] gt              
+  [0012] jmpIfZ           8
+  [0015] getProp          851
+  [0018] setLocal         0
+  [0020] pushArgList      0
+  [0022] pushPropList    
+  [0023] setProp          851
+  [0026] getLocal         0
+  [0028] pushArgListNoRet 1
+  [0030] extCall          52
+  [0032] ret             
+end
+
+on GetBoatSlowPoint
+  [0000] getProp          852
+  [0003] pushArgListNoRet 1
+  [0005] extCall          52
+  [0007] ret             
+end
+
+on GetAvatarToBoatPoint
+  [0000] getProp          853
+  [0003] pushArgListNoRet 1
+  [0005] extCall          52
+  [0007] ret             
+end
+
+on GetAvatarWaitPos
+  [0000] getProp          854
+  [0003] pushArgListNoRet 1
+  [0005] extCall          52
+  [0007] ret             
+end
+
+on update
+  [0000] getMovieProp     198
+  [0002] pushFloat32      1148846080
+  [0007] div             
+  [0008] getProp          849
+  [0011] sub             
+  [0012] setLocal         0
+  [0014] getLocal         0
+  [0016] getProp          855
+  [0019] sub             
+  [0020] setLocal         1
+  [0022] getLocal         0
+  [0024] setProp          855
+  [0027] getProp          850
+  [0030] peek             0
+  [0032] pushArgList      1
+  [0034] extCall          171
+  [0036] pushInt8         1
+  [0038] peek             0
+  [0040] peek             2
+  [0042] ltEq            
+  [0043] jmpIfZ           49
+  [0046] peek             2
+  [0048] peek             1
+  [0050] pushArgList      2
+  [0052] extCall          115
+  [0054] setLocal         2
+  [0056] getProp          855
+  [0059] getLocal         2
+  [0061] getObjProp       233
+  [0063] lt              
+  [0064] getProp          855
+  [0067] getLocal         1
+  [0069] add             
+  [0070] getLocal         2
+  [0072] getObjProp       233
+  [0074] gtEq            
+  [0075] and             
+  [0076] jmpIfZ           11
+  [0079] getLocal         2
+  [0081] getObjProp       857
+  [0084] setProp          851
+  [0087] pushInt8         1
+  [0089] add             
+  [0090] endRepeat        52
+  [0092] pop              3
+  [0094] ret             
+end

@@ -1,0 +1,115 @@
+-- Movie Script
+on CreateDownloadManager
+  [0000] pushSymb         266
+  [0003] pushCons         0
+  [0005] pushArgList      1
+  [0007] extCall          213
+  [0009] pushArgList      2
+  [0011] extCall          157
+  [0013] pushArgListNoRet 1
+  [0015] extCall          6
+  [0017] ret             
+end
+
+on RemoveDownloadManager
+  [0000] pushSymb         266
+  [0003] pushArgList      1
+  [0005] extCall          158
+  [0007] pushArgListNoRet 1
+  [0009] extCall          6
+  [0011] ret             
+end
+
+on getDownloadManager
+  [0000] pushArgList      0
+  [0002] extCall          151
+  [0004] setLocal         0
+  [0006] getLocal         0
+  [0008] pushSymb         266
+  [0011] pushArgList      2
+  [0013] objCall          160
+  [0015] jmpIfZ           19
+  [0018] getLocal         0
+  [0020] pushSymb         266
+  [0023] pushArgList      2
+  [0025] objCall          159
+  [0027] pushArgListNoRet 1
+  [0029] extCall          6
+  [0031] jmp              11
+  [0034] pushArgList      0
+  [0036] localCall        0
+  [0038] pushArgListNoRet 1
+  [0040] extCall          6
+  [0042] ret             
+end
+
+on queueDownload
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] getParam         3
+  [0012] pushArgList      5
+  [0014] objCall          267
+  [0017] pushArgListNoRet 1
+  [0019] extCall          6
+  [0021] ret             
+end
+
+on abortDownLoad
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          272
+  [0011] pushArgListNoRet 1
+  [0013] extCall          6
+  [0015] ret             
+end
+
+on registerDownloadCallback
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] getParam         3
+  [0012] pushArgList      5
+  [0014] objCall          248
+  [0016] pushArgListNoRet 1
+  [0018] extCall          6
+  [0020] ret             
+end
+
+on getDownLoadPercent
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          255
+  [0010] pushArgListNoRet 1
+  [0012] extCall          6
+  [0014] ret             
+end
+
+on downloadExists
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          59
+  [0010] pushArgListNoRet 1
+  [0012] extCall          6
+  [0014] ret             
+end
+
+on printDownloads
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          185
+  [0008] pushArgListNoRet 1
+  [0010] extCall          6
+  [0012] ret             
+end

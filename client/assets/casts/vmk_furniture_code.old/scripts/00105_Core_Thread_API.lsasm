@@ -1,0 +1,141 @@
+-- Movie Script
+on CreateThreadManager
+  [0000] pushSymb         212
+  [0002] pushCons         0
+  [0004] pushArgList      1
+  [0006] extCall          213
+  [0008] pushArgList      2
+  [0010] extCall          157
+  [0012] pushArgListNoRet 1
+  [0014] extCall          6
+  [0016] ret             
+end
+
+on RemoveThreadManager
+  [0000] pushSymb         212
+  [0002] pushArgList      1
+  [0004] extCall          158
+  [0006] pushArgListNoRet 1
+  [0008] extCall          6
+  [0010] ret             
+end
+
+on getThreadManager
+  [0000] pushArgList      0
+  [0002] extCall          151
+  [0004] setLocal         0
+  [0006] getLocal         0
+  [0008] pushSymb         212
+  [0010] pushArgList      2
+  [0012] objCall          160
+  [0014] jmpIfZ           18
+  [0017] getLocal         0
+  [0019] pushSymb         212
+  [0021] pushArgList      2
+  [0023] objCall          159
+  [0025] pushArgListNoRet 1
+  [0027] extCall          6
+  [0029] jmp              11
+  [0032] pushArgList      0
+  [0034] localCall        0
+  [0036] pushArgListNoRet 1
+  [0038] extCall          6
+  [0040] ret             
+end
+
+on createThread
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] pushArgList      3
+  [0010] objCall          137
+  [0012] pushArgListNoRet 1
+  [0014] extCall          6
+  [0016] ret             
+end
+
+on removeThread
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          184
+  [0010] pushArgListNoRet 1
+  [0012] extCall          6
+  [0014] ret             
+end
+
+on getThread
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          147
+  [0010] pushArgListNoRet 1
+  [0012] extCall          6
+  [0014] ret             
+end
+
+on threadExists
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          59
+  [0010] pushArgListNoRet 1
+  [0012] extCall          6
+  [0014] ret             
+end
+
+on initThread
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          208
+  [0010] pushArgListNoRet 1
+  [0012] extCall          6
+  [0014] ret             
+end
+
+on initExistingThreads
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          216
+  [0008] pushArgListNoRet 1
+  [0010] extCall          6
+  [0012] ret             
+end
+
+on closeThread
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          210
+  [0010] pushArgListNoRet 1
+  [0012] extCall          6
+  [0014] ret             
+end
+
+on closeExistingThreads
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          218
+  [0008] pushArgListNoRet 1
+  [0010] extCall          6
+  [0012] ret             
+end
+
+on printThreads
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          185
+  [0008] pushArgListNoRet 1
+  [0010] extCall          6
+  [0012] ret             
+end

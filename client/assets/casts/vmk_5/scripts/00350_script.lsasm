@@ -1,0 +1,175 @@
+-- Behavior
+on netError
+  [0000] getTopLevelProp  133
+  [0002] pushInt8         9
+  [0004] setObjProp       134
+  [0006] pushCons         0
+  [0008] pushArgList      1
+  [0010] extCall          44
+  [0012] pushCons         1
+  [0014] eq              
+  [0015] jmpIfZ           22
+  [0018] pushCons         2
+  [0020] pushArgList      1
+  [0022] extCall          23
+  [0024] pushCons         3
+  [0026] setObjProp       135
+  [0028] getTopLevelProp  45
+  [0030] pushInt8         1
+  [0032] setObjProp       46
+  [0034] jmp              9
+  [0037] getTopLevelProp  45
+  [0039] pushInt8         1
+  [0041] setObjProp       46
+  [0043] getTopLevelProp  45
+  [0045] pushCons         4
+  [0047] pushArgList      1
+  [0049] extCall          64
+  [0051] setObjProp       122
+  [0053] pushCons         5
+  [0055] pushArgList      1
+  [0057] extCall          64
+  [0059] pushArgList      1
+  [0061] extCall          137
+  [0063] setGlobal        136
+  [0065] getGlobal        136
+  [0067] pushArgListNoRet 1
+  [0069] objCall          138
+  [0071] pushZero        
+  [0072] setLocal         0
+  [0074] ret             
+end
+
+on castLib
+  [0000] getGlobal        139
+  [0002] pushInt8         1
+  [0004] add             
+  [0005] setGlobal        139
+  [0007] pushZero        
+  [0008] setMovieProp     21
+  [0010] pushInt8         1
+  [0012] pushArgListNoRet 1
+  [0014] extCall          18
+  [0016] ret             
+end
+
+on fileName
+  [0000] getGlobal        136
+  [0002] pushArgList      1
+  [0004] extCall          145
+  [0006] jmpIfZ           15
+  [0009] getGlobal        136
+  [0011] pushArgListNoRet 1
+  [0013] objCall          146
+  [0015] pushArgList      0
+  [0017] extCall          43
+  [0019] setGlobal        136
+  [0021] pushArgListNoRet 0
+  [0023] extCall          147
+  [0025] ret             
+end
+
+on getPropRef
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] extCall          51
+  [0006] jmpIfZ           11
+  [0009] pushArgList      0
+  [0011] theBuiltin       148
+  [0013] pushArgListNoRet 1
+  [0015] extCall          149
+  [0017] getTopLevelProp  45
+  [0019] pushCons         4
+  [0021] pushArgList      1
+  [0023] extCall          64
+  [0025] setObjProp       122
+  [0027] ret             
+end
+
+on name
+  [0000] pushCons         6
+  [0002] getParam         0
+  [0004] getParam         1
+  [0006] getParam         2
+  [0008] getParam         3
+  [0010] pushArgList      5
+  [0012] pushList        
+  [0013] pushArgListNoRet 1
+  [0015] localCall        11
+  [0017] getParam         1
+  [0019] pushCons         7
+  [0021] eq              
+  [0022] jmpIfZ           12
+  [0025] getParam         0
+  [0027] pushCons         8
+  [0029] joinPadStr      
+  [0030] pushArgListNoRet 1
+  [0032] localCall        11
+  [0034] ret             
+end
+
+on startClient
+  [0000] ret             
+end
+
+on memberNum
+  [0000] pushInt16        1067
+  [0003] pushArgListNoRet 1
+  [0005] extCall          18
+  [0007] ret             
+end
+
+on gotoNetPage
+  [0000] pushInt16        600
+  [0003] pushArgListNoRet 1
+  [0005] extCall          18
+  [0007] ret             
+end
+
+on m_sSecretCode
+  [0000] pushZero        
+  [0001] pushArgListNoRet 1
+  [0003] extCall          18
+  [0005] ret             
+end
+
+on tCode
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] pushArgListNoRet 1
+  [0005] extCall          18
+  [0007] ret             
+end
+
+on m_sSecretCode2
+  [0000] ret             
+end
+
+on preloadMode
+  [0000] getParam         0
+  [0002] pushCons         9
+  [0004] containsStr     
+  [0005] jmpIfZ           32
+  [0008] pushCons         10
+  [0010] pushArgList      1
+  [0012] extCall          62
+  [0014] pushInt16        1049
+  [0017] pushSymb         119
+  [0019] getTopLevelProp  45
+  [0021] getObjProp       155
+  [0023] pushSymb         119
+  [0025] getTopLevelProp  45
+  [0027] getObjProp       156
+  [0029] pushArgList      4
+  [0031] extCall          77
+  [0033] pushArgListNoRet 3
+  [0035] objCall          157
+  [0037] getParam         0
+  [0039] getParam         1
+  [0041] joinPadStr      
+  [0042] getParam         2
+  [0044] joinPadStr      
+  [0045] pushArgListNoRet 1
+  [0047] extCall          21
+  [0049] ret             
+end

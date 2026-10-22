@@ -1,0 +1,79 @@
+-- Parent Script
+on construct
+  [0000] pushSymb         5
+  [0002] pushCons         0
+  [0004] pushArgList      1
+  [0006] extCall          6
+  [0008] pushArgList      2
+  [0010] extCall          4
+  [0012] setProp          3
+  [0014] getProp          3
+  [0016] pushSymb         7
+  [0018] pushArgList      0
+  [0020] extCall          8
+  [0022] pushArgListNoRet 3
+  [0024] objCall          9
+  [0026] pushCons         1
+  [0028] pushCons         1
+  [0030] pushArgList      1
+  [0032] extCall          6
+  [0034] pushArgList      2
+  [0036] extCall          4
+  [0038] setProp          10
+  [0040] pushInt8         1
+  [0042] pushArgListNoRet 1
+  [0044] extCall          11
+  [0046] ret             
+end
+
+on deconstruct
+  [0000] getProp          3
+  [0002] pushArgListNoRet 1
+  [0004] objCall          13
+  [0006] pushArgList      0
+  [0008] extCall          8
+  [0010] setProp          3
+  [0012] pushCons         1
+  [0014] pushArgListNoRet 1
+  [0016] extCall          14
+  [0018] pushArgList      0
+  [0020] extCall          8
+  [0022] setProp          10
+  [0024] pushInt8         1
+  [0026] pushArgListNoRet 1
+  [0028] extCall          11
+  [0030] ret             
+end
+
+on CreateXML
+  [0000] getProp          3
+  [0002] pushArgList      1
+  [0004] extCall          15
+  [0006] jmpIfZ           9
+  [0009] getParam         0
+  [0011] pushArgListNoRet 1
+  [0013] objCall          0
+  [0015] getProp          3
+  [0017] getChainedProp   16
+  [0019] pushArgList      1
+  [0021] objCall          17
+  [0023] setLocal         0
+  [0025] getLocal         0
+  [0027] pushArgListNoRet 1
+  [0029] objCall          13
+  [0031] getLocal         0
+  [0033] getProp          10
+  [0035] setObjProp       18
+  [0037] getParam         1
+  [0039] pushArgList      1
+  [0041] extCall          19
+  [0043] jmpIfZ           11
+  [0046] getLocal         0
+  [0048] getParam         1
+  [0050] pushArgListNoRet 2
+  [0052] objCall          20
+  [0054] getLocal         0
+  [0056] pushArgListNoRet 1
+  [0058] extCall          11
+  [0060] ret             
+end

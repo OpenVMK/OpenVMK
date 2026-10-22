@@ -1,0 +1,20 @@
+// fda7c1aad86c08c12d1a13ae95116821.cct / CBspTree / setup_import
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function setup_import(_me: LingoMe, a_rXML: LingoValue) {
+  setMeProp(_me, "m_pRoot", callNamed("createObject", symbol("temp"), "CBspTreeNode"));
+  setThePropOf(meProp(_me, "m_pRoot"), "dimensions", callNamed("value", callMethod("GetParam", a_rXML, "DIM")));
+  for (var i = 1; i <= callMethod("count", a_rXML); ++i) {
+  callMethod("setup_import_node", _me, meProp(_me, "m_pRoot"), a_rXML[i])
+  }
+
+}
+

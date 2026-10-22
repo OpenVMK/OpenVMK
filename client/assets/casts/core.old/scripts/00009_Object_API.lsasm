@@ -1,0 +1,418 @@
+-- Movie Script
+on CreateObjectManager
+  [0000] getGlobal        15
+  [0002] pushArgList      1
+  [0004] extCall          49
+  [0006] jmpIfZ           12
+  [0009] getGlobal        15
+  [0011] pushArgListNoRet 1
+  [0013] extCall          5
+  [0015] jmp              55
+  [0018] pushCons         0
+  [0020] pushZero        
+  [0021] getField        
+  [0022] pushCons         1
+  [0024] pushArgList      2
+  [0026] extCall          51
+  [0028] pushCons         2
+  [0030] pushArgList      2
+  [0032] objCall          52
+  [0034] pushArgList      1
+  [0036] extCall          50
+  [0038] pushInt8         1
+  [0040] pushArgList      2
+  [0042] objCall          53
+  [0044] setLocal         0
+  [0046] getLocal         0
+  [0048] pushArgList      1
+  [0050] extCall          54
+  [0052] pushArgList      1
+  [0054] objCall          55
+  [0056] setGlobal        15
+  [0058] getGlobal        15
+  [0060] pushArgListNoRet 1
+  [0062] objCall          56
+  [0064] getGlobal        15
+  [0066] pushArgListNoRet 1
+  [0068] extCall          5
+  [0070] ret             
+end
+
+on RemoveObjectManager
+  [0000] getGlobal        15
+  [0002] pushArgList      1
+  [0004] extCall          14
+  [0006] jmpIfZ           11
+  [0009] pushZero        
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] jmp              21
+  [0017] getGlobal        15
+  [0019] pushArgListNoRet 1
+  [0021] objCall          58
+  [0023] pushArgList      0
+  [0025] extCall          59
+  [0027] setGlobal        15
+  [0029] pushInt8         1
+  [0031] pushArgListNoRet 1
+  [0033] extCall          5
+  [0035] ret             
+end
+
+on getObjectManager
+  [0000] getGlobal        15
+  [0002] pushArgList      1
+  [0004] extCall          49
+  [0006] jmpIfZ           12
+  [0009] getGlobal        15
+  [0011] pushArgListNoRet 1
+  [0013] extCall          5
+  [0015] jmp              11
+  [0018] pushArgList      0
+  [0020] localCall        0
+  [0022] pushArgListNoRet 1
+  [0024] extCall          5
+  [0026] ret             
+end
+
+on createObject
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] setLocal         0
+  [0005] pushInt8         2
+  [0007] setLocal         1
+  [0009] getLocal         1
+  [0011] pushArgList      0
+  [0013] theBuiltin       60
+  [0015] ltEq            
+  [0016] jmpIfZ           83
+  [0019] getLocal         1
+  [0021] pushArgList      1
+  [0023] extCall          61
+  [0025] setLocal         2
+  [0027] getLocal         2
+  [0029] pushArgList      1
+  [0031] extCall          62
+  [0033] jmpIfZ           49
+  [0036] getLocal         2
+  [0038] peek             0
+  [0040] pushArgList      1
+  [0042] extCall          63
+  [0044] pushInt8         1
+  [0046] peek             0
+  [0048] peek             2
+  [0050] ltEq            
+  [0051] jmpIfZ           26
+  [0054] peek             2
+  [0056] peek             1
+  [0058] pushArgList      2
+  [0060] extCall          53
+  [0062] setLocal         3
+  [0064] getLocal         0
+  [0066] getLocal         3
+  [0068] pushArgListNoRet 2
+  [0070] objCall          64
+  [0072] pushInt8         1
+  [0074] add             
+  [0075] endRepeat        29
+  [0077] pop              3
+  [0079] jmp              11
+  [0082] getLocal         0
+  [0084] getLocal         2
+  [0086] pushArgListNoRet 2
+  [0088] objCall          64
+  [0090] pushInt8         1
+  [0092] getLocal         1
+  [0094] add             
+  [0095] setLocal         1
+  [0097] endRepeat        88
+  [0099] pushArgList      0
+  [0101] localCall        2
+  [0103] getParam         0
+  [0105] getLocal         0
+  [0107] pushArgList      3
+  [0109] objCall          13
+  [0111] pushArgListNoRet 1
+  [0113] extCall          5
+  [0115] ret             
+end
+
+on removeObject
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          70
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on getObject
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          25
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on objectExists
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          24
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on printObjects
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          71
+  [0008] pushArgListNoRet 1
+  [0010] extCall          5
+  [0012] ret             
+end
+
+on registerObject
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] pushArgList      3
+  [0010] objCall          33
+  [0012] pushArgListNoRet 1
+  [0014] extCall          5
+  [0016] ret             
+end
+
+on unregisterObject
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          34
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on createManager
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] setLocal         0
+  [0005] pushInt8         2
+  [0007] setLocal         1
+  [0009] getLocal         1
+  [0011] pushArgList      0
+  [0013] theBuiltin       60
+  [0015] ltEq            
+  [0016] jmpIfZ           83
+  [0019] getLocal         1
+  [0021] pushArgList      1
+  [0023] extCall          61
+  [0025] setLocal         2
+  [0027] getLocal         2
+  [0029] pushArgList      1
+  [0031] extCall          62
+  [0033] jmpIfZ           49
+  [0036] getLocal         2
+  [0038] peek             0
+  [0040] pushArgList      1
+  [0042] extCall          63
+  [0044] pushInt8         1
+  [0046] peek             0
+  [0048] peek             2
+  [0050] ltEq            
+  [0051] jmpIfZ           26
+  [0054] peek             2
+  [0056] peek             1
+  [0058] pushArgList      2
+  [0060] extCall          53
+  [0062] setLocal         3
+  [0064] getLocal         0
+  [0066] getLocal         3
+  [0068] pushArgListNoRet 2
+  [0070] objCall          64
+  [0072] pushInt8         1
+  [0074] add             
+  [0075] endRepeat        29
+  [0077] pop              3
+  [0079] jmp              11
+  [0082] getLocal         0
+  [0084] getLocal         2
+  [0086] pushArgListNoRet 2
+  [0088] objCall          64
+  [0090] pushInt8         1
+  [0092] getLocal         1
+  [0094] add             
+  [0095] setLocal         1
+  [0097] endRepeat        88
+  [0099] pushArgList      0
+  [0101] localCall        2
+  [0103] setLocal         4
+  [0105] getLocal         4
+  [0107] getParam         0
+  [0109] getLocal         0
+  [0111] pushArgList      3
+  [0113] objCall          13
+  [0115] setLocal         5
+  [0117] getLocal         4
+  [0119] getParam         0
+  [0121] pushArgListNoRet 2
+  [0123] objCall          40
+  [0125] getLocal         4
+  [0127] getParam         0
+  [0129] getLocal         5
+  [0131] pushArgListNoRet 3
+  [0133] objCall          73
+  [0135] getLocal         5
+  [0137] pushArgListNoRet 1
+  [0139] extCall          5
+  [0141] ret             
+end
+
+on removeManager
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          70
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on getManager
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          37
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on managerExists
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          38
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on printManagers
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          71
+  [0008] pushArgListNoRet 1
+  [0010] extCall          5
+  [0012] ret             
+end
+
+on registerManager
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          40
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on unregisterManager
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          41
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on receivePrepare
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          42
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on removePrepare
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          43
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on receiveUpdate
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          44
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on removeUpdate
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          45
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on pauseUpdate
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          46
+  [0008] pushArgListNoRet 1
+  [0010] extCall          5
+  [0012] ret             
+end
+
+on resumeUpdate
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          47
+  [0008] pushArgListNoRet 1
+  [0010] extCall          5
+  [0012] ret             
+end
+
+on unpauseUpdate
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] pushArgList      1
+  [0006] objCall          47
+  [0008] pushArgListNoRet 1
+  [0010] extCall          5
+  [0012] ret             
+end

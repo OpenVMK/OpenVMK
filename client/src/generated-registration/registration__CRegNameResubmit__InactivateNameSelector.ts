@@ -1,0 +1,17 @@
+// registration.cct / CRegNameResubmit / InactivateNameSelector
+
+import {
+  callMethod, callNamed, chunkOf, float, globalVar, lingoBinary, lingoTruthy,
+  meProp, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function InactivateNameSelector(_me: LingoMe, _this: LingoValue) {
+  callMethod("inActivate", meProp(_me, "m_rComponentsPage"), meProp(_me, "m_sActiveName"))
+  setMeProp(_me, "m_sActiveName", "");
+  var t_rClientElement = callMethod("getElement", meProp(_me, "m_rWindow"), "reg.namelist");
+  var t_rImg = callMethod("render", meProp(_me, "m_rComponentsPage"));
+  callMethod("feedImage", t_rClientElement, t_rImg)
+}
+

@@ -1,0 +1,63 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] extCall          40
+  [0004] setProp          51
+  [0006] pushInt8         1
+  [0008] pushArgListNoRet 1
+  [0010] extCall          12
+  [0012] ret             
+end
+
+on deconstruct
+  [0000] pushInt8         1
+  [0002] pushArgListNoRet 1
+  [0004] extCall          12
+  [0006] ret             
+end
+
+on ShowLoadingWindow
+  [0000] pushCons         0
+  [0002] setLocal         0
+  [0004] pushArgList      0
+  [0006] extCall          53
+  [0008] pushCons         1
+  [0010] pushArgList      2
+  [0012] extCall          52
+  [0014] setProp          51
+  [0016] pushSymb         54
+  [0018] getLocal         0
+  [0020] pushSymb         55
+  [0022] pushZero        
+  [0023] pushSymb         56
+  [0025] getParam         0
+  [0027] pushArgList      1
+  [0029] objCall          9
+  [0031] pushSymb         57
+  [0033] pushInt8         1
+  [0035] pushArgList      8
+  [0037] pushPropList    
+  [0038] setLocal         1
+  [0040] getProp          51
+  [0042] pushArgList      1
+  [0044] extCall          58
+  [0046] jmpIfZ           11
+  [0049] getProp          51
+  [0051] getLocal         1
+  [0053] pushArgListNoRet 2
+  [0055] objCall          59
+  [0057] ret             
+end
+
+on RemoveLoadingWindow
+  [0000] getProp          51
+  [0002] pushArgList      1
+  [0004] extCall          58
+  [0006] jmpIfZ           13
+  [0009] getProp          51
+  [0011] pushArgList      1
+  [0013] objCall          9
+  [0015] pushArgListNoRet 1
+  [0017] extCall          62
+  [0019] ret             
+end

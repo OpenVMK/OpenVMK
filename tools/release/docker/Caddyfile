@@ -1,0 +1,13 @@
+# HTTPS front door for `docker compose --profile https up -d`.
+# Serves https://$VMK_DOMAIN and gets its certificate automatically.
+{$VMK_DOMAIN} {
+	# The game socket. The client is told wss://$VMK_DOMAIN/game (set
+	# VMK_PUBLIC_GAME_URL); the camera's second socket is /game/photo.
+	handle /game* {
+		reverse_proxy vmk:8080
+	}
+	# Everything else: login page, the game client and its art.
+	handle {
+		reverse_proxy vmk:5199
+	}
+}

@@ -1,0 +1,134 @@
+-- Parent Script
+on construct
+  [0000] pushSymb         6
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          7
+  [0008] pushSymb         2
+  [0010] pushArgListNoRet 3
+  [0012] extCall          5
+  [0014] pushSymb         8
+  [0016] getParam         0
+  [0018] pushArgList      1
+  [0020] objCall          7
+  [0022] pushSymb         3
+  [0024] pushArgListNoRet 3
+  [0026] extCall          5
+  [0028] pushSymb         149
+  [0030] getParam         0
+  [0032] pushArgList      1
+  [0034] objCall          7
+  [0036] pushSymb         142
+  [0038] pushArgListNoRet 3
+  [0040] extCall          5
+  [0042] pushInt8         1
+  [0044] pushArgListNoRet 1
+  [0046] extCall          9
+  [0048] ret             
+end
+
+on deconstruct
+  [0000] pushSymb         6
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          7
+  [0008] pushSymb         2
+  [0010] pushArgListNoRet 3
+  [0012] extCall          11
+  [0014] pushSymb         8
+  [0016] getParam         0
+  [0018] pushArgList      1
+  [0020] objCall          7
+  [0022] pushSymb         3
+  [0024] pushArgListNoRet 3
+  [0026] extCall          11
+  [0028] pushInt8         1
+  [0030] pushArgListNoRet 1
+  [0032] extCall          9
+  [0034] ret             
+end
+
+on Init
+  [0000] pushInt8         1
+  [0002] setLocal         0
+  [0004] ret             
+end
+
+on LoadAnim
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          119
+  [0006] pushCons         0
+  [0008] pushArgList      2
+  [0010] objCall          139
+  [0012] setLocal         0
+  [0014] pushCons         1
+  [0016] pushArgList      1
+  [0018] extCall          97
+  [0020] setLocal         1
+  [0022] getLocal         0
+  [0024] pushArgList      1
+  [0026] extCall          141
+  [0028] jmpIfZ           61
+  [0031] getLocal         0
+  [0033] pushArgList      1
+  [0035] objCall          54
+  [0037] pushArgList      1
+  [0039] objCall          55
+  [0041] setLocal         2
+  [0043] getLocal         2
+  [0045] pushArgList      1
+  [0047] extCall          141
+  [0049] jmpIfZ           8
+  [0052] getLocal         2
+  [0054] pushZero        
+  [0055] setObjProp       144
+  [0057] getLocal         1
+  [0059] pushArgList      1
+  [0061] extCall          141
+  [0063] jmpIfZ           23
+  [0066] getLocal         1
+  [0068] getLocal         0
+  [0070] pushArgList      1
+  [0072] objCall          97
+  [0074] pushArgList      1
+  [0076] objCall          145
+  [0078] pushCons         0
+  [0080] pushCons         2
+  [0082] pushArgListNoRet 4
+  [0084] objCall          146
+  [0086] jmp              9
+  [0089] pushCons         3
+  [0091] pushArgListNoRet 1
+  [0093] extCall          42
+  [0095] ret             
+end
+
+on UnloadAnim
+  [0000] ret             
+end
+
+on BreatheFire
+  [0000] getParam         1
+  [0002] pushArgList      1
+  [0004] extCall          105
+  [0006] not             
+  [0007] jmpIfZ           19
+  [0010] getParam         1
+  [0012] pushInt8         24
+  [0014] mul             
+  [0015] pushFloat32      1148846080
+  [0020] div             
+  [0021] setLocal         0
+  [0023] jmp              6
+  [0026] pushZero        
+  [0027] setLocal         0
+  [0029] pushSymb         150
+  [0031] pushCons         0
+  [0033] pushSymb         151
+  [0035] pushCons         4
+  [0037] getParam         1
+  [0039] pushArgListNoRet 5
+  [0041] extCall          20
+  [0043] ret             
+end

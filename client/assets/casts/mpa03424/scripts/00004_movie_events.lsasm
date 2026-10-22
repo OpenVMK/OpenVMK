@@ -1,0 +1,101 @@
+-- Movie Script
+on prepareMovie
+  [0000] pushZero        
+  [0001] setMovieProp     101
+  [0003] getGlobal        41
+  [0005] setLocal         0
+  [0007] pushArgListNoRet 0
+  [0009] extCall          102
+  [0011] getLocal         0
+  [0013] setGlobal        41
+  [0015] pushCons         0
+  [0017] pushArgList      1
+  [0019] extCall          19
+  [0021] pushArgList      1
+  [0023] objCall          0
+  [0025] setGlobal        103
+  [0027] ret             
+end
+
+on smoothTo
+  [0000] getParam         0
+  [0002] setLocal         0
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         0
+  [0010] sub             
+  [0011] getParam         2
+  [0013] div             
+  [0014] add             
+  [0015] setParam         0
+  [0017] getParam         0
+  [0019] getLocal         0
+  [0021] eq              
+  [0022] getParam         0
+  [0024] getParam         1
+  [0026] lt              
+  [0027] and             
+  [0028] jmpIfZ           10
+  [0031] getParam         0
+  [0033] pushInt8         1
+  [0035] add             
+  [0036] setParam         0
+  [0038] getParam         0
+  [0040] getLocal         0
+  [0042] eq              
+  [0043] getParam         0
+  [0045] getParam         1
+  [0047] gt              
+  [0048] and             
+  [0049] jmpIfZ           10
+  [0052] getParam         0
+  [0054] pushInt8         1
+  [0056] sub             
+  [0057] setParam         0
+  [0059] getParam         0
+  [0061] pushArgListNoRet 1
+  [0063] extCall          32
+  [0065] ret             
+end
+
+on addImage
+  [0000] getParam         2
+  [0002] pushArgList      1
+  [0004] extCall          459
+  [0007] jmpIfZ           11
+  [0010] pushZero        
+  [0011] pushZero        
+  [0012] pushArgList      2
+  [0014] extCall          73
+  [0016] setParam         2
+  [0018] getParam         1
+  [0020] getObjProp       68
+  [0022] setLocal         0
+  [0024] getParam         0
+  [0026] getParam         1
+  [0028] getLocal         0
+  [0030] getParam         2
+  [0032] pushInt8         1
+  [0034] pushArgList      2
+  [0036] objCall          44
+  [0038] getParam         2
+  [0040] pushInt8         2
+  [0042] pushArgList      2
+  [0044] objCall          44
+  [0046] getParam         2
+  [0048] pushInt8         1
+  [0050] pushArgList      2
+  [0052] objCall          44
+  [0054] getParam         2
+  [0056] pushInt8         2
+  [0058] pushArgList      2
+  [0060] objCall          44
+  [0062] pushArgList      4
+  [0064] extCall          68
+  [0066] add             
+  [0067] getLocal         0
+  [0069] getParam         3
+  [0071] pushArgListNoRet 5
+  [0073] objCall          109
+  [0075] ret             
+end

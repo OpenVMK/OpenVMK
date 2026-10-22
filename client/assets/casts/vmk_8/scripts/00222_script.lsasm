@@ -1,0 +1,90 @@
+-- Behavior
+on m_sSecretCode3
+  [0000] getTopLevelProp  71
+  [0002] pushInt8         9
+  [0004] setObjProp       72
+  [0006] getTopLevelProp  73
+  [0008] pushInt8         1
+  [0010] setObjProp       74
+  [0012] getTopLevelProp  73
+  [0014] pushCons         0
+  [0016] pushArgList      1
+  [0018] extCall          75
+  [0020] setObjProp       66
+  [0022] pushCons         1
+  [0024] pushArgList      1
+  [0026] extCall          75
+  [0028] pushArgList      1
+  [0030] extCall          77
+  [0032] setGlobal        76
+  [0034] getGlobal        76
+  [0036] pushArgListNoRet 1
+  [0038] objCall          78
+  [0040] ret             
+end
+
+on hex_md5
+  [0000] pushZero        
+  [0001] pushArgListNoRet 1
+  [0003] extCall          18
+  [0005] ret             
+end
+
+on GET
+  [0000] getGlobal        76
+  [0002] pushArgList      1
+  [0004] extCall          84
+  [0006] jmpIfZ           15
+  [0009] getGlobal        76
+  [0011] pushArgListNoRet 1
+  [0013] objCall          85
+  [0015] pushArgList      0
+  [0017] extCall          43
+  [0019] setGlobal        76
+  [0021] pushArgListNoRet 0
+  [0023] extCall          86
+  [0025] ret             
+end
+
+on prepareMovie
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] extCall          49
+  [0006] jmpIfZ           21
+  [0009] pushArgList      0
+  [0011] theBuiltin       87
+  [0013] pushArgListNoRet 1
+  [0015] extCall          88
+  [0017] getTopLevelProp  73
+  [0019] pushCons         0
+  [0021] pushArgList      1
+  [0023] extCall          75
+  [0025] setObjProp       66
+  [0027] ret             
+end
+
+on alertHook
+  [0000] pushCons         2
+  [0002] getParam         0
+  [0004] getParam         1
+  [0006] getParam         2
+  [0008] getParam         3
+  [0010] pushArgList      5
+  [0012] pushList        
+  [0013] pushArgListNoRet 1
+  [0015] extCall          90
+  [0017] getParam         1
+  [0019] pushCons         3
+  [0021] eq              
+  [0022] jmpIfZ           12
+  [0025] getParam         0
+  [0027] pushCons         4
+  [0029] joinPadStr      
+  [0030] pushArgListNoRet 1
+  [0032] extCall          90
+  [0034] ret             
+end
+
+on stopMovie
+  [0000] ret             
+end

@@ -1,0 +1,116 @@
+VMK - what's new
+================
+
+v1.1.4 (2026-10-21) - Turnstiles, room smoke and fire
+-----------------------------------------------------
+
+  - Turnstiles turn properly whichever way they face. Facing two of the
+    four directions, a turned turnstile (green, purple, red, blue and
+    gold) was drawn mirrored, with its door hanging loose in front of the
+    post. The scoreboard fix in v1.1.3 caused this; scoreboards still
+    light up on the right side.
+  - The campfire in the tent sits on its logs again instead of floating
+    above them, and the tent's smoke is back.
+  - Missing animations restored: the water and smoke in the cannon room,
+    the robot in Galaxy Imports and the smoke from Ned's cauldron.
+  - Smoke is see-through and fades as it rises, instead of being drawn
+    solid, and the cannon room smoke no longer blinks.
+  - Editing a room description: the typing cursor follows the text onto
+    the next line, instead of staying at the end of the first line.
+
+v1.1.3 (2026-10-19) - One-way teleporters, scoreboard lights
+------------------------------------------------------------
+
+  - Scoreboards light up on the right side when turned. Facing one way,
+    the lit bars of the gold, purple, red, blue and green scoreboards were
+    drawn on the wrong face of the board; they now follow the board's
+    direction. The same fix applies to a few other animated items that
+    reuse one side's art for the other.
+  - Ride teleporters only work one way round, as in the original. A ride
+    enters a teleporter only through its open end (the side it faces, where
+    its track joins) and comes out of the partner's open end. Riding into
+    the back or side of a teleporter now ends the ride in front of it.
+    If a ride in your room stopped teleporting after this update, turn the
+    entry teleporter so its open end faces back along the track.
+
+v1.1.2 (2026-10-19) - Getting off rides
+---------------------------------------
+
+  - At the end of a ride you now get off onto the next tile, the way you
+    were riding, instead of being left standing on the last piece of
+    track. If that tile is taken (furniture, more track, someone standing
+    there, or the edge of the room) you stay on the last piece and can
+    walk off to any free tile beside it.
+  - Same when a ride comes out of a teleporter with no track beyond it:
+    you get off on the far side of the teleporter.
+
+  Tip for ride teleporters: the open end of the dark-ride teleporters
+  (Alice, Peter Pan, Royal) faces one way. At the end of a track, turn it
+  so the open end faces back along the track; the partner faces the way
+  you leave. Rides work either way round; this is only how it looks.
+
+v1.1.1 (2026-10-19) - Teleporter fixes
+--------------------------------------
+
+  - Teleporters bought in the shop now come as a linked pair. The Space
+    Mountain Teleporter used to arrive as one lone half, which could never
+    send anyone anywhere. Staff "give" in /hk hands out pairs too.
+    A lone half bought before this update still does nothing; staff can
+    give the player a new pair.
+  - The Magic Show Water Trap Teleporter and the Tower of Terror Elevator
+    Teleporter now work. They had no teleport pad, so stepping on them did
+    nothing.
+  - Ride teleporters (River, Yeti, Space Mountain, Waterslide, Alice and
+    Peter Pan) now carry the ride on. A ride that reaches a teleporter
+    whose partner is placed comes out of the partner, in the same room or
+    another guest room, and keeps riding along the track there. Before, the
+    ride just stopped on the teleporter.
+
+v1.1.0 (2026-10-19) - Faster loading
+------------------------------------
+
+Loading was slow when VMK runs on a server: every file costs a trip over
+the internet, and the game made thousands of them. Measured with 100 ms
+of network delay per request (a typical internet connection):
+
+  First visit, start-up to the park map
+    Before:  1,826 downloads, 56 MB, still downloading after a minute
+    Now:       204 downloads, 17 MB, map in about 17 seconds
+
+  Coming back (reload / next visit)
+    Game code and unchanged art are kept by the browser: a return visit to
+    Main Street downloads about 1 MB instead of re-downloading everything.
+
+  Entering a room (Main Street -> Town Square)
+    About 3 MB and 6 seconds, down from roughly twice that.
+
+  Release size
+    5.2 GB -> 2.0 GB. Every picture is stored losslessly compressed: the
+    pixels are identical, the files are about a quarter of the size.
+
+What changed:
+  - The server compresses text and game code (gzip/brotli) and lets
+    browsers keep files they already have; a changed file is always
+    fetched fresh.
+  - Pictures are fetched many at a time in one download instead of one by
+    one.
+  - The next areas in the loading queue start downloading while the current
+    one is still being set up (the order the game sets them up in is
+    unchanged).
+  - Less work for the browser after logging in: the pause before the map
+    appears is roughly halved.
+
+Also fixed:
+  - Fantasyland Courtyard: walking onto the exit spots by the Alice and
+    Peter Pan rides put you into the ride's room for free, without riding.
+    That was never intended, so those exits are now disabled. Boarding
+    through the turnstiles is unchanged.
+  - Christmas snow drew as a strip of white boxes along the top of every
+    Christmas room. It now falls as white flakes, as in the original.
+
+Seasons: the Christmas decorations are OFF by default. To turn a season on,
+set VMK_SEASON=xmas (or halloween) for both servers; see SELF-HOSTING.md.
+
+For hosts: nothing to configure. A reverse proxy (e.g. Caddy) in front of
+VMK needs no compression setting of its own - VMK compresses its own
+responses.

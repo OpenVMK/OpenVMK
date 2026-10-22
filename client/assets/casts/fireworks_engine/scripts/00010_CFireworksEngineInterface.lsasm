@@ -1,0 +1,121 @@
+-- Parent Script
+on construct
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          29
+  [0006] setProp          211
+  [0008] pushSymb         213
+  [0010] pushCons         1
+  [0012] pushArgList      2
+  [0014] extCall          193
+  [0016] setProp          212
+  [0018] ret             
+end
+
+on deconstruct
+  [0000] getProp          212
+  [0002] pushArgList      1
+  [0004] objCall          165
+  [0006] pushArgListNoRet 1
+  [0008] extCall          198
+  [0010] ret             
+end
+
+on SetParticleSystem
+  [0000] getProp          212
+  [0002] getParam         1
+  [0004] pushArgListNoRet 2
+  [0006] objCall          206
+  [0008] ret             
+end
+
+on SetAutoExplode
+  [0000] getProp          212
+  [0002] getParam         1
+  [0004] pushArgListNoRet 2
+  [0006] objCall          207
+  [0008] ret             
+end
+
+on ExplodeBomb
+  [0000] getProp          212
+  [0002] getParam         1
+  [0004] getParam         2
+  [0006] getParam         3
+  [0008] getParam         4
+  [0010] getParam         5
+  [0012] pushArgListNoRet 6
+  [0014] objCall          208
+  [0016] ret             
+end
+
+on ShootAFirework
+  [0000] getProp          211
+  [0002] pushArgList      1
+  [0004] extCall          0
+  [0006] setLocal         0
+  [0008] getParam         1
+  [0010] pushArgList      1
+  [0012] extCall          221
+  [0014] setLocal         1
+  [0016] getLocal         1
+  [0018] pushArgList      1
+  [0020] extCall          33
+  [0022] jmpIfZ           16
+  [0025] getParam         0
+  [0027] getParam         1
+  [0029] pushCons         2
+  [0031] joinStr         
+  [0032] pushSymb         209
+  [0034] pushArgListNoRet 3
+  [0036] extCall          222
+  [0038] getLocal         0
+  [0040] getLocal         1
+  [0042] getParam         3
+  [0044] pushArgListNoRet 3
+  [0046] objCall          223
+  [0048] getLocal         0
+  [0050] getParam         2
+  [0052] pushArgListNoRet 2
+  [0054] objCall          138
+  [0056] getLocal         0
+  [0058] pushSymb         224
+  [0060] pushInt16        5000
+  [0063] pushSymb         225
+  [0065] pushCons         3
+  [0067] pushArgList      4
+  [0069] pushPropList    
+  [0070] pushSymb         226
+  [0072] pushInt8         1
+  [0074] pushArgList      2
+  [0076] pushPropList    
+  [0077] pushArgList      2
+  [0079] pushList        
+  [0080] pushArgListNoRet 2
+  [0082] objCall          227
+  [0084] getProp          212
+  [0086] getLocal         0
+  [0088] pushArgListNoRet 2
+  [0090] objCall          228
+  [0092] getLocal         0
+  [0094] pushArgListNoRet 1
+  [0096] extCall          36
+  [0098] ret             
+end
+
+on GetBombSound
+  [0000] getParam         1
+  [0002] pushArgList      1
+  [0004] extCall          221
+  [0006] setLocal         0
+  [0008] getLocal         0
+  [0010] pushSymb         234
+  [0012] pushArgList      2
+  [0014] objCall          35
+  [0016] getParam         2
+  [0018] pushArgList      2
+  [0020] objCall          35
+  [0022] pushArgListNoRet 1
+  [0024] extCall          36
+  [0026] ret             
+end

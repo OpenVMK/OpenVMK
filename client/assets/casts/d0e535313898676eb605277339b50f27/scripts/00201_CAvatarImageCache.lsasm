@@ -1,0 +1,73 @@
+-- Parent Script
+on construct
+  [0000] pushArgList      0
+  [0002] pushPropList    
+  [0003] setProp          1495
+  [0006] ret             
+end
+
+on deconstruct
+  [0000] pushArgList      0
+  [0002] pushPropList    
+  [0003] setProp          1495
+  [0006] ret             
+end
+
+on getImage
+  [0000] getProp          1495
+  [0003] getParam         1
+  [0005] pushArgList      2
+  [0007] objCall          77
+  [0009] setLocal         0
+  [0011] getLocal         0
+  [0013] pushZero        
+  [0014] gt              
+  [0015] jmpIfZ           17
+  [0018] getProp          1495
+  [0021] getLocal         0
+  [0023] pushArgList      2
+  [0025] objCall          72
+  [0027] setLocal         1
+  [0029] jmp              64
+  [0032] getParam         1
+  [0034] pushArgList      1
+  [0036] extCall          249
+  [0038] jmpIfZ           55
+  [0041] getParam         1
+  [0043] pushArgList      1
+  [0045] extCall          250
+  [0047] setLocal         2
+  [0049] getLocal         2
+  [0051] getChainedProp   246
+  [0053] pushArgList      1
+  [0055] objCall          79
+  [0057] setLocal         3
+  [0059] pushSymb         246
+  [0061] getLocal         3
+  [0063] pushSymb         247
+  [0065] getLocal         2
+  [0067] getObjProp       251
+  [0069] pushSymb         248
+  [0071] getLocal         3
+  [0073] pushArgList      1
+  [0075] objCall          252
+  [0077] pushArgList      6
+  [0079] pushPropList    
+  [0080] setLocal         1
+  [0082] getProp          1495
+  [0085] getParam         1
+  [0087] getLocal         1
+  [0089] pushArgListNoRet 3
+  [0091] objCall          234
+  [0093] getLocal         1
+  [0095] pushArgListNoRet 1
+  [0097] extCall          44
+  [0099] ret             
+end
+
+on PrintImageCache
+  [0000] getProp          1495
+  [0003] pushArgListNoRet 1
+  [0005] extCall          44
+  [0007] ret             
+end

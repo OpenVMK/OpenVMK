@@ -1,0 +1,29 @@
+-- Behavior
+on tracea
+  [0000] ret             
+end
+
+on put
+  [0000] getParam         1
+  [0002] pushCons         0
+  [0004] containsStr     
+  [0005] getParam         2
+  [0007] pushCons         0
+  [0009] containsStr     
+  [0010] or              
+  [0011] jmpIfZ           9
+  [0014] pushCons         1
+  [0016] pushArgListNoRet 1
+  [0018] extCall          21
+  [0020] ret             
+end
+
+on handlers
+  [0000] pushSymb         71
+  [0002] pushSymb         167
+  [0004] pushArgList      2
+  [0006] pushList        
+  [0007] pushArgListNoRet 1
+  [0009] extCall          18
+  [0011] ret             
+end

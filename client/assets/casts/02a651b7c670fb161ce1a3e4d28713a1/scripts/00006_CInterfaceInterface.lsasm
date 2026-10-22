@@ -1,0 +1,103 @@
+-- Parent Script
+on construct
+  [0000] pushCons         0
+  [0002] pushCons         1
+  [0004] pushArgList      2
+  [0006] extCall          8
+  [0008] setProp          7
+  [0010] pushCons         2
+  [0012] pushCons         3
+  [0014] pushArgList      2
+  [0016] extCall          8
+  [0018] setProp          9
+  [0020] pushSymb         11
+  [0022] getParam         0
+  [0024] pushArgList      1
+  [0026] objCall          12
+  [0028] pushSymb         2
+  [0030] pushArgListNoRet 3
+  [0032] extCall          10
+  [0034] pushSymb         13
+  [0036] getParam         0
+  [0038] pushArgList      1
+  [0040] objCall          12
+  [0042] pushSymb         3
+  [0044] pushArgListNoRet 3
+  [0046] extCall          10
+  [0048] pushInt8         1
+  [0050] pushArgListNoRet 1
+  [0052] extCall          14
+  [0054] ret             
+end
+
+on deconstruct
+  [0000] getProp          7
+  [0002] pushArgList      1
+  [0004] objCall          12
+  [0006] pushArgListNoRet 1
+  [0008] extCall          16
+  [0010] getProp          9
+  [0012] pushArgList      1
+  [0014] objCall          12
+  [0016] pushArgListNoRet 1
+  [0018] extCall          16
+  [0020] pushSymb         11
+  [0022] getParam         0
+  [0024] pushArgList      1
+  [0026] objCall          12
+  [0028] pushArgListNoRet 2
+  [0030] extCall          17
+  [0032] pushSymb         13
+  [0034] getParam         0
+  [0036] pushArgList      1
+  [0038] objCall          12
+  [0040] pushArgListNoRet 2
+  [0042] extCall          17
+  [0044] pushInt8         1
+  [0046] pushArgListNoRet 1
+  [0048] extCall          14
+  [0050] ret             
+end
+
+on ShowInterface
+  [0000] getParam         0
+  [0002] pushInt8         1
+  [0004] pushArgListNoRet 2
+  [0006] objCall          4
+  [0008] ret             
+end
+
+on HideInterface
+  [0000] getParam         0
+  [0002] pushZero        
+  [0003] pushArgListNoRet 2
+  [0005] objCall          4
+  [0007] ret             
+end
+
+on showMessageBar
+  [0000] getParam         1
+  [0002] jmpIfZ           12
+  [0005] getProp          7
+  [0007] pushArgListNoRet 1
+  [0009] objCall          4
+  [0011] jmp              9
+  [0014] getProp          7
+  [0016] pushArgListNoRet 1
+  [0018] objCall          19
+  [0020] ret             
+end
+
+on getMessageBar
+  [0000] getProp          7
+  [0002] pushArgListNoRet 1
+  [0004] extCall          14
+  [0006] ret             
+end
+
+on GetPopulation
+  [0000] getProp          9
+  [0002] pushArgListNoRet 1
+  [0004] extCall          14
+  [0006] ret             
+end

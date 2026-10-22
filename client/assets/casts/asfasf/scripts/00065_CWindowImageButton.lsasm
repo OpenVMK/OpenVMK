@@ -1,0 +1,209 @@
+-- Parent Script
+on prepare
+  [0000] getParam         0
+  [0002] getParam         0
+  [0004] pushSymb         1115
+  [0007] pushSymb         659
+  [0010] pushArgList      3
+  [0012] objCall          218
+  [0014] setObjProp       1203
+  [0017] getParam         0
+  [0019] pushArgList      0
+  [0021] pushPropList    
+  [0022] setObjProp       1209
+  [0025] getParam         0
+  [0027] getObjProp       1199
+  [0030] pushArgList      1
+  [0032] extCall          14
+  [0034] jmpIfZ           9
+  [0037] getParam         0
+  [0039] pushZero        
+  [0040] setObjProp       1199
+  [0043] getMovieProp     214
+  [0045] setLocal         0
+  [0047] pushCons         0
+  [0049] setMovieProp     214
+  [0051] getParam         0
+  [0053] pushSymb         1115
+  [0056] pushSymb         397
+  [0059] pushArgList      3
+  [0061] objCall          218
+  [0063] setLocal         1
+  [0065] getLocal         1
+  [0067] pushSymb         215
+  [0069] pushInt8         1
+  [0071] getLocal         1
+  [0073] pushSymb         215
+  [0075] pushArgList      2
+  [0077] objCall          63
+  [0079] pushInt8         1
+  [0081] sub             
+  [0082] pushArgList      4
+  [0084] objCall          218
+  [0086] setLocal         1
+  [0088] getLocal         0
+  [0090] setMovieProp     214
+  [0092] getParam         0
+  [0094] pushArgList      0
+  [0096] extCall          59
+  [0098] pushSymb         1205
+  [0101] getLocal         1
+  [0103] pushArgListNoRet 4
+  [0105] objCall          1192
+  [0108] getParam         0
+  [0110] pushArgList      0
+  [0112] extCall          59
+  [0114] pushSymb         1208
+  [0117] getLocal         1
+  [0119] pushArgListNoRet 4
+  [0121] objCall          1192
+  [0124] getParam         0
+  [0126] getParam         0
+  [0128] pushSymb         1205
+  [0131] pushArgList      2
+  [0133] objCall          1193
+  [0136] setObjProp       1117
+  [0139] getParam         0
+  [0141] getChainedProp   1105
+  [0144] getChainedProp   397
+  [0147] getObjProp       1068
+  [0150] setLocal         2
+  [0152] getParam         0
+  [0154] getChainedProp   1104
+  [0157] getParam         0
+  [0159] getObjProp       1117
+  [0162] setObjProp       533
+  [0165] getParam         0
+  [0167] getChainedProp   1104
+  [0170] getLocal         2
+  [0172] setObjProp       1068
+  [0175] getParam         0
+  [0177] getParam         0
+  [0179] getChainedProp   1117
+  [0182] getObjProp       666
+  [0185] setObjProp       982
+  [0188] getParam         0
+  [0190] getParam         0
+  [0192] getChainedProp   1117
+  [0195] getObjProp       667
+  [0198] setObjProp       983
+  [0201] getParam         0
+  [0203] getChainedProp   1105
+  [0206] getParam         0
+  [0208] getObjProp       982
+  [0211] setObjProp       666
+  [0214] getParam         0
+  [0216] getChainedProp   1105
+  [0219] getParam         0
+  [0221] getObjProp       983
+  [0224] setObjProp       667
+  [0227] pushInt8         1
+  [0229] pushArgListNoRet 1
+  [0231] extCall          5
+  [0233] ret             
+end
+
+on changeState
+  [0000] getParam         0
+  [0002] getParam         0
+  [0004] getParam         1
+  [0006] pushArgList      2
+  [0008] objCall          1193
+  [0011] setObjProp       1117
+  [0014] getParam         0
+  [0016] pushArgListNoRet 1
+  [0018] objCall          1070
+  [0021] ret             
+end
+
+on UpdateImageObjects
+  [0000] getParam         1
+  [0002] pushArgList      1
+  [0004] extCall          14
+  [0006] jmpIfZ           13
+  [0009] getParam         0
+  [0011] getObjProp       1100
+  [0014] setParam         1
+  [0016] jmp              26
+  [0019] getParam         1
+  [0021] pushArgList      1
+  [0023] extCall          390
+  [0026] jmpIfZ           16
+  [0029] getParam         1
+  [0031] pushArgList      1
+  [0033] extCall          116
+  [0035] pushArgList      1
+  [0037] extCall          397
+  [0040] setParam         1
+  [0042] getParam         2
+  [0044] pushSymb         1205
+  [0047] eq              
+  [0048] jmpIfZ           13
+  [0051] getParam         3
+  [0053] pushCons         1
+  [0055] joinStr         
+  [0056] setParam         3
+  [0058] jmp              19
+  [0061] getParam         2
+  [0063] pushSymb         1208
+  [0066] eq              
+  [0067] jmpIfZ           10
+  [0070] getParam         3
+  [0072] pushCons         2
+  [0074] joinStr         
+  [0075] setParam         3
+  [0077] getParam         3
+  [0079] pushArgList      1
+  [0081] extCall          116
+  [0083] setLocal         0
+  [0085] getLocal         0
+  [0087] pushZero        
+  [0088] eq              
+  [0089] jmpIfZ           21
+  [0092] getParam         0
+  [0094] pushCons         3
+  [0096] getParam         3
+  [0098] joinPadStr      
+  [0099] pushSymb         1192
+  [0102] pushArgList      3
+  [0104] extCall          78
+  [0106] pushArgListNoRet 1
+  [0108] extCall          5
+  [0110] getLocal         0
+  [0112] pushArgList      1
+  [0114] extCall          397
+  [0117] setLocal         1
+  [0119] getLocal         1
+  [0121] getChainedProp   533
+  [0124] pushArgList      1
+  [0126] objCall          392
+  [0129] setLocal         2
+  [0131] getLocal         2
+  [0133] getObjProp       491
+  [0136] getParam         1
+  [0138] ntEq            
+  [0139] jmpIfZ           10
+  [0142] getLocal         2
+  [0144] getParam         1
+  [0146] setObjProp       491
+  [0149] getParam         0
+  [0151] getChainedProp   1209
+  [0154] getParam         2
+  [0156] pushArgList      1
+  [0158] extCall          457
+  [0161] getLocal         2
+  [0163] pushArgListNoRet 3
+  [0165] objCall          619
+  [0168] ret             
+end
+
+on createButtonImg
+  [0000] getParam         0
+  [0002] getChainedProp   1209
+  [0005] getParam         1
+  [0007] pushArgList      2
+  [0009] objCall          218
+  [0011] pushArgListNoRet 1
+  [0013] extCall          5
+  [0015] ret             
+end

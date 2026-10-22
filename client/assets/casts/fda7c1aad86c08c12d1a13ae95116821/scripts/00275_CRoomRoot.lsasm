@@ -1,0 +1,86 @@
+-- Parent Script
+on construct
+  [0000] getMovieProp     445
+  [0003] getChainedProp   40
+  [0005] getObjProp       42
+  [0007] pushInt8         2
+  [0009] div             
+  [0010] setLocal         0
+  [0012] getMovieProp     445
+  [0015] getChainedProp   40
+  [0017] getObjProp       43
+  [0019] pushInt8         2
+  [0021] div             
+  [0022] setLocal         1
+  [0024] pushInt32        5000000
+  [0029] inv             
+  [0030] setLocal         2
+  [0032] getLocal         0
+  [0034] getLocal         1
+  [0036] getLocal         2
+  [0038] pushArgList      3
+  [0040] extCall          315
+  [0043] setProp          446
+  [0046] pushInt8         1
+  [0048] pushArgListNoRet 1
+  [0050] extCall          13
+  [0052] ret             
+end
+
+on GetRelPos
+  [0000] pushArgList      0
+  [0002] extCall          315
+  [0005] pushArgListNoRet 1
+  [0007] extCall          13
+  [0009] ret             
+end
+
+on SetRelPos
+  [0000] ret             
+end
+
+on GetAbsPos
+  [0000] pushArgList      0
+  [0002] extCall          315
+  [0005] pushArgListNoRet 1
+  [0007] extCall          13
+  [0009] ret             
+end
+
+on SetAbsPos
+  [0000] ret             
+end
+
+on GetScrPos
+  [0000] getProp          446
+  [0003] getObjProp       375
+  [0006] getProp          446
+  [0009] getObjProp       431
+  [0012] getProp          446
+  [0015] getObjProp       432
+  [0018] pushArgList      3
+  [0020] extCall          315
+  [0023] pushArgListNoRet 1
+  [0025] extCall          13
+  [0027] ret             
+end
+
+on SetScrPos
+  [0000] ret             
+end
+
+on GetRoot
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          124
+  [0006] pushArgListNoRet 1
+  [0008] extCall          13
+  [0010] ret             
+end
+
+on GetContext
+  [0000] getParam         0
+  [0002] pushArgListNoRet 1
+  [0004] extCall          13
+  [0006] ret             
+end

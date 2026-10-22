@@ -1,0 +1,62 @@
+-- Movie Script
+on GetLoadingScreenConfigurationObj
+  [0000] pushCons         0
+  [0002] pushArgList      1
+  [0004] extCall          226
+  [0006] pushArgList      1
+  [0008] objCall          227
+  [0010] pushArgList      1
+  [0012] objCall          117
+  [0014] pushArgListNoRet 1
+  [0016] extCall          24
+  [0018] ret             
+end
+
+on PullLoadingScreenConfiguration
+  [0000] pushArgList      0
+  [0002] localCall        0
+  [0004] pushArgListNoRet 1
+  [0006] objCall          524
+  [0009] ret             
+end
+
+on ShowCustomLoadingScreen
+  [0000] pushArgListNoRet 0
+  [0002] localCall        4
+  [0004] pushArgList      0
+  [0006] extCall          127
+  [0008] pushCons         1
+  [0010] pushArgList      2
+  [0012] extCall          105
+  [0014] setGlobal        525
+  [0017] getGlobal        525
+  [0020] getParam         0
+  [0022] pushArgList      2
+  [0024] objCall          390
+  [0027] pushArgListNoRet 1
+  [0029] extCall          24
+  [0031] ret             
+end
+
+on GetCustomLoadingScreenObject
+  [0000] getGlobal        525
+  [0003] pushArgListNoRet 1
+  [0005] extCall          24
+  [0007] ret             
+end
+
+on RemoveCustomLoadingScreen
+  [0000] getGlobal        525
+  [0003] pushArgList      1
+  [0005] extCall          271
+  [0008] jmpIfZ           14
+  [0011] getGlobal        525
+  [0014] pushArgList      1
+  [0016] objCall          30
+  [0018] pushArgListNoRet 1
+  [0020] extCall          106
+  [0022] pushArgList      0
+  [0024] extCall          31
+  [0026] setGlobal        525
+  [0029] ret             
+end

@@ -1,0 +1,137 @@
+-- Parent Script
+on construct
+  [0000] pushSymb         68
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          21
+  [0008] pushSymb         64
+  [0010] pushArgListNoRet 3
+  [0012] extCall          67
+  [0014] pushSymb         69
+  [0016] getParam         0
+  [0018] pushArgList      1
+  [0020] objCall          21
+  [0022] pushSymb         65
+  [0024] pushArgListNoRet 3
+  [0026] extCall          67
+  [0028] pushArgList      0
+  [0030] extCall          28
+  [0032] setProp          70
+  [0034] pushInt8         1
+  [0036] pushArgListNoRet 1
+  [0038] extCall          6
+  [0040] ret             
+end
+
+on deconstruct
+  [0000] pushSymb         68
+  [0002] getParam         0
+  [0004] pushArgList      1
+  [0006] objCall          21
+  [0008] pushArgListNoRet 2
+  [0010] extCall          71
+  [0012] pushSymb         69
+  [0014] getParam         0
+  [0016] pushArgList      1
+  [0018] objCall          21
+  [0020] pushArgListNoRet 2
+  [0022] extCall          71
+  [0024] getProp          70
+  [0026] pushArgList      1
+  [0028] extCall          40
+  [0030] jmpIfZ           13
+  [0033] getProp          70
+  [0035] pushArgList      1
+  [0037] objCall          21
+  [0039] pushArgListNoRet 1
+  [0041] extCall          72
+  [0043] pushInt8         1
+  [0045] pushArgListNoRet 1
+  [0047] extCall          6
+  [0049] ret             
+end
+
+on createManager
+  [0000] pushCons         0
+  [0002] pushCons         1
+  [0004] pushArgList      2
+  [0006] extCall          73
+  [0008] setProp          70
+  [0010] ret             
+end
+
+on activateBillBoards
+  [0000] getProp          70
+  [0002] pushArgList      1
+  [0004] extCall          40
+  [0006] not             
+  [0007] jmpIfZ           9
+  [0010] getParam         0
+  [0012] pushArgListNoRet 1
+  [0014] objCall          64
+  [0016] pushCons         2
+  [0018] pushInt16        1000
+  [0021] pushSymb         66
+  [0023] getParam         0
+  [0025] pushArgList      1
+  [0027] objCall          21
+  [0029] pushArgList      0
+  [0031] extCall          28
+  [0033] pushInt8         1
+  [0035] pushArgListNoRet 6
+  [0037] extCall          74
+  [0039] ret             
+end
+
+on LateActivation
+  [0000] pushSymb         75
+  [0002] pushArgList      1
+  [0004] extCall          36
+  [0006] pushArgList      1
+  [0008] objCall          38
+  [0010] pushArgList      1
+  [0012] objCall          76
+  [0014] setLocal         0
+  [0016] pushInt8         1
+  [0018] setLocal         1
+  [0020] pushInt8         1
+  [0022] setLocal         2
+  [0024] getLocal         2
+  [0026] jmpIfZ           67
+  [0029] pushCons         3
+  [0031] getLocal         0
+  [0033] joinStr         
+  [0034] pushCons         4
+  [0036] joinStr         
+  [0037] getLocal         1
+  [0039] joinStr         
+  [0040] setLocal         3
+  [0042] getLocal         3
+  [0044] pushArgList      1
+  [0046] extCall          134
+  [0048] jmpIfZ           33
+  [0051] getProp          70
+  [0053] pushCons         3
+  [0055] getLocal         0
+  [0057] joinStr         
+  [0058] pushCons         4
+  [0060] joinStr         
+  [0061] getLocal         1
+  [0063] joinStr         
+  [0064] pushArgList      1
+  [0066] extCall          77
+  [0068] pushArgList      1
+  [0070] extCall          79
+  [0072] getLocal         0
+  [0074] pushArgListNoRet 3
+  [0076] objCall          1
+  [0078] jmp              6
+  [0081] pushZero        
+  [0082] setLocal         2
+  [0084] getLocal         1
+  [0086] pushInt8         1
+  [0088] add             
+  [0089] setLocal         1
+  [0091] endRepeat        67
+  [0093] ret             
+end

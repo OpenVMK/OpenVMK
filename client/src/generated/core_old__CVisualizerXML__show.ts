@@ -1,0 +1,21 @@
+// core.old.cct / CVisualizerXML / show
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function show(_me: LingoMe) {
+  if (lingoBinary("eq", meProp(_me, "pVisible"), 0)) {
+  setMeProp(_me, "pVisible", 1);
+  callMethod("moveX", _me, -float(10000))
+  return 1;
+  }
+
+  return 0;
+}
+

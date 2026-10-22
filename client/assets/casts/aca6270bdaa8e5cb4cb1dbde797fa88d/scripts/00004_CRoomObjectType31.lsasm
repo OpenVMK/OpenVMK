@@ -1,0 +1,95 @@
+-- Parent Script
+on construct
+  [0000] pushCons         0
+  [0002] pushArgListNoRet 1
+  [0004] extCall          3
+  [0006] pushArgList      0
+  [0008] extCall          5
+  [0010] setProp          4
+  [0012] pushZero        
+  [0013] setProp          75
+  [0015] pushSymb         0
+  [0017] getParam         0
+  [0019] pushArgList      2
+  [0021] extCall          7
+  [0023] pushArgListNoRet 1
+  [0025] extCall          6
+  [0027] ret             
+end
+
+on deconstruct
+  [0000] pushCons         1
+  [0002] pushArgListNoRet 1
+  [0004] extCall          3
+  [0006] getProp          4
+  [0008] pushArgList      1
+  [0010] extCall          9
+  [0012] not             
+  [0013] jmpIfZ           13
+  [0016] getProp          4
+  [0018] pushArgList      1
+  [0020] objCall          11
+  [0022] pushArgListNoRet 1
+  [0024] extCall          10
+  [0026] pushSymb         1
+  [0028] getParam         0
+  [0030] pushArgList      2
+  [0032] extCall          7
+  [0034] pushArgListNoRet 1
+  [0036] extCall          6
+  [0038] ret             
+end
+
+on select
+  [0000] pushCons         2
+  [0002] pushArgListNoRet 1
+  [0004] extCall          3
+  [0006] pushSymb         13
+  [0008] pushCons         3
+  [0010] pushArgList      2
+  [0012] extCall          12
+  [0014] setProp          4
+  [0016] pushSymb         2
+  [0018] getParam         0
+  [0020] pushArgListNoRet 2
+  [0022] extCall          7
+  [0024] ret             
+end
+
+on update
+  [0000] getProp          75
+  [0002] not             
+  [0003] jmpIfZ           9
+  [0006] getParam         0
+  [0008] pushArgListNoRet 1
+  [0010] objCall          74
+  [0012] ret             
+end
+
+on _Init
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] objCall          71
+  [0006] setLocal         0
+  [0008] getLocal         0
+  [0010] pushArgList      1
+  [0012] objCall          85
+  [0014] pushCons         4
+  [0016] pushArgList      1
+  [0018] extCall          30
+  [0020] pushCons         5
+  [0022] pushArgList      1
+  [0024] extCall          30
+  [0026] pushArgList      2
+  [0028] pushList        
+  [0029] pushInt8         1
+  [0031] pushArgList      1
+  [0033] pushList        
+  [0034] pushArgList      1
+  [0036] pushList        
+  [0037] pushArgListNoRet 3
+  [0039] objCall          78
+  [0041] pushInt8         1
+  [0043] setProp          75
+  [0045] ret             
+end

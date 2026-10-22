@@ -1,0 +1,168 @@
+-- Movie Script
+on prepareMovie
+  [0000] getTopLevelProp  12
+  [0002] pushInt8         9
+  [0004] setObjProp       13
+  [0006] pushCons         0
+  [0008] pushArgList      1
+  [0010] extCall          14
+  [0012] pushCons         1
+  [0014] eq              
+  [0015] jmpIfZ           21
+  [0018] pushCons         2
+  [0020] pushArgList      1
+  [0022] extCall          15
+  [0024] pushCons         3
+  [0026] setObjProp       16
+  [0028] getTopLevelProp  17
+  [0030] pushZero        
+  [0031] setObjProp       18
+  [0033] jmp              8
+  [0036] getTopLevelProp  17
+  [0038] pushZero        
+  [0039] setObjProp       18
+  [0041] getTopLevelProp  17
+  [0043] pushCons         4
+  [0045] pushArgList      1
+  [0047] extCall          19
+  [0049] setObjProp       1
+  [0051] pushCons         5
+  [0053] pushArgList      1
+  [0055] extCall          19
+  [0057] pushArgList      1
+  [0059] extCall          21
+  [0061] setGlobal        20
+  [0063] getGlobal        20
+  [0065] pushArgListNoRet 1
+  [0067] objCall          22
+  [0069] pushZero        
+  [0070] setLocal         0
+  [0072] ret             
+end
+
+on alertHook
+  [0000] getGlobal        23
+  [0002] pushInt8         1
+  [0004] add             
+  [0005] setGlobal        23
+  [0007] pushZero        
+  [0008] setMovieProp     24
+  [0010] pushInt8         1
+  [0012] pushArgListNoRet 1
+  [0014] extCall          25
+  [0016] ret             
+end
+
+on stopMovie
+  [0000] getGlobal        20
+  [0002] pushArgList      1
+  [0004] extCall          31
+  [0006] jmpIfZ           15
+  [0009] getGlobal        20
+  [0011] pushArgListNoRet 1
+  [0013] objCall          32
+  [0015] pushArgList      0
+  [0017] extCall          33
+  [0019] setGlobal        20
+  [0021] pushArgListNoRet 0
+  [0023] extCall          34
+  [0025] ret             
+end
+
+on exitFrame
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] extCall          35
+  [0006] jmpIfZ           11
+  [0009] pushArgList      0
+  [0011] theBuiltin       36
+  [0013] pushArgListNoRet 1
+  [0015] extCall          37
+  [0017] getTopLevelProp  17
+  [0019] pushCons         4
+  [0021] pushArgList      1
+  [0023] extCall          19
+  [0025] setObjProp       1
+  [0027] ret             
+end
+
+on streamStatus
+  [0000] pushCons         6
+  [0002] getParam         0
+  [0004] getParam         1
+  [0006] getParam         2
+  [0008] getParam         3
+  [0010] pushArgList      5
+  [0012] pushList        
+  [0013] pushArgListNoRet 1
+  [0015] localCall        11
+  [0017] getParam         1
+  [0019] pushCons         7
+  [0021] eq              
+  [0022] jmpIfZ           12
+  [0025] getParam         0
+  [0027] pushCons         8
+  [0029] joinPadStr      
+  [0030] pushArgListNoRet 1
+  [0032] localCall        11
+  [0034] ret             
+end
+
+on ExportStageDescriptions
+  [0000] ret             
+end
+
+on stageRight
+  [0000] pushInt16        1067
+  [0003] pushArgListNoRet 1
+  [0005] extCall          25
+  [0007] ret             
+end
+
+on stageBottom
+  [0000] pushInt16        600
+  [0003] pushArgListNoRet 1
+  [0005] extCall          25
+  [0007] ret             
+end
+
+on GetLockState
+  [0000] pushZero        
+  [0001] pushArgListNoRet 1
+  [0003] extCall          25
+  [0005] ret             
+end
+
+on handlers
+  [0000] pushArgList      0
+  [0002] pushList        
+  [0003] pushArgListNoRet 1
+  [0005] extCall          25
+  [0007] ret             
+end
+
+on trace
+  [0000] ret             
+end
+
+on put
+  [0000] getParam         0
+  [0002] pushCons         9
+  [0004] containsStr     
+  [0005] jmpIfZ           32
+  [0008] pushCons         10
+  [0010] pushArgList      1
+  [0012] extCall          43
+  [0014] pushInt16        1049
+  [0017] pushSymb         45
+  [0019] getTopLevelProp  17
+  [0021] getObjProp       46
+  [0023] pushSymb         45
+  [0025] getTopLevelProp  17
+  [0027] getObjProp       47
+  [0029] pushArgList      4
+  [0031] extCall          44
+  [0033] pushArgListNoRet 3
+  [0035] objCall          48
+  [0037] ret             
+end

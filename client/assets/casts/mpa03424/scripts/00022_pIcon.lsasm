@@ -1,0 +1,148 @@
+-- Score Script
+on new
+  [0000] pushZero        
+  [0001] setProp          38
+  [0003] getParam         1
+  [0005] pushSymb         94
+  [0007] pushArgList      2
+  [0009] objCall          44
+  [0011] setLocal         0
+  [0013] getParam         1
+  [0015] pushSymb         92
+  [0017] pushArgList      2
+  [0019] objCall          44
+  [0021] setProp          16
+  [0023] pushInt8         10
+  [0025] getLocal         0
+  [0027] add             
+  [0028] pushArgList      1
+  [0030] extCall          77
+  [0032] setProp          118
+  [0034] getProp          118
+  [0036] getObjProp       120
+  [0038] setProp          119
+  [0040] getProp          118
+  [0042] getObjProp       122
+  [0044] setProp          121
+  [0046] getProp          16
+  [0048] pushSymb         93
+  [0050] eq              
+  [0051] jmpIfZ           52
+  [0054] pushCons         0
+  [0056] pushArgList      1
+  [0058] extCall          19
+  [0060] pushSymb         21
+  [0062] pushCons         1
+  [0064] pushSymb         22
+  [0066] pushCons         2
+  [0068] pushSymb         23
+  [0070] pushInt8         100
+  [0072] pushSymb         16
+  [0074] pushSymb         24
+  [0076] pushArgList      8
+  [0078] pushPropList    
+  [0079] pushArgList      2
+  [0081] objCall          0
+  [0083] setProp          123
+  [0085] getProp          118
+  [0087] pushInt8         1
+  [0089] setObjProp       120
+  [0091] getProp          118
+  [0093] pushInt8         1
+  [0095] setObjProp       122
+  [0097] getProp          118
+  [0099] pushInt8         100
+  [0101] setObjProp       124
+  [0103] getParam         0
+  [0105] pushArgListNoRet 1
+  [0107] extCall          32
+  [0109] ret             
+end
+
+on frameEvent
+  [0000] getProp          16
+  [0002] pushSymb         93
+  [0004] eq              
+  [0005] jmpIfZ           70
+  [0008] getProp          123
+  [0010] pushArgListNoRet 1
+  [0012] objCall          1
+  [0014] getProp          123
+  [0016] getObjProp       23
+  [0018] setLocal         0
+  [0020] getProp          118
+  [0022] getProp          119
+  [0024] getLocal         0
+  [0026] pushFloat32      1120403456
+  [0031] div             
+  [0032] getProp          119
+  [0034] mul             
+  [0035] sub             
+  [0036] setObjProp       120
+  [0038] getProp          118
+  [0040] getProp          121
+  [0042] getLocal         0
+  [0044] pushFloat32      1120403456
+  [0049] div             
+  [0050] getProp          121
+  [0052] mul             
+  [0053] sub             
+  [0054] setObjProp       122
+  [0056] getProp          123
+  [0058] getObjProp       16
+  [0060] pushSymb         79
+  [0062] eq              
+  [0063] jmpIfZ           9
+  [0066] pushSymb         90
+  [0068] pushArgListNoRet 1
+  [0070] extCall          32
+  [0072] jmp              86
+  [0075] getProp          16
+  [0077] pushSymb         125
+  [0079] eq              
+  [0080] jmpIfZ           78
+  [0083] getProp          38
+  [0085] pushInt8         1
+  [0087] add             
+  [0088] setProp          38
+  [0090] getProp          119
+  [0092] pushInt8         30
+  [0094] inv             
+  [0095] getProp          38
+  [0097] getProp          38
+  [0099] mul             
+  [0100] add             
+  [0101] sub             
+  [0102] setProp          119
+  [0104] getProp          121
+  [0106] pushInt8         30
+  [0108] inv             
+  [0109] getProp          38
+  [0111] getProp          38
+  [0113] mul             
+  [0114] add             
+  [0115] sub             
+  [0116] setProp          121
+  [0118] getProp          119
+  [0120] pushInt8         1
+  [0122] lt              
+  [0123] getProp          121
+  [0125] pushInt8         1
+  [0127] lt              
+  [0128] or              
+  [0129] jmpIfZ           17
+  [0132] getProp          118
+  [0134] pushZero        
+  [0135] setObjProp       124
+  [0137] pushSymb         90
+  [0139] pushArgListNoRet 1
+  [0141] extCall          32
+  [0143] jmp              15
+  [0146] getProp          118
+  [0148] getProp          119
+  [0150] setObjProp       120
+  [0152] getProp          118
+  [0154] getProp          121
+  [0156] setObjProp       122
+  [0158] ret             
+end

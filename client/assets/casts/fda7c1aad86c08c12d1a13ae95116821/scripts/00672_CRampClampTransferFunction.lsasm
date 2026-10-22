@@ -1,0 +1,122 @@
+-- Parent Script
+on Init
+  [0000] getParam         1
+  [0002] pushArgList      1
+  [0004] extCall          157
+  [0006] setProp          1200
+  [0009] getParam         2
+  [0011] pushArgList      1
+  [0013] extCall          157
+  [0015] setProp          1201
+  [0018] getParam         3
+  [0020] pushArgList      1
+  [0022] extCall          157
+  [0024] setProp          1202
+  [0027] getParam         4
+  [0029] pushArgList      1
+  [0031] extCall          157
+  [0033] setProp          1203
+  [0036] getParam         5
+  [0038] pushArgList      1
+  [0040] extCall          1205
+  [0043] setProp          1204
+  [0046] ret             
+end
+
+on get
+  [0000] getProp          1204
+  [0003] peek             0
+  [0005] pushSymb         596
+  [0008] eq              
+  [0009] jmpIfZ           34
+  [0012] getProp          1201
+  [0015] getProp          1200
+  [0018] sub             
+  [0019] getProp          1202
+  [0022] div             
+  [0023] getProp          1203
+  [0026] mul             
+  [0027] getParam         1
+  [0029] getProp          1202
+  [0032] div             
+  [0033] mul             
+  [0034] getProp          1200
+  [0037] add             
+  [0038] setLocal         0
+  [0040] jmp              80
+  [0043] peek             0
+  [0045] pushSymb         594
+  [0048] eq              
+  [0049] jmpIfZ           46
+  [0052] getProp          1201
+  [0055] getProp          1200
+  [0058] sub             
+  [0059] getProp          1202
+  [0062] div             
+  [0063] getProp          1203
+  [0066] mul             
+  [0067] getParam         1
+  [0069] getProp          1202
+  [0072] div             
+  [0073] mul             
+  [0074] getProp          1201
+  [0077] add             
+  [0078] getProp          1203
+  [0081] getProp          1201
+  [0084] getProp          1200
+  [0087] sub             
+  [0088] mul             
+  [0089] sub             
+  [0090] setLocal         0
+  [0092] jmp              28
+  [0095] peek             0
+  [0097] pushSymb         1211
+  [0100] eq              
+  [0101] jmpIfZ           19
+  [0104] pop              1
+  [0106] getParam         0
+  [0108] pushCons         0
+  [0110] pushSymb         23
+  [0112] pushArgList      3
+  [0114] extCall          61
+  [0116] pushArgListNoRet 1
+  [0118] extCall          13
+  [0120] pop              1
+  [0122] getLocal         0
+  [0124] getProp          1201
+  [0127] getProp          1200
+  [0130] pushArgList      2
+  [0132] pushList        
+  [0133] pushArgList      1
+  [0135] extCall          617
+  [0138] gt              
+  [0139] jmpIfZ           22
+  [0142] getProp          1201
+  [0145] getProp          1200
+  [0148] pushArgList      2
+  [0150] pushList        
+  [0151] pushArgList      1
+  [0153] extCall          617
+  [0156] setLocal         0
+  [0158] jmp              39
+  [0161] getLocal         0
+  [0163] getProp          1201
+  [0166] getProp          1200
+  [0169] pushArgList      2
+  [0171] pushList        
+  [0172] pushArgList      1
+  [0174] extCall          616
+  [0177] lt              
+  [0178] jmpIfZ           19
+  [0181] getProp          1201
+  [0184] getProp          1200
+  [0187] pushArgList      2
+  [0189] pushList        
+  [0190] pushArgList      1
+  [0192] extCall          616
+  [0195] setLocal         0
+  [0197] getLocal         0
+  [0199] pushArgListNoRet 1
+  [0201] extCall          13
+  [0203] ret             
+end

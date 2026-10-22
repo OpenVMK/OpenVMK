@@ -1,0 +1,15 @@
+// vmk_casual.cct / CCasualGameEngine / RemovePlayer
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function RemovePlayer(_me: LingoMe, _this: LingoValue, a_iAvatarRef: LingoValue, a_rMsg: LingoValue) {
+  callNamed("put", "CCasualGameEngine::RemovePlayer")
+}
+

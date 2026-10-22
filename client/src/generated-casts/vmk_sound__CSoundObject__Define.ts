@@ -1,0 +1,30 @@
+// vmk_sound.cct / CSoundObject / Define
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function Define(_me: LingoMe, a_SndName: LingoValue) {
+  if ((lingoTruthy(callNamed("objectExists", "SoundChannelAllocator")) ? 0 : 1)) {
+  var t_Obj = callNamed("createObject", "SoundChannelAllocator", "CSoundChannelAllocator");
+  callMethod("Define", t_Obj)
+  }
+
+  setMeProp(_me, "m_rSoundChannelObj", undefined);
+  setMeProp(_me, "m_sSndNAme", a_SndName);
+  var t_sndMem = callNamed("member", callNamed("getmemnum", a_SndName));
+  if ((lingoTruthy(callNamed("voidp", t_sndMem)) ? 0 : 1)) {
+  setMeProp(_me, "m_mpSndProps", new LingoPropList([symbol("member"), t_sndMem]));
+  setMeProp(_me, "m_rMemSound", t_sndMem);
+  return 1;
+  } else {
+  return 0;
+  }
+
+}
+

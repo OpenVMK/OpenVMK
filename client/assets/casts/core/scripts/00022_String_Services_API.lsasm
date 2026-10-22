@@ -1,0 +1,226 @@
+-- Movie Script
+on CreateStringServices
+  [0000] pushSymb         213
+  [0002] pushCons         0
+  [0004] pushArgList      1
+  [0006] extCall          100
+  [0008] pushArgList      2
+  [0010] extCall          35
+  [0012] pushArgListNoRet 1
+  [0014] extCall          5
+  [0016] ret             
+end
+
+on RemoveStringServices
+  [0000] pushSymb         213
+  [0002] pushArgList      1
+  [0004] extCall          36
+  [0006] pushArgListNoRet 1
+  [0008] extCall          5
+  [0010] ret             
+end
+
+on getStringServices
+  [0000] pushArgList      0
+  [0002] extCall          29
+  [0004] setLocal         0
+  [0006] getLocal         0
+  [0008] pushSymb         213
+  [0010] pushArgList      2
+  [0012] objCall          38
+  [0014] jmpIfZ           18
+  [0017] getLocal         0
+  [0019] pushSymb         213
+  [0021] pushArgList      2
+  [0023] objCall          37
+  [0025] pushArgListNoRet 1
+  [0027] extCall          5
+  [0029] jmp              11
+  [0032] pushArgList      0
+  [0034] localCall        0
+  [0036] pushArgListNoRet 1
+  [0038] extCall          5
+  [0040] ret             
+end
+
+on convertToPropList
+  [0000] getMovieProp     214
+  [0002] setLocal         0
+  [0004] getParam         1
+  [0006] pushArgList      1
+  [0008] extCall          14
+  [0010] jmpIfZ           7
+  [0013] pushCons         1
+  [0015] setParam         1
+  [0017] getParam         1
+  [0019] setMovieProp     214
+  [0021] pushArgList      0
+  [0023] pushPropList    
+  [0024] setLocal         1
+  [0026] pushInt8         1
+  [0028] setLocal         2
+  [0030] getLocal         2
+  [0032] getParam         0
+  [0034] pushSymb         215
+  [0036] pushArgList      2
+  [0038] objCall          63
+  [0040] ltEq            
+  [0041] jmpIfZ           140
+  [0044] getParam         0
+  [0046] pushSymb         215
+  [0048] getLocal         2
+  [0050] pushArgList      3
+  [0052] objCall          216
+  [0054] pushSymb         217
+  [0056] pushInt8         1
+  [0058] getParam         0
+  [0060] pushSymb         215
+  [0062] getLocal         2
+  [0064] pushArgList      3
+  [0066] objCall          216
+  [0068] pushSymb         217
+  [0070] pushArgList      2
+  [0072] objCall          63
+  [0074] pushArgList      4
+  [0076] objCall          218
+  [0078] setLocal         3
+  [0080] getLocal         3
+  [0082] pushSymb         219
+  [0084] pushInt8         1
+  [0086] pushCons         2
+  [0088] getLocal         3
+  [0090] pushArgList      2
+  [0092] extCall          220
+  [0094] pushInt8         1
+  [0096] sub             
+  [0097] pushArgList      4
+  [0099] objCall          218
+  [0101] setLocal         4
+  [0103] getLocal         3
+  [0105] pushSymb         219
+  [0107] pushCons         2
+  [0109] getLocal         3
+  [0111] pushArgList      2
+  [0113] extCall          220
+  [0115] pushInt8         1
+  [0117] add             
+  [0118] getParam         0
+  [0120] pushArgList      1
+  [0122] extCall          221
+  [0124] pushArgList      4
+  [0126] objCall          218
+  [0128] setLocal         5
+  [0130] getLocal         1
+  [0132] getLocal         4
+  [0134] pushSymb         217
+  [0136] pushInt8         1
+  [0138] getLocal         4
+  [0140] pushSymb         217
+  [0142] pushArgList      2
+  [0144] objCall          63
+  [0146] pushArgList      4
+  [0148] objCall          218
+  [0150] getLocal         5
+  [0152] pushSymb         217
+  [0154] pushInt8         1
+  [0156] getLocal         5
+  [0158] pushSymb         217
+  [0160] pushArgList      2
+  [0162] objCall          63
+  [0164] pushArgList      4
+  [0166] objCall          218
+  [0168] pushArgListNoRet 3
+  [0170] objCall          222
+  [0172] pushInt8         1
+  [0174] getLocal         2
+  [0176] add             
+  [0177] setLocal         2
+  [0179] endRepeat        149
+  [0181] getLocal         0
+  [0183] setMovieProp     214
+  [0185] getLocal         1
+  [0187] pushArgListNoRet 1
+  [0189] extCall          5
+  [0191] ret             
+end
+
+on convertToLowerCase
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          206
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on convertToHigherCase
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          207
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on convertSpecialChars
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          208
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on convertIntToHex
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          209
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on convertHexToInt
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] pushArgList      2
+  [0008] objCall          210
+  [0010] pushArgListNoRet 1
+  [0012] extCall          5
+  [0014] ret             
+end
+
+on replaceChars
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] pushArgList      4
+  [0012] objCall          211
+  [0014] pushArgListNoRet 1
+  [0016] extCall          5
+  [0018] ret             
+end
+
+on replaceChunks
+  [0000] pushArgList      0
+  [0002] localCall        2
+  [0004] getParam         0
+  [0006] getParam         1
+  [0008] getParam         2
+  [0010] pushArgList      4
+  [0012] objCall          212
+  [0014] pushArgListNoRet 1
+  [0016] extCall          5
+  [0018] ret             
+end

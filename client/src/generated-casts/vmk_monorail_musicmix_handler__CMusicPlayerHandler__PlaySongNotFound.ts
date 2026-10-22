@@ -1,0 +1,14 @@
+// vmk_monorail_musicmix_handler.cct / CMusicPlayerHandler / PlaySongNotFound
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function PlaySongNotFound(_me: LingoMe, tMsg: LingoValue) {
+}
+

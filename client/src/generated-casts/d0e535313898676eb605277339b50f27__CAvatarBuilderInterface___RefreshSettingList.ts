@@ -1,0 +1,15 @@
+// d0e535313898676eb605277339b50f27.cct / CAvatarBuilderInterface / _RefreshSettingList
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function _RefreshSettingList(_me: LingoMe, _this: LingoValue, a_mp_kType_mp_iRef_rItem: LingoValue, a_kAlteredCategory: LingoValue) {
+  callMethod("update", meProp(_me, "m_rCurPageObj"), a_mp_kType_mp_iRef_rItem, a_kAlteredCategory)
+}
+

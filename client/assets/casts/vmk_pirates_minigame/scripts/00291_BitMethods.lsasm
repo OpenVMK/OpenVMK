@@ -1,0 +1,129 @@
+-- Movie Script
+on SetBit
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] extCall          66
+  [0006] not             
+  [0007] getParam         1
+  [0009] pushArgList      1
+  [0011] extCall          66
+  [0013] not             
+  [0014] and             
+  [0015] jmpIfZ           56
+  [0018] getParam         0
+  [0020] setLocal         0
+  [0022] pushInt8         1
+  [0024] setLocal         1
+  [0026] pushInt8         2
+  [0028] setLocal         2
+  [0030] getLocal         2
+  [0032] getParam         1
+  [0034] ltEq            
+  [0035] jmpIfZ           19
+  [0038] getLocal         1
+  [0040] pushInt8         2
+  [0042] mul             
+  [0043] setLocal         1
+  [0045] pushInt8         1
+  [0047] getLocal         2
+  [0049] add             
+  [0050] setLocal         2
+  [0052] endRepeat        22
+  [0054] getLocal         0
+  [0056] getLocal         1
+  [0058] pushArgList      2
+  [0060] extCall          1045
+  [0063] setLocal         0
+  [0065] getLocal         0
+  [0067] pushArgListNoRet 1
+  [0069] extCall          31
+  [0071] ret             
+end
+
+on ClearBit
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] extCall          66
+  [0006] not             
+  [0007] getParam         1
+  [0009] pushArgList      1
+  [0011] extCall          66
+  [0013] not             
+  [0014] and             
+  [0015] jmpIfZ           65
+  [0018] getParam         0
+  [0020] setLocal         0
+  [0022] pushInt8         1
+  [0024] setLocal         1
+  [0026] pushInt8         2
+  [0028] setLocal         2
+  [0030] getLocal         2
+  [0032] getParam         1
+  [0034] ltEq            
+  [0035] jmpIfZ           19
+  [0038] getLocal         1
+  [0040] pushInt8         2
+  [0042] mul             
+  [0043] setLocal         1
+  [0045] pushInt8         1
+  [0047] getLocal         2
+  [0049] add             
+  [0050] setLocal         2
+  [0052] endRepeat        22
+  [0054] getLocal         1
+  [0056] pushArgList      1
+  [0058] extCall          1050
+  [0061] setLocal         1
+  [0063] getLocal         0
+  [0065] getLocal         1
+  [0067] pushArgList      2
+  [0069] extCall          1051
+  [0072] setLocal         0
+  [0074] getLocal         0
+  [0076] pushArgListNoRet 1
+  [0078] extCall          31
+  [0080] ret             
+end
+
+on TestBit
+  [0000] getParam         0
+  [0002] pushArgList      1
+  [0004] extCall          66
+  [0006] not             
+  [0007] getParam         1
+  [0009] pushArgList      1
+  [0011] extCall          66
+  [0013] not             
+  [0014] and             
+  [0015] jmpIfZ           58
+  [0018] getParam         0
+  [0020] setLocal         0
+  [0022] pushInt8         1
+  [0024] setLocal         1
+  [0026] pushInt8         2
+  [0028] setLocal         2
+  [0030] getLocal         2
+  [0032] getParam         1
+  [0034] ltEq            
+  [0035] jmpIfZ           19
+  [0038] getLocal         1
+  [0040] pushInt8         2
+  [0042] mul             
+  [0043] setLocal         1
+  [0045] pushInt8         1
+  [0047] getLocal         2
+  [0049] add             
+  [0050] setLocal         2
+  [0052] endRepeat        22
+  [0054] getLocal         0
+  [0056] getLocal         1
+  [0058] pushArgList      2
+  [0060] extCall          1051
+  [0063] setLocal         0
+  [0065] getLocal         0
+  [0067] pushZero        
+  [0068] gt              
+  [0069] pushArgListNoRet 1
+  [0071] extCall          31
+  [0073] ret             
+end

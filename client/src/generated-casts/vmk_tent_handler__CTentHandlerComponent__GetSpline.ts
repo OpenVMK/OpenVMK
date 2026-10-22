@@ -1,0 +1,15 @@
+// vmk_tent_handler.cct / CTentHandlerComponent / GetSpline
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function GetSpline(_me: LingoMe) {
+  return callMethod("GetBaseSpline", meProp(_me, "m_stage"));
+}
+

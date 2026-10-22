@@ -1,0 +1,201 @@
+-- Parent Script
+on construct
+  [0000] pushZero        
+  [0001] setProp          177
+  [0003] pushInt8         1
+  [0005] pushArgListNoRet 1
+  [0007] extCall          47
+  [0009] ret             
+end
+
+on deconstruct
+  [0000] ret             
+end
+
+on Init
+  [0000] getParam         1
+  [0002] peek             0
+  [0004] pushInt8         1
+  [0006] eq              
+  [0007] jmpIfZ           31
+  [0010] pushInt8         10
+  [0012] pushArgList      1
+  [0014] extCall          32
+  [0016] pushInt8         10
+  [0018] add             
+  [0019] setProp          178
+  [0021] pushCons         0
+  [0023] pushArgList      1
+  [0025] extCall          36
+  [0027] getChainedProp   82
+  [0029] pushArgList      1
+  [0031] objCall          180
+  [0033] setProp          179
+  [0035] jmp              28
+  [0038] pushInt8         6
+  [0040] pushArgList      1
+  [0042] extCall          32
+  [0044] pushInt8         6
+  [0046] add             
+  [0047] setProp          178
+  [0049] pushCons         1
+  [0051] pushArgList      1
+  [0053] extCall          36
+  [0055] getChainedProp   82
+  [0057] pushArgList      1
+  [0059] objCall          180
+  [0061] setProp          179
+  [0063] pop              1
+  [0065] getProp          178
+  [0067] setProp          181
+  [0069] pushInt8         28
+  [0071] pushArgList      0
+  [0073] extCall          183
+  [0075] mul             
+  [0076] pushFloat32      1127481344
+  [0081] div             
+  [0082] setProp          182
+  [0084] getParam         0
+  [0086] pushArgListNoRet 1
+  [0088] objCall          176
+  [0090] getParam         0
+  [0092] pushZero        
+  [0093] pushArgListNoRet 2
+  [0095] objCall          174
+  [0097] ret             
+end
+
+on setSprite
+  [0000] getParam         1
+  [0002] setProp          177
+  [0004] ret             
+end
+
+on setSpeed
+  [0000] getParam         1
+  [0002] getProp          181
+  [0004] mul             
+  [0005] setProp          178
+  [0007] getProp          178
+  [0009] getProp          182
+  [0011] pushArgList      1
+  [0013] extCall          187
+  [0015] mul             
+  [0016] setProp          186
+  [0018] getProp          178
+  [0020] getProp          182
+  [0022] pushArgList      1
+  [0024] extCall          189
+  [0026] mul             
+  [0027] setProp          188
+  [0029] ret             
+end
+
+on accelerate
+  [0000] getProp          178
+  [0002] pushFloat32      1056964608
+  [0007] getParam         1
+  [0009] mul             
+  [0010] add             
+  [0011] setProp          178
+  [0013] ret             
+end
+
+on update
+  [0000] getProp          192
+  [0002] pushInt8         1
+  [0004] sub             
+  [0005] setProp          192
+  [0007] getProp          192
+  [0009] pushZero        
+  [0010] lt              
+  [0011] jmpIfZ           42
+  [0014] getProp          193
+  [0016] getProp          186
+  [0018] getProp          188
+  [0020] pushArgList      2
+  [0022] extCall          108
+  [0024] add             
+  [0025] setProp          193
+  [0027] getProp          193
+  [0029] getObjProp       194
+  [0031] pushInt16        800
+  [0034] gt              
+  [0035] getProp          193
+  [0037] getObjProp       195
+  [0039] pushInt16        600
+  [0042] gt              
+  [0043] and             
+  [0044] jmpIfZ           9
+  [0047] getParam         0
+  [0049] pushArgListNoRet 1
+  [0051] objCall          176
+  [0053] ret             
+end
+
+on reset
+  [0000] pushInt8         60
+  [0002] pushArgList      1
+  [0004] extCall          32
+  [0006] setProp          192
+  [0008] getProp          179
+  [0010] getChainedProp   118
+  [0012] getObjProp       83
+  [0014] inv             
+  [0015] getProp          179
+  [0017] getChainedProp   118
+  [0019] getObjProp       84
+  [0021] inv             
+  [0022] pushArgList      2
+  [0024] extCall          108
+  [0026] setProp          193
+  [0028] pushInt8         2
+  [0030] pushArgList      1
+  [0032] extCall          32
+  [0034] peek             0
+  [0036] pushInt8         1
+  [0038] eq              
+  [0039] jmpIfZ           24
+  [0042] pushInt16        450
+  [0045] pushArgList      1
+  [0047] extCall          32
+  [0049] pushInt16        350
+  [0052] add             
+  [0053] pushZero        
+  [0054] pushArgList      2
+  [0056] extCall          108
+  [0058] setProp          196
+  [0060] jmp              29
+  [0063] peek             0
+  [0065] pushInt8         2
+  [0067] eq              
+  [0068] jmpIfZ           21
+  [0071] pushZero        
+  [0072] pushInt16        250
+  [0075] pushArgList      1
+  [0077] extCall          32
+  [0079] pushInt16        350
+  [0082] add             
+  [0083] pushArgList      2
+  [0085] extCall          108
+  [0087] setProp          196
+  [0089] pop              1
+  [0091] ret             
+end
+
+on render
+  [0000] getProp          192
+  [0002] pushZero        
+  [0003] lt              
+  [0004] jmpIfZ           19
+  [0007] getProp          177
+  [0009] pushZero        
+  [0010] ntEq            
+  [0011] jmpIfZ           12
+  [0014] getProp          177
+  [0016] getProp          196
+  [0018] getProp          193
+  [0020] add             
+  [0021] setObjProp       165
+  [0023] ret             
+end
