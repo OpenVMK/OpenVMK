@@ -161,6 +161,7 @@ import {
   tileNamed, tileToward, floorNameOf, tilesApart, roomTiles,
 } from "./room-geometry.js";
 import { Ghost } from "./ghosts.js";
+import { GatorWaiter, SEAT } from "./gator-waiter.js";
 import { seasonalLayout, seasonalTileMap, useSeasonalLayout } from "./room-geometry.js";
 import { doorBackTo, exitAt, remapRoomTiles, type ExitRule } from "./room-exits.js";
 import { seedPublicFurni } from "./public-furni.js";
@@ -2394,7 +2395,7 @@ function seatTypeCodes(): Set<number> {
  */
 const npcDirectors = new Map<string, NodeJS.Timeout>();
 function ensureNpcDirector(roomBucket: string, roomCode: number): void {
-  const npcs = npcsInRoom(roomCode).filter((n) => !n.roams);
+  const npcs = npcsInRoom(roomCode).filter((n) => !n.roams && n.moves.length > 0);
   if (npcs.length === 0 || npcDirectors.has(roomBucket)) return;
   const schedule = (ms: number) => npcDirectors.set(roomBucket, setTimeout(tick, ms));
   const tick = () => {
@@ -2461,6 +2462,70 @@ function ghostFor(roomBucket: string, geometryRoom: string | undefined, npc: Npc
   );
   ghosts.set(key, ghost);
   return ghost;
+}
+
+/** The Blue Bayou's Gator Waiter, one per room bucket (gator-waiter.ts). */
+const waiters = new Map<string, GatorWaiter>();
+function waiterFor(roomBucket: string, geometryRoom: string | undefined, npc: Npc): GatorWaiter {
+  let waiter = waiters.get(roomBucket);
+  if (waiter) return waiter;
+  const ref = NPC_REF_BASE + npc.code;
+  const neighbours = new Map(roomTiles(geometryRoom).map((t) => [t.ref, t.neighbours]));
+  const seatTiles = () => new Set(getRoomItems(roomBucket).filter((i) => i.typeCode === SEAT).map((i) => i.tile));
+  const blocked = () => {
+    const solid = furnitureTiles(roomBucket, geometryRoom);
+    for (const t of occupiedTiles(roomBucket, -1)) solid.add(t);
+    for (const t of seatTiles()) solid.add(t);
+    return solid;
+  };
+  waiter = new GatorWaiter(
+    npc.tile,
+    npc.dir ?? 0,
+    {
+      occupied: () => occupantsOf(roomBucket).length > 0,
+      items: () => getRoomItems(roomBucket),
+      route: (from, to) => {
+        const solid = blocked();
+        solid.delete(to);
+        return findPath(geometryRoom, from, to, solid);
+      },
+      direction: (from, to) => directionBetween(geometryRoom, from, to),
+      distance: (a, b) => tilesApart(geometryRoom, a, b),
+      footprint: (table) => {
+        const covered = [...coveredTiles(geometryRoom, table.tile, table.typeCode, table.dir).keys()];
+        return covered.length ? covered : [table.tile];
+      },
+      standable: (tile) => neighbours.has(tile) && !blocked().has(tile) && exitIdAt(geometryRoom, tile) === null,
+      neighbours: (tile) => neighbours.get(tile) ?? [],
+    },
+    {
+      // `_UpdateElement` with dir AND state: the gator's handler reads both.
+      gator: (tile, dir, action) => {
+        const params: OutgoingParam[] = [
+          { int: ref },
+          { int: ITEM_CATEGORY_FURNITURE },
+          { int: tile },
+          { int: 0 }, // allowGuestMove
+          { int: 2 }, // dir + state
+          { int: dir },
+          { int: action },
+        ];
+        for (const o of occupantsOf(roomBucket)) o.send(MSG.UPDATE_ELEMENT, params, undefined);
+      },
+      chat: (line) => {
+        const chat: OutgoingParam[] = [{ int: ref }, { str: wireText(line) }, { str: "" }];
+        for (const o of occupantsOf(roomBucket)) o.send(MSG.ELEMENT_CHAT, chat, undefined);
+      },
+      table: (item, state) => {
+        setRoomItemState(item.ref, state);
+        broadcastState({ ...item, state }, state);
+        // Any 2599 drives the gator's animation (see gator-waiter.ts): put his back.
+        waiters.get(roomBucket)?.resend();
+      },
+    },
+  );
+  waiters.set(roomBucket, waiter);
+  return waiter;
 }
 
 const SEAT_REF_BASE = 900000;
@@ -6846,13 +6911,19 @@ function createVmkSession(
       // A ghost is wherever it last wandered to (ghosts.ts).
       const ghostOf = (npc: Npc) =>
         npc.roams && currentRoomName ? ghostFor(currentRoomName, currentGeometryRoom, npc) : undefined;
-      const npcs: PlacedItem[] = roomNpcs.map((npc) => ({
-        ref: NPC_REF_BASE + npc.code,
-        typeCode: npc.code,
-        tile: ghostOf(npc)?.tile ?? npc.tile,
-        dir: 0,
-        state: 0,
-      }));
+      // So is the Gator Waiter (gator-waiter.ts), wherever his last order took him.
+      const waiterOf = (npc: Npc) =>
+        npc.waiter && currentRoomName ? waiterFor(currentRoomName, currentGeometryRoom, npc) : undefined;
+      const npcs: PlacedItem[] = roomNpcs.map((npc) => {
+        const waiter = waiterOf(npc);
+        return {
+          ref: NPC_REF_BASE + npc.code,
+          typeCode: npc.code,
+          tile: waiter?.tile ?? ghostOf(npc)?.tile ?? npc.tile,
+          dir: waiter?.dir ?? npc.dir ?? 0,
+          state: waiter?.action ?? 0,
+        };
+      });
       const queueMarkers = currentGuestRoom() ? [] : queueMarkersFor(currentGeometryRoom);
       const elements = [...seats, ...placed, ...npcs, ...queueMarkers];
       if (elements.length > 0) {
@@ -6881,6 +6952,27 @@ function createVmkSession(
         send(MSG.ROOM_ANIMATION_LIST, list, `RoomAnimationList ${roomNpcs.length}`);
         ensureNpcDirector(currentRoomName, currentRoomCode);
         for (const npc of roomNpcs) ghostOf(npc)?.start();
+        for (const npc of roomNpcs) {
+          const waiter = waiterOf(npc);
+          if (!waiter) continue;
+          // `CGatorWaiterHandler` hears 2586 BEFORE the room has built the
+          // element (listeners run in reverse), so its InitAnimation finds no
+          // 4009 node; the first 2599 is what puts him on screen.
+          send(
+            MSG.UPDATE_ELEMENT,
+            [
+              { int: NPC_REF_BASE + npc.code },
+              { int: ITEM_CATEGORY_FURNITURE },
+              { int: waiter.tile },
+              { int: 0 },
+              { int: 2 },
+              { int: waiter.dir },
+              { int: waiter.action },
+            ],
+            `GatorWaiter @${waiter.tile} dir ${waiter.dir} action ${waiter.action}`,
+          );
+          waiter.start();
+        }
       }
       return;
     }
@@ -8688,6 +8780,8 @@ function createVmkSession(
       else for (const occupant of audience) occupant.send(MSG.AVATAR_CHAT, params, undefined);
       // After the bubble, so the room sees the word said and then the magic.
       castByMagicWord(tokensToText(tokens));
+      // The Blue Bayou's Gator Waiter serves a seated guest who says the word.
+      if (currentRoomName) waiters.get(currentRoomName)?.heard(characterName, currentTile, tokensToText(tokens));
       return;
     }
 
@@ -9815,6 +9909,10 @@ function createVmkSession(
       );
       // Same tile: a pose change, not a move.
       sendPulse(currentTile, LEGS_STAND);
+      // Waving down the Gator Waiter from a Blue Bayou table.
+      if (starting && action === EMOTE_WAVE && currentRoomName) {
+        waiters.get(currentRoomName)?.waved(characterName, currentTile);
+      }
       return;
     }
 

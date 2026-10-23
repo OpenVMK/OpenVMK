@@ -62,6 +62,10 @@ export interface Npc {
    * by ghosts.ts rather than the NPC director; `tile` is only a fallback.
    */
   roams?: boolean;
+  /** The element's facing, 0-7 (default 0). */
+  dir?: number;
+  /** The Blue Bayou's Gator Waiter: driven by gator-waiter.ts, not the director. */
+  waiter?: boolean;
 }
 
 export const NPCS: Npc[] = [
@@ -223,6 +227,23 @@ export const NPCS: Npc[] = [
       "Heh, you found old Gus, %name%! Got a file for this chain?",
       "Don't mind the ball and chain, %name%. I'm just hanging around.",
       "Shh, %name%! Don't tell the bride I'm up here.",
+    ],
+  },
+  {
+    code: 4009,
+    name: "Gator Waiter",
+    roomCode: 97,
+    // His spot by the restaurant door, facing the patio.
+    tile: 31,
+    dir: 4,
+    waiter: true,
+    moves: [],
+    speaks: [],
+    chatter: [],
+    lines: [
+      "Evenin', %name%! Grab a seat, wave me down, and don't forget the magic word.",
+      "Welcome to the Blue Bayou, %name%! Best Monte Cristo this side of the Mississippi.",
+      "Table for one, %name%? Sit anywhere you like, cher.",
     ],
   },
 ];
