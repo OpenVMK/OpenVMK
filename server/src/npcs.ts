@@ -57,6 +57,11 @@ export interface Npc {
    */
   moves: number[];
   speaks: number[];
+  /**
+   * A Haunted Mansion ghost: it wanders the room and comes and goes, driven
+   * by ghosts.ts rather than the NPC director; `tile` is only a fallback.
+   */
+  roams?: boolean;
 }
 
 export const NPCS: Npc[] = [
@@ -159,6 +164,65 @@ export const NPCS: Npc[] = [
       "I see firing cannons and sunken vessels in your future, %name%.",
       "I sense dancing princesses and pillaging pirates near, %name%.",
       "Don't forget to use your single-use magic pins before they expire, %name%!",
+    ],
+  },
+  // The hitchhiking ghosts (CGhostHandler, one per mansion room; ghosts.ts
+  // drives their 0-4 states). Their lines are lost; these are in character.
+  {
+    code: 4006,
+    name: "Phineas",
+    roomCode: 60,
+    tile: 0,
+    roams: true,
+    moves: [],
+    speaks: [],
+    chatter: [
+      "Going my way? I'll just tag along...",
+      "Is this room stretching, or is it just me?",
+      "Beware of hitchhiking ghosts!",
+    ],
+    lines: [
+      "Well, %name%, you found me! Mind if I hitch a ride out of here?",
+      "Going my way, %name%? I've been waiting for a lift for ages.",
+      "Don't look so pale, %name%. That's my job!",
+    ],
+  },
+  {
+    code: 4007,
+    name: "Ezra",
+    roomCode: 65,
+    tile: 0,
+    roams: true,
+    moves: [],
+    speaks: [],
+    chatter: [
+      "Care for a dance? I'm a little stiff...",
+      "Happy deathday to meee...",
+      "Keep the candles lit, it's a party!",
+    ],
+    lines: [
+      "Ah, %name%! Have you come for the party? Grab a partner and waltz!",
+      "You found me, %name%. I'd shake your hand, but mine keeps falling off.",
+      "The ballroom's full tonight, %name%. Nine hundred and ninety-nine guests - room for one more!",
+    ],
+  },
+  {
+    code: 4008,
+    name: "Gus",
+    roomCode: 66,
+    tile: 0,
+    roams: true,
+    moves: [],
+    speaks: [],
+    chatter: [
+      "Anybody seen the key to this ball and chain?",
+      "Heh heh... boo!",
+      "Mighty dusty up here in the attic.",
+    ],
+    lines: [
+      "Heh, you found old Gus, %name%! Got a file for this chain?",
+      "Don't mind the ball and chain, %name%. I'm just hanging around.",
+      "Shh, %name%! Don't tell the bride I'm up here.",
     ],
   },
 ];
