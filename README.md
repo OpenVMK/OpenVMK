@@ -102,13 +102,13 @@ These act directly on your local database (`data/vmk.db`), so only someone who c
 - [x] Camera, photo album, and photo walls
 - [x] Staff admin panel and moderation (kicks, bans, staff alerts)
 - [x] Mini games: Pirates of the Caribbean, Haunted Mansion Ghost Chasers, Castle Fireworks Remixed, Jungle Cruise Photo Safari, Street Party Music Game
+- [x] Haunted Mansion public rooms with NPC ghosts
 - [x] TypeScript browser port of the original client: plays in a modern browser, no plugin
 - [x] First release on GitHub Releases (October 18, 2026)
 
 **In progress**
 
 - [ ] Mini games: Magic Shop Checkers (the last one)
-- [ ] Haunted Mansion public rooms with NPC ghosts
 - [ ] Quests and Hidden Mickeys
 - [ ] Docker deployment: a Compose setup ships with the release but is still early; reports welcome
 
