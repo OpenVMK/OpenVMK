@@ -158,8 +158,9 @@ import {
 } from "./vmk-protocol.js";
 import {
   directionBetween, exitIdAt, exitTilesWithIds, findPath, insideOf, freeTileNear, isExitTile, spawnTileFor, tileName,
-  tileNamed, tileToward, floorNameOf, tilesApart,
+  tileNamed, tileToward, floorNameOf, tilesApart, roomTiles,
 } from "./room-geometry.js";
+import { Ghost } from "./ghosts.js";
 import { seasonalLayout, seasonalTileMap, useSeasonalLayout } from "./room-geometry.js";
 import { doorBackTo, exitAt, remapRoomTiles, type ExitRule } from "./room-exits.js";
 import { seedPublicFurni } from "./public-furni.js";
@@ -226,7 +227,7 @@ import {
 } from "./room-entry-queue.js";
 import { isSingleUsePin, magicOf, magicTiming, startingLevel } from "./magic-pins.js";
 import { itemName } from "./catalog.js";
-import { NPC_REF_BASE, npcByRef, npcsInRoom, visitNpc } from "./npcs.js";
+import { NPC_REF_BASE, npcByRef, npcsInRoom, visitNpc, type Npc } from "./npcs.js";
 import {
   MESSENGER_COMMANDS,
   handleMessengerCommand,
@@ -661,16 +662,12 @@ const GEOMETRY_ALIAS = new Map<number, string>();
  * strands the player somewhere with no way to play and, for the lobbies, no
  * obvious way out. Refusing the request keeps them where they are.
  *
- * The Haunted Mansion public levels (60/65/66) stay listed: their casts all
- * resolve now, but their NPC ghosts have no server side yet. The lobby, 1104,
- * is open — haunted-mansion.ts / hm-match.ts, docs/HAUNTED-MANSION-PLAN.md.
+ * (The Haunted Mansion public levels, 60/65/66, are OPEN — their ghosts are
+ * ghosts.ts. The lobby, 1104, is haunted-mansion.ts / hm-match.ts.)
  */
 const BLOCKED_ROOMS = new Map<number, string>([
   // (1001, the Pirates of the Caribbean lobby, is OPEN — pirates.ts. 1000,
   // 1002 and 1003 were listed with it but have no room config at all.)
-  [60, "The Haunted Mansion"],
-  [65, "The Haunted Mansion"],
-  [66, "The Haunted Mansion"],
   // (1104, the Haunted Mansion lobby, is OPEN — haunted-mansion.ts.)
   // (11, the Dock, and 1102, the Jungle Cruise game, are OPEN — jungle-cruise.ts.)
   // The Magic Shop and its checkers room. They share a space cast, and the shop
@@ -2397,7 +2394,7 @@ function seatTypeCodes(): Set<number> {
  */
 const npcDirectors = new Map<string, NodeJS.Timeout>();
 function ensureNpcDirector(roomBucket: string, roomCode: number): void {
-  const npcs = npcsInRoom(roomCode);
+  const npcs = npcsInRoom(roomCode).filter((n) => !n.roams);
   if (npcs.length === 0 || npcDirectors.has(roomBucket)) return;
   const schedule = (ms: number) => npcDirectors.set(roomBucket, setTimeout(tick, ms));
   const tick = () => {
@@ -2420,6 +2417,50 @@ function ensureNpcDirector(roomBucket: string, roomCode: number): void {
     schedule(25_000 + Math.random() * 25_000);
   };
   schedule(6_000 + Math.random() * 6_000);
+}
+
+/**
+ * The Haunted Mansion ghosts, one per room bucket (ghosts.ts). Created on the
+ * first visit and kept, so the ghost's tile survives an empty room; it rests
+ * hidden until someone comes back.
+ */
+const ghosts = new Map<string, Ghost>();
+function ghostFor(roomBucket: string, geometryRoom: string | undefined, npc: Npc): Ghost {
+  const key = `${roomBucket}#${npc.code}`;
+  let ghost = ghosts.get(key);
+  if (ghost) return ghost;
+  const tiles = roomTiles(geometryRoom);
+  const neighbours = new Map(tiles.map((t) => [t.ref, t.neighbours]));
+  const ref = NPC_REF_BASE + npc.code;
+  const everyone = (msg: number, params: OutgoingParam[]) => {
+    for (const o of occupantsOf(roomBucket)) o.send(msg, params, undefined);
+  };
+  ghost = new Ghost(
+    npc,
+    {
+      // Floor it could walk on, but never a doorway.
+      tiles: tiles.filter((t) => t.neighbours.length > 0 && exitIdAt(geometryRoom, t.ref) === null).map((t) => t.ref),
+      neighbours: (tile) => neighbours.get(tile) ?? [],
+    },
+    {
+      occupied: () => occupantsOf(roomBucket).length > 0,
+      state: (state) => everyone(MSG.ROOM_ANIMATION_STATE, [{ int: ref }, { int: state }]),
+      // `_UpdateElement`: a new place ref, dir only.
+      move: (tile) =>
+        everyone(MSG.UPDATE_ELEMENT, [
+          { int: ref },
+          { int: ITEM_CATEGORY_FURNITURE },
+          { int: tile },
+          { int: 0 }, // allowGuestMove
+          { int: 1 }, // dir only
+          { int: 0 },
+        ]),
+      // Empty name: the client falls back to `item.<type>`, the ghost's name.
+      chat: (line) => everyone(MSG.ELEMENT_CHAT, [{ int: ref }, { str: wireText(line) }, { str: "" }]),
+    },
+  );
+  ghosts.set(key, ghost);
+  return ghost;
 }
 
 const SEAT_REF_BASE = 900000;
@@ -6802,10 +6843,13 @@ function createVmkSession(
        * Public rooms only: a guest room built on the same style has no NPC.
        */
       const roomNpcs = currentGuestRoom() ? [] : npcsInRoom(currentRoomCode);
+      // A ghost is wherever it last wandered to (ghosts.ts).
+      const ghostOf = (npc: Npc) =>
+        npc.roams && currentRoomName ? ghostFor(currentRoomName, currentGeometryRoom, npc) : undefined;
       const npcs: PlacedItem[] = roomNpcs.map((npc) => ({
         ref: NPC_REF_BASE + npc.code,
         typeCode: npc.code,
-        tile: npc.tile,
+        tile: ghostOf(npc)?.tile ?? npc.tile,
         dir: 0,
         state: 0,
       }));
@@ -6820,20 +6864,23 @@ function createVmkSession(
         );
       }
       if (roomNpcs.length > 0 && currentRoomName && currentRoomCode !== undefined) {
-        // `2791`: each NPC's current animation — resting (state 0) on arrival.
+        // `2791`: each NPC's current animation — resting (state 0) on arrival;
+        // a ghost mid-visit joins its loop `age` ms in.
         const list: OutgoingParam[] = [{ int: roomNpcs.length }];
         for (const npc of roomNpcs) {
+          const ghost = ghostOf(npc);
           list.push(
             { int: NPC_REF_BASE + npc.code }, // ref
             { int: npc.code }, // type
-            { int: 0 }, // state
-            { int: 0 }, // age
+            { int: ghost?.state ?? 0 }, // state
+            { int: ghost ? Math.min(ghost.age, 60_000) : 0 }, // age
             { int: 0 }, // int params
             { int: 0 }, // string params
           );
         }
         send(MSG.ROOM_ANIMATION_LIST, list, `RoomAnimationList ${roomNpcs.length}`);
         ensureNpcDirector(currentRoomName, currentRoomCode);
+        for (const npc of roomNpcs) ghostOf(npc)?.start();
       }
       return;
     }
@@ -7263,6 +7310,8 @@ function createVmkSession(
       const npc = use ? npcByRef(ref) : undefined;
       if (npc) {
         if (!live || npc.roomCode !== currentRoomCode || currentGuestRoom()) return;
+        // A hidden ghost isn't there to find — you have to wait for it.
+        if (npc.roams && !(currentRoomName && ghostFor(currentRoomName, currentGeometryRoom, npc).visible)) return;
         // The double-click arrives twice; one answer, one reward.
         const now = Date.now();
         if (now - (lastUse.get(ref) ?? 0) < USE_DEBOUNCE_MS) {
