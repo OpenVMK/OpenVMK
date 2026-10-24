@@ -2894,7 +2894,28 @@ function encodeWebSocketBinaryFrame(payload: Buffer): Buffer {
   return frame;
 }
 
-function decodeWebSocketFrames(buffer: Buffer): { payloads: Buffer[]; remaining: Buffer } {
+/**
+ * The largest frame a client may send. The game's messages are small; without
+ * a cap a frame header can announce any length and the socket buffers it all,
+ * re-copying the backlog on every chunk (quadratic CPU, unbounded memory).
+ * Photos travel as base64 pixels, so the photo socket gets more room.
+ */
+const WS_MAX_GAME_FRAME = 1024 * 1024;
+const WS_MAX_PHOTO_FRAME = 8 * 1024 * 1024;
+
+/**
+ * Socket silence limits. The protocol has no keepalive — a logged-in player
+ * standing still sends nothing — so the idle limit after login is long;
+ * VMK_IDLE_TIMEOUT_MINUTES=0 turns it off. Before login a client is in a
+ * handshake that takes a second or two, so a minute is generous.
+ */
+const LOGIN_TIMEOUT_MS = 60_000;
+const IDLE_TIMEOUT_MS = Math.max(0, Number(process.env.VMK_IDLE_TIMEOUT_MINUTES ?? 120) || 0) * 60_000;
+
+function decodeWebSocketFrames(
+  buffer: Buffer,
+  maxPayload: number,
+): { payloads: Buffer[]; remaining: Buffer; tooLarge: boolean } {
   const payloads: Buffer[] = [];
   let offset = 0;
   while (offset + 2 <= buffer.length) {
@@ -2912,10 +2933,12 @@ function decodeWebSocketFrames(buffer: Buffer): { payloads: Buffer[]; remaining:
     } else if (payloadLength === 127) {
       if (offset + 10 > buffer.length) break;
       const length = buffer.readBigUInt64BE(offset + 2);
-      if (length > BigInt(Number.MAX_SAFE_INTEGER)) break;
+      if (length > BigInt(maxPayload)) return { payloads, remaining: Buffer.alloc(0), tooLarge: true };
       payloadLength = Number(length);
       headerSize = 10;
     }
+
+    if (payloadLength > maxPayload) return { payloads, remaining: Buffer.alloc(0), tooLarge: true };
 
     const maskSize = masked ? 4 : 0;
     const frameSize = headerSize + maskSize + payloadLength;
@@ -2939,7 +2962,7 @@ function decodeWebSocketFrames(buffer: Buffer): { payloads: Buffer[]; remaining:
     }
     offset += frameSize;
   }
-  return { payloads, remaining: buffer.subarray(offset) };
+  return { payloads, remaining: buffer.subarray(offset), tooLarge: false };
 }
 
 /** Tag of the navigator's root node. Arbitrary but must be stable. */
@@ -3041,6 +3064,8 @@ function createVmkSession(
   remote: string,
   initial: Buffer = Buffer.alloc(0),
   onClose: (reason: string) => void = () => {},
+  /** Login accepted: the connection moves from the login timeout to the idle one. */
+  onLogin: () => void = () => {},
 ) {
   const dh = createDiffieHellman((n) => new Uint8Array(randomBytes(n)));
   let started = false;
@@ -6291,6 +6316,7 @@ function createVmkSession(
       }
 
       characterName = account.character_name ?? account.username;
+      onLogin();
 
       // One character online at a time. A second login takes over the account
       // and the earlier connection is dropped.
@@ -10298,6 +10324,13 @@ function createVmkSession(
       console.log(`[${label}] << ${chunk.length}b ${hexPreview(chunk)} | "${asciiPreview(chunk)}"`);
       pending += chunk.toString("latin1");
       pump();
+      // A message that never completes (or announces a huge length) would
+      // otherwise buffer forever. Ciphertext is hex: two characters a byte.
+      if (pending.length + plain.length > 2 * WS_MAX_GAME_FRAME) {
+        pending = "";
+        plain = "";
+        onClose("unfinished message over the size limit");
+      }
     },
     start() {
       if (started) return;
@@ -10360,8 +10393,17 @@ function handleHttpConnection(socket: Socket, initial: Buffer) {
     return;
   }
 
-  const url = new URL(req.path, `http://127.0.0.1:${PORT}`);
-  const pathname = decodeURIComponent(url.pathname);
+  // ⚠ Both throw on hostile input — a broken `%` escape (`/%E0%A4%A`) or a
+  // path like `//[` — and an uncaught throw here kills the whole server.
+  let url: URL;
+  let pathname: string;
+  try {
+    url = new URL(req.path, `http://127.0.0.1:${PORT}`);
+    pathname = decodeURIComponent(url.pathname);
+  } catch {
+    sendHttp(socket, 400, "Bad request");
+    return;
+  }
   console.log(`[http] ${req.method} ${pathname}`);
 
   if (
@@ -10630,6 +10672,8 @@ function encodeWebSocketTextFrame(text: string): Buffer {
 }
 
 function handlePhotoConnection(socket: Socket, initial: Buffer, remote: string) {
+  // Opened by a client that is already in the game; it may sit unused a while.
+  socket.setTimeout(IDLE_TIMEOUT_MS);
   let wsBuffer: Buffer = Buffer.from(initial);
   const session = createPhotoSession((json) => socket.write(encodeWebSocketTextFrame(json)), remote, {
     albumOwnerFor: (userId) => {
@@ -10642,9 +10686,13 @@ function handlePhotoConnection(socket: Socket, initial: Buffer, remote: string) 
     log: (line) => console.log(line),
   });
   const pump = () => {
-    const { payloads, remaining } = decodeWebSocketFrames(wsBuffer);
+    const { payloads, remaining, tooLarge } = decodeWebSocketFrames(wsBuffer, WS_MAX_PHOTO_FRAME);
     wsBuffer = remaining;
     for (const payload of payloads) session.feed(payload.toString("utf8"));
+    if (tooLarge) {
+      console.log(`[photo] closing ${remote}: frame over ${WS_MAX_PHOTO_FRAME} bytes`);
+      socket.destroy();
+    }
   };
   pump();
   socket.on("data", (chunk: Buffer) => {
@@ -10666,13 +10714,18 @@ function handleWebSocketGameConnection(socket: Socket, initial: Buffer, remote: 
       console.log(`[ws] closing ${remote}: ${reason}`);
       socket.destroy();
     },
+    () => socket.setTimeout(IDLE_TIMEOUT_MS),
   );
 
   const pumpWs = () => {
-    const { payloads, remaining } = decodeWebSocketFrames(wsBuffer);
+    const { payloads, remaining, tooLarge } = decodeWebSocketFrames(wsBuffer, WS_MAX_GAME_FRAME);
     wsBuffer = remaining;
     for (const payload of payloads) {
       session.feed(payload);
+    }
+    if (tooLarge) {
+      console.log(`[ws] closing ${remote}: frame over ${WS_MAX_GAME_FRAME} bytes`);
+      socket.destroy();
     }
   };
 
@@ -10710,6 +10763,7 @@ function handleTcpConnection(socket: Socket, initial: Buffer) {
       console.log(`[tcp] closing ${remote}: ${reason}`);
       socket.destroy();
     },
+    () => socket.setTimeout(IDLE_TIMEOUT_MS),
   );
   session.start();
 
@@ -10733,6 +10787,15 @@ export function startShockwaveGameServer(port = PORT): Server {
 
   const server = net.createServer((socket) => {
     let mode: "pending" | "http" | "tcp" = "pending";
+    // Silence closes the socket: LOGIN_TIMEOUT_MS until the game login is
+    // accepted (an HTTP request is answered well within it), IDLE_TIMEOUT_MS
+    // after (createVmkSession's onLogin). Without this a connection that never
+    // sends anything stays open forever, and anyone can hold thousands.
+    socket.setTimeout(LOGIN_TIMEOUT_MS);
+    socket.on("timeout", () => {
+      console.log(`[conn] ${socket.remoteAddress}:${socket.remotePort} idle — closing`);
+      socket.destroy();
+    });
 
     const startTcp = (initial: Buffer) => {
       if (mode !== "pending") return;

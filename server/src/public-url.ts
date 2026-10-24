@@ -53,10 +53,17 @@ const setting = (name: string): string | undefined => process.env[name]?.trim() 
 export function publicUrls(req: IncomingMessage | undefined): PublicUrls {
   const configured = setting("VMK_PUBLIC_ORIGIN");
   const host = req?.headers.host;
-  const origin = trimSlash(
-    configured ?? (host && SAFE_HOST.test(host) ? `http://${host}` : `http://127.0.0.1:${HTTP_PORT}`),
-  );
-  const page = new URL(origin);
+  const fallback = `http://127.0.0.1:${HTTP_PORT}`;
+  let origin = trimSlash(configured ?? (host && SAFE_HOST.test(host) ? `http://${host}` : fallback));
+  let page: URL;
+  try {
+    page = new URL(origin);
+  } catch {
+    // SAFE_HOST still passes hosts URL rejects (`a:99999`, `[::::]`); a Host
+    // header is client input, so fall back rather than throw mid-request.
+    origin = fallback;
+    page = new URL(origin);
+  }
   const gameUrl = trimSlash(
     setting("VMK_PUBLIC_GAME_URL") ??
       `${page.protocol === "https:" ? "wss" : "ws"}://${page.hostname}:${GAME_PORT}`,

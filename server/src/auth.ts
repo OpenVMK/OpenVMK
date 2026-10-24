@@ -32,7 +32,14 @@ export function parseCookies(req: IncomingMessage): Record<string, string> {
     if (eq < 0) {
       continue;
     }
-    out[part.slice(0, eq).trim()] = decodeURIComponent(part.slice(eq + 1).trim());
+    const raw = part.slice(eq + 1).trim();
+    // A broken `%` escape throws, and the cookie header is the client's to
+    // send: keep such a value as-is rather than let one request kill the server.
+    try {
+      out[part.slice(0, eq).trim()] = decodeURIComponent(raw);
+    } catch {
+      out[part.slice(0, eq).trim()] = raw;
+    }
   }
   return out;
 }
