@@ -40,8 +40,7 @@ import {
 import { buildGetSecCast, secretsFromTicket } from "./getsec-cast.js";
 import {
   characterNameTaken,
-  getUserByTicket,
-  markTicketConsumed,
+  claimTicket,
   setCharacter,
   savePendingCharacter,
   completeCharacter,
@@ -2776,7 +2775,7 @@ function ensureSession(userId: number): DevSession {
     };
     sessions.set(userId, session);
     tickets.set(session.ticket, userId);
-    console.log(`[session] created userId=${userId} ticket=${session.ticket}`);
+    console.log(`[session] created userId=${userId}`);
   }
   return session;
 }
@@ -2787,11 +2786,29 @@ function hexPreview(buf: Buffer, max = 64): string {
   return buf.length > max ? `${hex} … (+${buf.length - max}b)` : hex;
 }
 
+/**
+ * A copy of client bytes fit for the log: every run of 32+ hex digits becomes
+ * `*`. The LOGIN message carries the ticket in the clear (the browser client
+ * declines encryption), and logs are read by more people than should log in.
+ */
+function maskTickets(buf: Buffer): Buffer {
+  return Buffer.from(buf.toString("latin1").replace(/[0-9a-f]{32,}/gi, (run) => "*".repeat(run.length)), "latin1");
+}
+
 function asciiPreview(buf: Buffer, max = 80): string {
   return [...buf.subarray(0, max)]
     .map((b) => (b >= 0x20 && b <= 0x7e ? String.fromCharCode(b) : "."))
     .join("");
 }
+
+/**
+ * GetSec is the ORIGINAL Shockwave client's key fetch (loading.php / sec.php);
+ * the browser client never calls it. Its blob carries the user's login ticket,
+ * so it is OFF unless VMK_SHOCKWAVE_GETSEC=1 — set for Shockwave testing only —
+ * and even then `/GetSec` answers only the web server (the bridge secret),
+ * which decides whose blob it is from the caller's own session (assets.ts).
+ */
+export const SHOCKWAVE_GETSEC = process.env.VMK_SHOCKWAVE_GETSEC === "1";
 
 function buildGetSecBlob(userId: number): Buffer {
   const session = ensureSession(userId);
@@ -2809,14 +2826,12 @@ function buildGetSecBlob(userId: number): Buffer {
       try {
         const secrets = secretsFromTicket(session.ticket);
         const cast = buildGetSecCast(secrets);
-        console.log(
-          `[getsec] synthesized cast userId=${userId} ticket=${session.ticket} size=${cast.length}b ` +
-            `preview=${hexPreview(cast, 32)}`,
-        );
+        console.log(`[getsec] synthesized cast userId=${userId} size=${cast.length}b`);
         return cast;
       } catch (err) {
-        console.warn(`[getsec] cast synthesis failed, falling back to ticket bytes:`, err);
-        return Buffer.from(session.ticket, "utf8");
+        // Never the ticket itself: zeros, as `zeros` mode would send.
+        console.warn(`[getsec] cast synthesis failed, sending zeros:`, err);
+        return Buffer.alloc(256, 0);
       }
   }
 }
@@ -6287,7 +6302,8 @@ function createVmkSession(
       // it really belongs to the account being claimed.
       const claimedName = fields[0] ?? "";
       const presented = fields[1] ?? "";
-      const account = presented ? getUserByTicket(presented) : undefined;
+      // Consumed here, whatever happens next: a ticket logs in once.
+      const account = presented ? claimTicket(presented) : undefined;
 
       if (!account || account.username.toLowerCase() !== claimedName.toLowerCase()) {
         console.log(
@@ -6295,7 +6311,7 @@ function createVmkSession(
             !presented
               ? "no ticket presented"
               : !account
-                ? `ticket ${presented.slice(0, 8)}… is unknown or expired`
+                ? "ticket is unknown, already used or expired"
                 : `ticket belongs to "${account.username}", not "${claimedName}"`
           }`,
         );
@@ -6384,7 +6400,6 @@ function createVmkSession(
         },
       };
       claimUserConnection(live);
-      markTicketConsumed(presented);
       loginLogId = logLogin(account.id, "game", ipOf(remote), fields[2] ?? "");
 
       // Online in the messenger from now; the client's `MESSENGER_INIT` (sent
@@ -10321,7 +10336,8 @@ function createVmkSession(
 
   return {
     feed(chunk: Buffer) {
-      console.log(`[${label}] << ${chunk.length}b ${hexPreview(chunk)} | "${asciiPreview(chunk)}"`);
+      const shown = maskTickets(chunk);
+      console.log(`[${label}] << ${chunk.length}b ${hexPreview(shown)} | "${asciiPreview(shown)}"`);
       pending += chunk.toString("latin1");
       pump();
       // A message that never completes (or announces a huge length) would
@@ -10430,8 +10446,14 @@ function handleHttpConnection(socket: Socket, initial: Buffer) {
     return;
   }
 
-  // Dev: register ticket from player preset
+  // The web server registers each ticket it mints (auth.ts issueTicketFor);
+  // what is registered is what GetSec hands back, so only it may.
   if (req.method === "POST" && pathname === "/dev/register") {
+    if (!hasBridgeSecret(req.headers)) {
+      console.warn("[dev] register refused: no bridge secret");
+      sendHttp(socket, 403, "forbidden");
+      return;
+    }
     try {
       const json = JSON.parse(req.body.toString("utf8") || "{}") as { userId?: number; ticket?: string; loginName?: string };
       const userId = Number(json.userId ?? 1);
@@ -10439,8 +10461,8 @@ function handleHttpConnection(socket: Socket, initial: Buffer) {
       const loginName = String(json.loginName ?? `Guest${userId}`);
       sessions.set(userId, { userId, ticket, loginName });
       tickets.set(ticket, userId);
-      console.log(`[dev] registered userId=${userId} ticket=${ticket}`);
-      sendHttp(socket, 200, JSON.stringify({ ok: true, userId, ticket }), "application/json");
+      console.log(`[dev] registered userId=${userId}`);
+      sendHttp(socket, 200, JSON.stringify({ ok: true, userId }), "application/json");
     } catch (err) {
       sendHttp(socket, 400, String(err));
     }
@@ -10475,8 +10497,14 @@ function handleHttpConnection(socket: Socket, initial: Buffer) {
   if (req.method === "GET" && getSecMatch) {
     const [, uuid, userIdStr] = getSecMatch;
     const userId = Number(userIdStr);
-    if (uuid?.toLowerCase() !== GETSEC_UUID) {
-      sendHttp(socket, 404, "unknown GetSec namespace");
+    if (!SHOCKWAVE_GETSEC || uuid?.toLowerCase() !== GETSEC_UUID) {
+      sendHttp(socket, 404, "not found");
+      return;
+    }
+    // Only the web server may ask: it alone knows whose session is calling.
+    if (!hasBridgeSecret(req.headers)) {
+      console.warn(`[GetSec] refused userId=${userId}: no bridge secret`);
+      sendHttp(socket, 403, "forbidden");
       return;
     }
     const blob = buildGetSecBlob(userId);
@@ -10539,6 +10567,13 @@ function describeLive(conn: LiveConnection) {
  * shared secret (staff-db.ts `bridgeSecret`), or anyone who can play could
  * kick everyone.
  */
+/** Does this request carry the web server's shared secret (`X-HK-Secret`)? */
+function hasBridgeSecret(headers: Record<string, string | undefined>): boolean {
+  const presented = Buffer.from(String(headers["x-hk-secret"] ?? ""));
+  const expected = Buffer.from(bridgeSecret());
+  return presented.length === expected.length && timingSafeEqual(presented, expected);
+}
+
 function handleHkBridge(
   socket: Socket,
   method: string,
@@ -10548,9 +10583,7 @@ function handleHkBridge(
 ): void {
   const json = (status: number, value: unknown) =>
     sendHttp(socket, status, JSON.stringify(value), "application/json");
-  const presented = Buffer.from(String(headers["x-hk-secret"] ?? ""));
-  const expected = Buffer.from(bridgeSecret());
-  if (presented.length !== expected.length || !timingSafeEqual(presented, expected)) {
+  if (!hasBridgeSecret(headers)) {
     console.warn(`[hk-bridge] refused ${method} ${action}: bad secret`);
     json(403, { ok: false, error: "forbidden" });
     return;
@@ -10751,7 +10784,8 @@ function handleTcpConnection(socket: Socket, initial: Buffer) {
   const remote = `${socket.remoteAddress}:${socket.remotePort}`;
   console.log(`[tcp] connect ${remote}${initial.length ? ` (+${initial.length}b initial)` : ""}`);
   if (initial.length) {
-    console.log(`[tcp] << ${hexPreview(initial)} | "${asciiPreview(initial)}"`);
+    const shown = maskTickets(initial);
+    console.log(`[tcp] << ${hexPreview(shown)} | "${asciiPreview(shown)}"`);
   }
 
   const session = createVmkSession(

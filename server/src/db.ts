@@ -2111,9 +2111,10 @@ export function createTicket(userId: number): string {
 }
 
 /**
- * Resolve a ticket to its user. Does NOT consume it -- the client may fetch
- * GetSec and then log in, so the ticket is read more than once during a single
- * connect. Expiry is what bounds it.
+ * Resolve an unused, unexpired ticket to its user WITHOUT consuming it: the
+ * client fetches its variables (and, for Shockwave, GetSec) with the ticket
+ * before it logs in. Logging in consumes it (`claimTicket`); after that it
+ * resolves to nobody.
  */
 export function getUserByTicket(ticket: string | undefined): User | undefined {
   if (!ticket) {
@@ -2122,9 +2123,27 @@ export function getUserByTicket(ticket: string | undefined): User | undefined {
   const row = db
     .prepare(
       `SELECT u.* FROM tickets t JOIN users u ON u.id = t.user_id
-       WHERE t.ticket = ? AND t.expires_at > ?`,
+       WHERE t.ticket = ? AND t.expires_at > ? AND t.consumed_at IS NULL`,
     )
     .get(ticket, now());
+  return row ? rowToUser(row as Record<string, unknown>) : undefined;
+}
+
+/**
+ * The game login: resolve a ticket and consume it in one step, so it logs in
+ * exactly once. A ticket that leaks after that (logs, a URL) is worthless.
+ */
+export function claimTicket(ticket: string | undefined): User | undefined {
+  if (!ticket) {
+    return undefined;
+  }
+  const claimed = db
+    .prepare("UPDATE tickets SET consumed_at = ? WHERE ticket = ? AND consumed_at IS NULL AND expires_at > ?")
+    .run(now(), ticket, now());
+  if (claimed.changes !== 1) return undefined;
+  const row = db
+    .prepare("SELECT u.* FROM tickets t JOIN users u ON u.id = t.user_id WHERE t.ticket = ?")
+    .get(ticket);
   return row ? rowToUser(row as Record<string, unknown>) : undefined;
 }
 
