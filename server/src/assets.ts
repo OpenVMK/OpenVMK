@@ -492,6 +492,14 @@ const CRASH_LOG = join(ROOT, "logs", "client-errors.log");
 let crashLogReady = false;
 /** Report text -> times seen this run, so retry storms collapse to one line. */
 const crashSeen = new Map<string, number>();
+/**
+ * Limits, because reports need no login: anyone can send them, so without a
+ * cap the map and the log grow for as long as someone keeps sending.
+ */
+const CRASH_SEEN_MAX = 1000;
+const CRASH_TEXT_MAX = 4000;
+const CRASH_LOG_MAX_BYTES = 10 * 1024 * 1024;
+let crashLogBytes = 0;
 
 function reportClientError(req: IncomingMessage, pathname: string) {
   // The formatted report always carries the literal the error handler prefixes
@@ -501,7 +509,7 @@ function reportClientError(req: IncomingMessage, pathname: string) {
   // real one is prose, so it has spaces or is far longer than any cast name.
   if (!/\s/.test(pathname) && pathname.length < 120) return;
 
-  const text = pathname.replace(/^\/+/, "");
+  const text = pathname.replace(/^\/+/, "").slice(0, CRASH_TEXT_MAX);
 
   // ⚠ COLLAPSE REPEATS OR THE LOG IS USELESS. `CDownload.update` retries a
   // failed download about ten times a second and reports every attempt, so one
@@ -509,6 +517,8 @@ function reportClientError(req: IncomingMessage, pathname: string) {
   // which is how a single interesting fault gets scrolled out of sight. Report
   // the first occurrence at once, then only every tenth, carrying the count.
   const seen = (crashSeen.get(text) ?? 0) + 1;
+  // Full: start counting afresh. Repeats of an old report may log once more.
+  if (seen === 1 && crashSeen.size >= CRASH_SEEN_MAX) crashSeen.clear();
   crashSeen.set(text, seen);
   if (seen > 1 && seen % 10 !== 0) return;
   const suffix = seen > 1 ? `  (x${seen})` : "";
@@ -517,9 +527,14 @@ function reportClientError(req: IncomingMessage, pathname: string) {
   try {
     if (!crashLogReady) {
       mkdirSync(dirname(CRASH_LOG), { recursive: true });
+      crashLogBytes = existsSync(CRASH_LOG) ? statSync(CRASH_LOG).size : 0;
       crashLogReady = true;
     }
-    appendFileSync(CRASH_LOG, `${new Date().toISOString()} ${req.method ?? "GET"}\n${text}\n\n`, "utf8");
+    // Full: the console still gets every report; the file stops growing.
+    if (crashLogBytes >= CRASH_LOG_MAX_BYTES) return;
+    const entry = `${new Date().toISOString()} ${req.method ?? "GET"}\n${text}\n\n`;
+    appendFileSync(CRASH_LOG, entry, "utf8");
+    crashLogBytes += Buffer.byteLength(entry);
   } catch {
     /* the console line is the copy that matters */
   }
@@ -1415,8 +1430,17 @@ function handleDownloadShim(pathname: string, res: ServerResponse) {
 }
 
 function route(req: IncomingMessage, res: ServerResponse) {
-  const url = new URL(req.url ?? "/", `http://127.0.0.1:${PORT}`);
-  const pathname = decodeURIComponent(url.pathname);
+  // ⚠ Both throw on hostile input — a broken `%` escape (`/%E0%A4%A`) or a
+  // path like `//[` — and an uncaught throw here kills the whole server.
+  let url: URL;
+  let pathname: string;
+  try {
+    url = new URL(req.url ?? "/", `http://127.0.0.1:${PORT}`);
+    pathname = decodeURIComponent(url.pathname);
+  } catch {
+    send(res, 400, "Bad request");
+    return;
+  }
 
   reportClientError(req, pathname);
 
