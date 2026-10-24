@@ -15,6 +15,7 @@ import {
   loginOrCreate,
   type User,
 } from "./db.js";
+import { bridgeSecret } from "./staff-db.js";
 
 export const SESSION_COOKIE = "vmk_session";
 
@@ -94,7 +95,8 @@ export async function issueTicketFor(user: User, gameServer: string): Promise<st
   try {
     const response = await fetch(`${gameServer}/dev/register`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      // The game server takes registrations from this server only.
+      headers: { "Content-Type": "application/json", "X-HK-Secret": bridgeSecret() },
       body: JSON.stringify({
         userId: user.id,
         ticket,

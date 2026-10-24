@@ -32,6 +32,7 @@
  */
 import { DatabaseSync } from "node:sqlite";
 import { randomBytes } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const DB_PATH = join(process.cwd(), "data", "vmk.db");
@@ -86,9 +87,13 @@ db.prepare(
 // Best-effort, exactly like issueTicketFor: the ticket is already durable in
 // the database, so a MUS server that is down does not invalidate it.
 try {
+  // The game server takes registrations only with the servers' shared secret
+  // (staff-db.ts bridgeSecret, kept beside the database).
+  const secretFile = join(process.cwd(), "data", "hk-bridge.secret");
+  const secret = existsSync(secretFile) ? readFileSync(secretFile, "utf8").trim() : "";
   const response = await fetch(`${GAME_SERVER}/dev/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-HK-Secret": secret },
     body: JSON.stringify({
       userId: user.id,
       ticket,

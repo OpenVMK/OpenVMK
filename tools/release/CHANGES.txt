@@ -1,6 +1,38 @@
 VMK - what's new
 ================
 
+v1.2.0 (2026-10-24) - Haunted Mansion rooms, Blue Bayou, server fixes
+---------------------------------------------------------------------
+
+  - The Haunted Mansion is open all the way through: the Stretching
+    Room, the Ballroom and the Attic, reached from the crypt in the
+    Haunted Mansion Lobby, and on to the Frontierland Monorail.
+  - The hitchhiking ghosts are back. Phineas haunts the Stretching
+    Room, Ezra the Ballroom and Gus the Attic. They come and go, drift
+    about the room and talk; you may have to wait for one to appear.
+    Double-click a ghost when you find it for credits (40 the first
+    time, 20 every 12 hours after).
+  - The three mansion rooms are furnished: cupboards, busts, clocks,
+    candles, handrails, the Ballroom's tables and presents, the Attic's
+    harp and chests, and the doors.
+  - The Blue Bayou has its restaurant tables and chairs, and the Gator
+    Waiter. Take a seat, wave him down and say the magic word, and he
+    brings your food to the table. Double-click him for credits like
+    the other characters.
+  - Server fixes for anyone hosting on the internet: a single malformed
+    web request (a broken % escape in the address or in a cookie, or an
+    odd Host header) could stop the server. Oversized game messages are
+    refused, connections that never log in are closed after a minute,
+    and the client error log can no longer grow without limit.
+    Logged-in players who stand idle stay connected (2 hours by
+    default; set VMK_IDLE_TIMEOUT_MINUTES to change it, 0 for no limit).
+  - Security: the GetSec addresses (sec.php, loading.php), which only
+    the original Shockwave client uses, handed out a signed-in player's
+    login ticket to anyone who asked, the owner's included. They are now
+    off unless VMK_SHOCKWAVE_GETSEC=1 is set, and even then only give a
+    player their own. Login tickets work once, and are no longer written
+    to the logs. If you host on the internet, update.
+
 v1.1.4 (2026-10-21) - Turnstiles, room smoke and fire
 -----------------------------------------------------
 

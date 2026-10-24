@@ -38,7 +38,7 @@ import { ARCHIVE, castExtracted, downloadFile } from "./paths.js";
 import { publicUrls, withPublicUrls } from "./public-url.js";
 import { clientIp, trustedProxies } from "./client-ip.js";
 import { banPage, handleHk, warmHk } from "./hk.js";
-import { logLogin } from "./staff-db.js";
+import { bridgeSecret, logLogin } from "./staff-db.js";
 import { castArtVersion, etagOf, isCompressible, notModified, serveCastBatch, writeBody } from "./delivery.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -178,6 +178,8 @@ const PORT = Number(process.env.VMK_SHOCKWAVE_PORT ?? 5199);
 const PUBLIC_ORIGIN = process.env.VMK_PUBLIC_ORIGIN?.trim().replace(/\/+$/, "") || `http://127.0.0.1:${PORT}`;
 const LOADING_URL = process.env.VMK_LOADING_URL ?? `${PUBLIC_ORIGIN}/vmk/loading.php`;
 const LOADING_STATIC = process.env.VMK_LOADING_STATIC ?? "";
+/** GetSec for the original Shockwave client — same switch as the game server's. */
+const SHOCKWAVE_GETSEC = process.env.VMK_SHOCKWAVE_GETSEC === "1";
 
 /** 1×1 PNG placeholder for missing archive CDN images */
 const PLACEHOLDER_PNG = Buffer.from(
@@ -996,7 +998,12 @@ async function proxyGameServer(req: IncomingMessage, res: ServerResponse, path: 
   try {
     const upstream = await fetch(target, {
       method: req.method ?? "POST",
-      headers: { "Content-Type": req.headers["content-type"] ?? "application/json" },
+      headers: {
+        "Content-Type": req.headers["content-type"] ?? "application/json",
+        // The game server's /dev/register wants the shared secret; this proxy
+        // only exists with VMK_DEV=1 (see the route).
+        "X-HK-Secret": bridgeSecret(),
+      },
       body: body.length ? body : undefined,
       signal: AbortSignal.timeout(3000),
     });
@@ -1020,15 +1027,30 @@ async function handleGetSecProxy(
     return;
   }
 
-  const userId =
-    url.searchParams.get("userId") ??
-    url.searchParams.get("user_id") ??
-    req.headers["x-vmk-user-id"]?.toString() ??
-    "1";
+  // ⚠ GetSec's blob carries the user's login ticket. It is off unless the host
+  // opts in for the original Shockwave client (the browser client never asks),
+  // and then it is the CALLER'S OWN: the signed-in session, or a still-valid
+  // `?t=` ticket (the movie may fetch without the cookie). Never a user id from
+  // the request, and never a default — that handed user 1's ticket to anyone.
+  if (!SHOCKWAVE_GETSEC) {
+    send(res, 404, "Not found");
+    return;
+  }
+  const who = currentUser(req) ?? getUserByTicket(url.searchParams.get("t") ?? undefined);
+  if (!who) {
+    logFetch(req, url.pathname, `${label} -> no session, nothing sent`);
+    // PHP ref dies with no body when there is no session.
+    send(res, 204, "");
+    return;
+  }
+  const userId = who.id;
   const target = `${GAME_SERVER}/GetSec/${GETSEC_UUID}/${userId}`;
   logFetch(req, url.pathname, `${label} -> GetSec userId=${userId}`);
   try {
-    const upstream = await fetch(target, { signal: AbortSignal.timeout(1000) });
+    const upstream = await fetch(target, {
+      headers: { "X-HK-Secret": bridgeSecret() },
+      signal: AbortSignal.timeout(1000),
+    });
     if (!upstream.ok) {
       console.log(`[${label}] GetSec ${upstream.status} from ${target}`);
       send(res, upstream.status, "");
@@ -1490,8 +1512,10 @@ function route(req: IncomingMessage, res: ServerResponse) {
     return;
   }
 
-  // Proxy game-server dev registration (avoids browser CORS 5199 -> 8080)
-  if (pathname === "/dev/register" && req.method === "POST") {
+  // Proxy game-server dev registration (avoids browser CORS 5199 -> 8080).
+  // Dev only: it adds the shared secret, so open to anyone it would let anyone
+  // choose what GetSec hands out.
+  if (DEV_MODE && pathname === "/dev/register" && req.method === "POST") {
     void proxyGameServer(req, res, "/dev/register");
     return;
   }
