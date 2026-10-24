@@ -178,7 +178,7 @@ const PORT = Number(process.env.VMK_SHOCKWAVE_PORT ?? 5199);
 const PUBLIC_ORIGIN = process.env.VMK_PUBLIC_ORIGIN?.trim().replace(/\/+$/, "") || `http://127.0.0.1:${PORT}`;
 const LOADING_URL = process.env.VMK_LOADING_URL ?? `${PUBLIC_ORIGIN}/vmk/loading.php`;
 const LOADING_STATIC = process.env.VMK_LOADING_STATIC ?? "";
-/** GetSec for the original Shockwave client — same switch as the game server's. */
+/** GetSec, for the fan-server Shockwave builds only — same switch as the game server's. */
 const SHOCKWAVE_GETSEC = process.env.VMK_SHOCKWAVE_GETSEC === "1";
 
 /** 1×1 PNG placeholder for missing archive CDN images */
@@ -1028,7 +1028,8 @@ async function handleGetSecProxy(
   }
 
   // ⚠ GetSec's blob carries the user's login ticket. It is off unless the host
-  // opts in for the original Shockwave client (the browser client never asks),
+  // opts in for the fan-server Shockwave builds (Disney's movie and the browser
+  // client never ask),
   // and then it is the CALLER'S OWN: the signed-in session, or a still-valid
   // `?t=` ticket (the movie may fetch without the cookie). Never a user id from
   // the request, and never a default — that handed user 1's ticket to anyone.

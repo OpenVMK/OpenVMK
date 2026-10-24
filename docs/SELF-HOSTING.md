@@ -218,7 +218,7 @@ Set these as environment variables, or in `.env` for Docker. All are optional.
 | `VMK_SEASON` | *(none)* | Seasonal decorations: `xmas` or `halloween`. |
 | `VMK_CHAT_CENSOR` | `on` | `off` lets chat words outside the dictionary through. |
 | `VMK_IDLE_TIMEOUT_MINUTES` | `120` | Minutes a logged-in player can stay completely silent before the connection is closed. `0` for no limit. Connections that never log in close after a minute either way. |
-| `VMK_SHOCKWAVE_GETSEC` | *(off)* | `1` serves GetSec (`loading.php`, `sec.php`) for the original Shockwave client, on both servers. The browser client never needs it; leave it off on anything players reach from the internet. |
+| `VMK_SHOCKWAVE_GETSEC` | *(off)* | `1` serves GetSec (`loading.php`, `sec.php`), set on both servers. The game never needs it; only some later fan-made Shockwave builds ask for it. Leave it off on anything players reach from the internet. |
 | `VMK_DATA_DIR` | `./data` | Where the database lives. |
 
 Docker-only (`.env`): `VMK_DOMAIN`, `VMK_BIND`, `VMK_HOST_WEB_PORT`,
