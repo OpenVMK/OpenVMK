@@ -2802,8 +2802,9 @@ function asciiPreview(buf: Buffer, max = 80): string {
 }
 
 /**
- * GetSec is the ORIGINAL Shockwave client's key fetch (loading.php / sec.php);
- * the browser client never calls it. Its blob carries the user's login ticket,
+ * GetSec is a key fetch (loading.php / sec.php) made only by later fan-server
+ * Shockwave builds (vmk_8, vmk_14, framework.dcr). Disney's framework_disney.dcr
+ * never asks, and neither does the browser client. Its blob carries the user's login ticket,
  * so it is OFF unless VMK_SHOCKWAVE_GETSEC=1 — set for Shockwave testing only —
  * and even then `/GetSec` answers only the web server (the bridge secret),
  * which decides whose blob it is from the caller's own session (assets.ts).

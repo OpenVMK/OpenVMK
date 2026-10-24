@@ -26,12 +26,13 @@ v1.2.0 (2026-10-24) - Haunted Mansion rooms, Blue Bayou, server fixes
     and the client error log can no longer grow without limit.
     Logged-in players who stand idle stay connected (2 hours by
     default; set VMK_IDLE_TIMEOUT_MINUTES to change it, 0 for no limit).
-  - Security: the GetSec addresses (sec.php, loading.php), which only
-    the original Shockwave client uses, handed out a signed-in player's
-    login ticket to anyone who asked, the owner's included. They are now
-    off unless VMK_SHOCKWAVE_GETSEC=1 is set, and even then only give a
-    player their own. Login tickets work once, and are no longer written
-    to the logs. If you host on the internet, update.
+  - Security: the GetSec addresses (sec.php, loading.php) handed out a
+    signed-in player's login ticket to anyone who asked, the owner's
+    included. The game itself never uses them; only some later fan-made
+    Shockwave builds did. They are now off unless VMK_SHOCKWAVE_GETSEC=1
+    is set, and even then only give a player their own. Login tickets
+    work once, and are no longer written to the logs. If you host on the
+    internet, update.
 
 v1.1.4 (2026-10-21) - Turnstiles, room smoke and fire
 -----------------------------------------------------
