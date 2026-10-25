@@ -19,6 +19,8 @@
  *         Esplanade.
  *       Halloween: the same five, plus the Haunted Mansion Lobby.
  *   - Music, where the season has a track of its own (`SOUNDS` below).
+ *       Christmas: all five decorated rooms. Halloween: Central Plaza, Town
+ *         Square, Main Street.
  *   - Christmas adds `vmk_holiday_animation` to every room it redecorates.
  *     This is the falling-snow layer the archived config put on those five rooms.
  *   - Whole guest-room styles with a seasonal build (`ROOMS` below).
@@ -42,8 +44,14 @@ const FOLDERS: Record<Season, string[]> = {
 
 /** Everyday sound cast basename -> the season's track. */
 const SOUNDS: Record<Season, Record<string, string>> = {
+  // `vmk_sound/xmas/` names its casts after the songs, not the rooms.
+  // `vmk_snd_hub2_xmas` is deck_the_halls byte for byte.
   xmas: {
     vmk_snd_hub2: "vmk_sound/vmk_snd_hub2_xmas",
+    vmk_snd_main_street1: "vmk_sound/xmas/vmk_snd_dreidel", // Town Square
+    vmk_snd_main_street2: "vmk_sound/xmas/vmk_snd_jingle_bells", // Main Street
+    vmk_snd_vmk_esplanade: "vmk_sound/xmas/vmk_snd_jingle_bells", // shares Main Street's
+    vmk_snd_castle_courtyard: "vmk_sound/xmas/vmk_snd_nutcracker",
   },
   halloween: {
     vmk_snd_hub2: "vmk_sound/vmk_halloween/vmk_snd_hub2_halloween",

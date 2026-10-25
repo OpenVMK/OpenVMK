@@ -38,7 +38,9 @@ const EXTRACTOR = resolve(
 const DEST = resolve("client/assets/casts");
 /** Season -> the archive folders holding its same-named room casts. */
 export const SEASON_FOLDERS = {
-  xmas: ["vmk_spaces/xmas"],
+  // `vmk_sound/xmas/` holds the Christmas music for every decorated room but
+  // Central Plaza (whose track also sits loose, as `vmk_snd_hub2_xmas`).
+  xmas: ["vmk_spaces/xmas", "vmk_sound/xmas"],
   // `vmk_halloween/` repeats three of `halloween/` byte for byte, and adds the
   // one room that folder lacks: the Esplanade (2.2 MB, vs 307 KB everyday).
   halloween: ["vmk_spaces/halloween", "vmk_spaces/vmk_halloween"],
