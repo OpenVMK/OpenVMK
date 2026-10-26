@@ -106,6 +106,44 @@ export function decodeChat(
   return tokens;
 }
 
+/**
+ * The signature field's limit. `CAvatarBuilderPage` truncates `set.myslogan`
+ * at `t_iMaxlength = 80` and shows `reg.slogan.toolong`, so no real client
+ * sends more.
+ */
+export const SLOGAN_MAX_CHARS = 80;
+
+/**
+ * Trim a signature to what the client's field could have produced.
+ *
+ * ⚠ The slogan is re-broadcast to every online friend on every room change
+ * (`announce`), so an unbounded one turns room hopping into a fan-out
+ * amplifier. Every token spends at least one character of the budget — a
+ * dictionary word or friend name cannot be measured here, but each is at least
+ * that — and free text is cut where the budget runs out.
+ */
+export function clampSlogan(tokens: ChatToken[]): ChatToken[] {
+  const out: ChatToken[] = [];
+  let budget = SLOGAN_MAX_CHARS;
+  for (const token of tokens) {
+    if (budget <= 0) break;
+    if (token.kind === "text" || token.kind === "room") {
+      const text = String(token.text ?? "").slice(0, budget);
+      if (text.length === 0) continue;
+      out.push({ kind: token.kind, text });
+      budget -= text.length;
+    } else if (token.kind === "censored") {
+      const length = Math.min(token.length, budget);
+      out.push({ kind: "censored", length });
+      budget -= Math.max(1, length);
+    } else {
+      out.push(token);
+      budget -= 1;
+    }
+  }
+  return out;
+}
+
 /** Best-effort rendering for the server log. Not what the player sees. */
 export function tokensToText(tokens: ChatToken[]): string {
   let out = "";
