@@ -33,6 +33,13 @@
  *
  * The template's KEY* and CAS* are left alone: we overwrite chunks in place, so
  * every association still points where it did.
+ *
+ * ⚠ ediM TEMPLATE, BITD LIBRARY. Every pants cast stores its frames as `ediM`,
+ * while the library holds plain `BITD`, so no pants cast could serve as a
+ * template (Mission Space pants 51-54, Deep Sea Diving pants 55). Such a child
+ * is RETAGGED: its map entry becomes BITD with the library's compression type
+ * and its KEY* row is rewritten to match. The CASt comes from the library too,
+ * so member and pixels agree on the format.
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { read, chunkData, write } from "./shockwave/afterburner.mjs";
@@ -127,6 +134,8 @@ console.log(`template: ${tIndex.size} member(s)   mega: ${mIndex.size} member(s)
 const rename = (name) => name.replace(new RegExp(`_${fromArg}_`), `_${toArg}_`);
 
 const replacements = new Map();
+/** ediM child resId -> the library BITD's compType; see the ediM note above. */
+const retag = new Map();
 const copied = [];
 const missing = [];
 for (const [name, t] of tIndex) {
@@ -141,7 +150,11 @@ for (const [name, t] of tIndex) {
   replacements.set(t.castResId, chunkData(mega, mega.entries.find((e) => e.resId === m.castResId)));
   // Its children, matched by fourcc so BITD and ALFA cannot be transposed.
   for (const child of t.children) {
-    const src = m.children.find((c) => c.fourcc === child.fourcc);
+    let src = m.children.find((c) => c.fourcc === child.fourcc);
+    if (!src && child.fourcc === "ediM") {
+      src = m.children.find((c) => c.fourcc === "BITD");
+      if (src) retag.set(child.resId, mega.entries.find((e) => e.resId === src.resId).compType);
+    }
     if (!src) {
       missing.push(`${want}:${child.fourcc}`);
       continue;
@@ -157,6 +170,27 @@ if (missing.length > 0) {
   console.error(`\nMISSING in the mega-library (${missing.length}):`);
   for (const m of missing.slice(0, 20)) console.error(`   ${m}`);
   throw new Error("refusing to write a cast with missing members");
+}
+
+if (retag.size > 0) {
+  for (const entry of template.entries) {
+    if (!retag.has(entry.resId)) continue;
+    entry.tag = "BITD";
+    entry.compType = retag.get(entry.resId);
+  }
+  // KEY* rows are [sectionId, castId, reversed fourcc], little-endian.
+  const keyEntry = template.entries.find((e) => e.tag === "KEY*");
+  const key = Buffer.from(chunkData(template, keyEntry));
+  const usedCount = key.readInt32LE(8);
+  let rows = 0;
+  for (let i = 0, p = 12; i < usedCount && p + 12 <= key.length; i++, p += 12) {
+    if (!retag.has(key.readInt32LE(p))) continue;
+    key.write("DTIB", p + 8, "latin1");
+    rows++;
+  }
+  if (rows !== retag.size) throw new Error(`retagged ${retag.size} chunk(s) but found ${rows} KEY* row(s)`);
+  replacements.set(keyEntry.resId, key);
+  console.log(`retagged ediM -> BITD: ${retag.size}`);
 }
 
 writeFileSync(outPath, write(template, replacements));
