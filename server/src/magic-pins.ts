@@ -79,11 +79,19 @@ const PINS = new Map<number, MagicPin>([
   [2131, { effect: 105, word: "Drive!" }], // Autopia Offroad Blue
   [2132, { effect: 106, word: "Drive!" }], // Autopia Offroad Pink
   [2133, { effect: 107, word: "Drive!" }], // Autopia Offroad Yellow
-  [2135, { effect: 17, word: "Dive!" }], // Deep Sea Diving — SPS-scuba-breath
-  [2136, { effect: 18, word: "Space!" }], // Inner-Space Suit Blue — SM-space-suit-1
-  [2137, { effect: 18, word: "Space!" }], // Inner-Space Suit Green
-  [2138, { effect: 18, word: "Space!" }], // Inner-Space Suit Pink
-  [2139, { effect: 18, word: "Space!" }], // Inner-Space Suit Red
+  // Deep Sea Diving — SPS-scuba-breath. The magic-only diving set, numbered
+  // beside the Coral pin's (41032/44258/46038/48028): Diver Helmet Blue, Jacket
+  // with Oxygen Tank, Pants, Boots. The plain diving set (44231/46023/48013) is
+  // the quest's tradeable clothing, so the pin wearing it would be the guess.
+  [2135, { effect: 17, costume: [41031, 1, 44257, 1, 46037, 1, 48027, 1], word: "Dive!" }],
+  // Inner-Space Suit — SM-space-suit-1. Each pin wears its colour's Mission Space
+  // Helmet/Vest/Pants/Boots. Helmet and boots are one model tinted per colour
+  // (SetList: 175 Blue, 178 Green, 176 Pink, 177 Red); vest and pants are a
+  // model each, colour 1.
+  [2136, { effect: 18, costume: [41025, 175, 44251, 1, 46031, 1, 48021, 175], word: "Space!" }], // Blue
+  [2137, { effect: 18, costume: [41026, 178, 44252, 1, 46032, 1, 48022, 178], word: "Space!" }], // Green
+  [2138, { effect: 18, costume: [41027, 176, 44253, 1, 46033, 1, 48023, 176], word: "Space!" }], // Pink
+  [2139, { effect: 18, costume: [41028, 177, 44254, 1, 46034, 1, 48024, 177], word: "Space!" }], // Red
   [2143, { effect: 19, costume: [40001, 1, 41032, 1, 44258, 1, 46038, 1, 48028, 1], word: "Ahoy!" }], // Turn Into Coral — MFX-coral-1; Coral Magic Hair/Hat/Vest/Pants/Boots
   [2219, { effect: 25, endEffect: 26, word: "Jaws!" }], // Turn Into Shark — shark in / out
   [12242, { effect: 0, sword: true, word: "Draw!" }], // Sword In The Stone Single Use — pulls the courtyard sword; 2242 is an ordinary pin

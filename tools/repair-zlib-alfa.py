@@ -7,7 +7,8 @@ garbage — e.g. the Pirates shoot-direction arrow `shoot0060` drew on an opaque
 off-white box while its 35 sibling frames were clean.
 
 A chunk is only repaired when zlib -> PackBits yields EXACTLY width*height
-bytes for its PNG, so a coincidental 0x78 header is never touched.
+bytes for its PNG (rows padded to an even width count too), so a
+coincidental 0x78 header is never touched.
 
   python tools/repair-zlib-alfa.py                 # dry run: report only
   python tools/repair-zlib-alfa.py --apply NAME..  # rewrite PNGs whose path contains NAME
@@ -68,9 +69,14 @@ def main() -> None:
             continue
         img = Image.open(png).convert("RGBA")
         w, h = img.size
-        if len(alpha) != w * h:
+        # Odd widths pad each alpha row to an even length: the Baseball
+        # Predictometer ticker (item_397 *_5_3_11..13) is 35 wide in 828 = 36*23.
+        stride = w + (w & 1) if len(alpha) == (w + (w & 1)) * h else w
+        if len(alpha) != stride * h:
             print(f"skip  {rel}: {len(alpha)} bytes for {w}x{h}")
             continue
+        if stride != w:
+            alpha = bytearray(b for y in range(h) for b in alpha[y * stride : y * stride + w])
         old = img.getchannel("A").tobytes()
         diff = sum(1 for a, b in zip(old, alpha) if a != b)
         wanted = apply and any(n in png for n in names)
