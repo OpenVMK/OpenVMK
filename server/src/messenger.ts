@@ -47,7 +47,7 @@ import {
   type StoredMessage,
 } from "./db.js";
 import { CMD, MSG, decodeToInt, readClientString, wireText, type OutgoingParam } from "./vmk-protocol.js";
-import { decodeChat, reEmit, tokensToText, type ChatToken } from "./chat-tokens.js";
+import { clampSlogan, decodeChat, reEmit, tokensToText, type ChatToken } from "./chat-tokens.js";
 
 /** Where an online player is, as the friend list shows it. */
 export interface PeerLocation {
@@ -106,7 +106,8 @@ function sloganTokens(userId: number): ChatToken[] {
   if (!raw) return [];
   try {
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as ChatToken[]) : [];
+    // Clamped on read: rows stored before the 506 handler capped them.
+    return Array.isArray(parsed) ? clampSlogan(parsed as ChatToken[]) : [];
   } catch {
     return [];
   }

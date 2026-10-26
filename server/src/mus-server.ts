@@ -240,6 +240,7 @@ import {
 } from "./messenger.js";
 import {
   cannedText,
+  clampSlogan,
   decodeChat,
   reEmit,
   tokensToText,
@@ -2564,7 +2565,8 @@ function storedSloganTokens(userId: number): ChatToken[] {
   if (!raw) return [];
   try {
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as ChatToken[]) : [];
+    // Clamped on read too: rows stored before the 506 handler capped them.
+    return Array.isArray(parsed) ? clampSlogan(parsed as ChatToken[]) : [];
   } catch {
     return [];
   }
@@ -8667,7 +8669,7 @@ function createVmkSession(
         return value;
       };
       if (body.length > 0) readInt(); // the count
-      const tokens = decodeChat(readInt, readStr, () => offset < body.length);
+      const tokens = clampSlogan(decodeChat(readInt, readStr, () => offset < body.length));
       // ⚠ `tokensToText` is for LOGS ONLY — it renders an unresolvable index as
       // the literal `<word:8436>`. Storing that put debug syntax on a player's
       // profile. The user-facing string drops what it cannot resolve instead.
