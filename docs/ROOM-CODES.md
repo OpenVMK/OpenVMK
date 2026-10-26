@@ -10,8 +10,8 @@ the server builds `LOADABLE_ROOMS` from. Use with the staff command
 node tools/list-room-codes.mjs --md
 ```
 
-**144 codes** — 110 named (the navigator advertises these),
-34 unnamed but loadable.
+**147 codes** — 114 named (the navigator advertises these),
+33 unnamed but loadable.
 **seats** marks a room whose cast has extracted sit tiles
 (`assets/room-seats.json`); it is per-CAST, so codes sharing a cast share the mark.
 
@@ -92,10 +92,10 @@ node tools/list-room-codes.mjs --md
 | 82 | Nautilus Grotto | `nautilus_grotto` | seats |
 | 83 | High School Musical Room | `high_school` |  |
 | 84 | Caribbean Town Square Guest Room | `potc2_private` |  |
-| 85 | Waterpark Pool | `shark_reef` |  |
+| 85 | Waterpark Pool | `shark_reef` | seats |
 | 86 | Summit Plummet Guest Room | `typhoon_lagoon` |  |
 | 87 | Blizzard Beach Private Room | `blizzard_beach` |  |
-| 88 | Pirates Treasure room | `treasure_room` |  |
+| 88 | Pirates Treasure room | `treasure_room` | seats |
 | 89 | Tron Guest Room | `tron_private` |  |
 | 90 | Refreshment Corner Guest Room | `refreshment_private` |  |
 | 91 | Football Guest Room | `wws_football_private` |  |
@@ -122,13 +122,17 @@ node tools/list-room-codes.mjs --md
 | 138 | Skull Rock Guest Room | `pirates_private` |  |
 | 139 | Haunted Mansion Conservatory Guest Room | `haunted_private` |  |
 | 140 | Penny Arcade | `penny_arcade` |  |
+| 141 | Monsters Inc Laugh Floor | `monsters_laugh_floor` |  |
 | 1001 | Pirates of the Caribbean Game Lobby | `pirates_game_preshow` |  |
+| 1010 | Classics Lobby | `pirates_classic_preshow` |  |
+| 1011 | Cave of Wonders | `caveofwonders` |  |
 | 1100 | Castle Fireworks Remixed Lobby | `fireworks_preshow` |  |
 | 1102 | Jungle Cruise Photo Safari Game | `jungle_cruise` |  |
 | 1103 | Street Party Music Game | `musicmix` |  |
 | 1104 | Haunted Mansion Lobby | `haunted_mansion_lobby` |  |
+| 1107 | Monorail Music Mixer Game | `musicmix` |  |
 | 1108 | Main Street Magic Shop | `vmk_magic_shop` |  |
-| 1109 | Magic Shop Checkers Room | `vmk_checkers` |  |
+| 1109 | Magic Shop Checkers Room | `vmk_checkers` | seats |
 
 ## Unnamed (no `room.<n>.name` text; show as "Room <code>")
 
@@ -160,7 +164,6 @@ node tools/list-room-codes.mjs --md
 | 134 | `vmks_fantasy_c_exterior_2` |  |
 | 135 | `Alice_demo_bgr` |  |
 | 1106 | `tomorrowland_arcade` |  |
-| 1107 | `musicmix` |  |
 | 1200 | `hm_level_test` |  |
 | 1201 | `hm_level1` |  |
 | 1202 | `hm_level2` |  |
