@@ -1873,12 +1873,57 @@ export class Stage {
      * image-to-image `INK_DARKEST` path.) See [[film-loops-render-from-scvw]].
      */
     const darken = record.ink === 39;
+    /**
+     * ⚠ SUBTRACT PIN (35) has no canvas composite mode at all, so it is built
+     * from two that exist: invert the box, ADD the sprite, invert back.
+     * 255 − min(255, (255 − dst) + src) = max(0, dst − src), which is exactly
+     * Subtract Pin per channel. "difference" against white is the inversion,
+     * and two of them are the identity wherever the sprite did not land.
+     *
+     * Before this it fell through to an opaque blit. MEASURED on Room 32 (Spell
+     * Room): the sky vortex `spellroom_sky_anim` is eight 800×71 near-black
+     * frames (`magickeff_v1_*`, swirl ≤ 25 grey) at ink 35 — Copy pasted a black
+     * band over the top of the sky; subtracted, it carves a faint dark swirl.
+     */
+    if (record.ink === 35 && target.fillRect) {
+      this.paintSubtractPin(target, drawable, source, rotated, record);
+      return;
+    }
     if (!additive && !lighten && !darken) {
       this.blitMirrored(target, drawable, source, rotated, record);
       return;
     }
     target.globalCompositeOperation = additive ? "lighter" : darken ? "darken" : "lighten";
     this.blitMirrored(target, drawable, source, rotated, record);
+    target.globalCompositeOperation = "source-over";
+  }
+
+  /** Subtract Pin as invert → add → invert — see the ink 35 note in `paint`. */
+  private paintSubtractPin(
+    target: RenderTarget,
+    drawable: unknown,
+    source: { x: number; y: number; w: number; h: number } | null,
+    rotated: boolean,
+    record: DrawRecord,
+  ): void {
+    // The box the sprite actually lands in, after `blitMirrored` flips it.
+    let { x, y } = record;
+    if (record.flipH) x = 2 * (record.pivotX ?? record.x + record.width / 2) - x - record.width;
+    if (record.flipV) y = 2 * (record.pivotY ?? record.y + record.height / 2) - y - record.height;
+    const holder = target as unknown as { globalAlpha: number; fillStyle: string };
+    const spriteAlpha = holder.globalAlpha;
+    const invert = (): void => {
+      target.globalAlpha = 1;
+      target.globalCompositeOperation = "difference";
+      target.fillStyle = "#ffffff";
+      target.fillRect!(x, y, record.width, record.height);
+    };
+    invert();
+    target.globalAlpha = spriteAlpha;
+    target.globalCompositeOperation = "lighter";
+    this.blitMirrored(target, drawable, source, rotated, record);
+    invert();
+    target.globalAlpha = spriteAlpha;
     target.globalCompositeOperation = "source-over";
   }
 
