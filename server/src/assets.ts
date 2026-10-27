@@ -32,7 +32,7 @@ import {
   redirect,
   setSessionCookie,
 } from "./auth.js";
-import { createTicket, databasePath, deleteSession, getUserByTicket, pruneExpired } from "./db.js";
+import { createTicket, databasePath, deleteSession, getUserByTicket, getUserByUsername, pruneExpired } from "./db.js";
 import { seasonFromEnv, seasonalCasts } from "./seasons.js";
 import { ARCHIVE, castExtracted, downloadFile } from "./paths.js";
 import { publicUrls, withPublicUrls } from "./public-url.js";
@@ -1242,6 +1242,32 @@ function guard(label: string, run: () => Promise<void>, res: ServerResponse): vo
   });
 }
 
+/** Per-IP limits on `/auth`: failed sign-ins, and new accounts. */
+const AUTH_FAILURES_MAX = 10;
+const AUTH_FAILURE_WINDOW_MS = 10 * 60e3;
+const SIGNUPS_MAX = 5;
+const SIGNUP_WINDOW_MS = 60 * 60e3;
+const authFailures = new Map<string, { count: number; until: number }>();
+const signups = new Map<string, { count: number; until: number }>();
+
+function gateClosed(gates: Map<string, { count: number; until: number }>, ip: string, max: number): boolean {
+  const gate = gates.get(ip);
+  return gate !== undefined && gate.until > Date.now() && gate.count >= max;
+}
+
+function countAttempt(gates: Map<string, { count: number; until: number }>, ip: string, windowMs: number): void {
+  const t = Date.now();
+  const gate = gates.get(ip);
+  if (gate && gate.until > t) gate.count++;
+  else gates.set(ip, { count: 1, until: t + windowMs });
+}
+
+// Expired gates go, so the maps cannot grow by one entry per address forever.
+setInterval(() => {
+  const t = Date.now();
+  for (const gates of [authFailures, signups]) for (const [ip, g] of gates) if (g.until <= t) gates.delete(ip);
+}, 10 * 60e3).unref();
+
 async function handleAuthPost(req: IncomingMessage, res: ServerResponse): Promise<void> {
   let form: URLSearchParams;
   try {
@@ -1267,8 +1293,22 @@ async function handleAuthPost(req: IncomingMessage, res: ServerResponse): Promis
     return;
   }
 
+  // ⚠ Every attempt runs scrypt, and an unknown name CREATES an account, with
+  // no limit: a script could stall this server or mint accounts by the
+  // thousand. It also checks the same passwords as Housekeeping, so without
+  // its own limit Housekeeping's 5-try lockout was moot.
+  const ip = clientIp(req.socket.remoteAddress, req.headers);
+  const signingUp = !getUserByUsername(username);
+  if (gateClosed(authFailures, ip, AUTH_FAILURES_MAX) || (signingUp && gateClosed(signups, ip, SIGNUPS_MAX))) {
+    console.warn(`[auth] ${signingUp ? "sign-up" : "sign-in"} for "${username}" refused: rate limit (${ip})`);
+    redirect(res, back("Too many attempts. Wait a few minutes and try again."));
+    return;
+  }
+
   const outcome = authenticate(username, password);
+  if (outcome?.created) countAttempt(signups, ip, SIGNUP_WINDOW_MS);
   if (!outcome) {
+    countAttempt(authFailures, ip, AUTH_FAILURE_WINDOW_MS);
     // Deliberately does NOT distinguish "wrong password" from anything else, so
     // the page cannot be used to enumerate who has an account.
     redirect(res, back("That username and password do not match."));
@@ -1283,7 +1323,7 @@ async function handleAuthPost(req: IncomingMessage, res: ServerResponse): Promis
     outcome.user.id,
     "web",
     // The PLAYER's address, not a reverse proxy's — see client-ip.ts.
-    clientIp(req.socket.remoteAddress, req.headers),
+    ip,
     "",
     String(req.headers["user-agent"] ?? ""),
   );

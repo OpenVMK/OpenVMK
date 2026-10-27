@@ -83,6 +83,12 @@ export function cannedText(text: string): Array<{ int: number } | { str: string 
   return [{ int: 1 }, { int: 0 }, { str: text }];
 }
 
+/**
+ * Most free text one decoded message keeps. The longest client field is 255
+ * (messenger compose, room description); this leaves room for any of them.
+ */
+const DECODE_TEXT_MAX = 1024;
+
 /** Read a message body into tokens. `hasMore` reports unconsumed bytes. */
 export function decodeChat(
   readInt: () => number,
@@ -90,11 +96,20 @@ export function decodeChat(
   hasMore: () => boolean,
 ): ChatToken[] {
   const tokens: ChatToken[] = [];
+  // ⚠ Free text is bounded in TOTAL, not just per token: 512 tokens of 1 MB
+  // each was a 512 MB string for `tokensToPlainText` to build. No client field
+  // holds more than DECODE_TEXT_MAX; each caller clamps to its own field after.
+  let textLeft = DECODE_TEXT_MAX;
+  const boundedStr = (): string => {
+    const text = readStr().slice(0, textLeft);
+    textLeft -= text.length;
+    return text;
+  };
   // Bounded so a malformed body cannot spin: no real message is this long.
   for (let i = 0; i < 512 && hasMore(); i++) {
     const token = readInt();
-    if (token === 0) tokens.push({ kind: "text", text: readStr() });
-    else if (token === -2) tokens.push({ kind: "room", text: readStr() });
+    if (token === 0) tokens.push({ kind: "text", text: boundedStr() });
+    else if (token === -2) tokens.push({ kind: "room", text: boundedStr() });
     else if (token === -1) tokens.push({ kind: "friend", code: readInt(), form: "nominative" });
     else if (token === -3) tokens.push({ kind: "friend", code: readInt(), form: "genitive" });
     else if (token === -4) tokens.push({ kind: "friend", code: readInt(), form: "plural" });

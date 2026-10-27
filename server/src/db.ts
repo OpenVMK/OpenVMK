@@ -1304,6 +1304,11 @@ export function createPendingPhoto(ownerId: number, caption: string): number {
   return Number(info.lastInsertRowid);
 }
 
+/** Drop a player's unfinished uploads: rows a THUMBNAIL made and no PICTURE filled. */
+export function deletePendingPhotos(ownerId: number): number {
+  return Number(db.prepare("DELETE FROM photos WHERE owner_id = ? AND width = 0").run(ownerId).changes);
+}
+
 export function setPhotoPixels(id: number, width: number, height: number, pixels: Uint8Array): void {
   db.prepare("UPDATE photos SET width = ?, height = ?, pixels = ? WHERE id = ?").run(width, height, pixels, id);
 }
@@ -1909,6 +1914,11 @@ export interface MessengerUser {
   name: string;
   /** ms epoch of the last disconnect (or login, for rows older than that). */
   lastSeenAt: number | null;
+  /**
+   * Registration finished. Without it `name` falls back to the LOGIN name,
+   * which must not be shown to other players.
+   */
+  hasCharacter: boolean;
 }
 
 function rowToMessengerUser(row: Record<string, unknown>): MessengerUser {
@@ -1917,6 +1927,7 @@ function rowToMessengerUser(row: Record<string, unknown>): MessengerUser {
     id: Number(row.id),
     name: String(row.character_name ?? row.username),
     lastSeenAt: seen === null || seen === undefined ? null : Number(seen),
+    hasCharacter: Number(row.has_character) === 1,
   };
 }
 
@@ -1976,6 +1987,13 @@ export function addFriendRequest(requesterId: number, targetId: number): boolean
     )
     .run(requesterId, targetId, now());
   return Number(result.changes) > 0;
+}
+
+export function countOutgoingFriendRequests(requesterId: number): number {
+  const row = db.prepare("SELECT COUNT(*) AS n FROM friend_requests WHERE requester_id = ?").get(requesterId) as {
+    n: number;
+  };
+  return Number(row.n);
 }
 
 export function hasFriendRequest(requesterId: number, targetId: number): boolean {
@@ -2057,11 +2075,22 @@ export function addMessage(
 }
 
 /** Everything still in the player's inbox, oldest first. */
-export function getUnreadMessages(recipientId: number): StoredMessage[] {
+/**
+ * The oldest unread messages, at most `limit` — every one is delivered at
+ * login, so an unbounded inbox made one login a server-wide stall.
+ */
+export function getUnreadMessages(recipientId: number, limit = 200): StoredMessage[] {
   const rows = db
-    .prepare("SELECT * FROM messages WHERE recipient_id = ? AND read_at IS NULL ORDER BY id")
-    .all(recipientId) as Array<Record<string, unknown>>;
+    .prepare("SELECT * FROM messages WHERE recipient_id = ? AND read_at IS NULL ORDER BY id LIMIT ?")
+    .all(recipientId, limit) as Array<Record<string, unknown>>;
   return rows.map(rowToMessage);
+}
+
+export function countUnreadMessages(recipientId: number, kind: MessageKind): number {
+  const row = db
+    .prepare("SELECT COUNT(*) AS n FROM messages WHERE recipient_id = ? AND kind = ? AND read_at IS NULL")
+    .get(recipientId, kind) as { n: number };
+  return Number(row.n);
 }
 
 /** Scoped to the recipient, so nobody can clear someone else's inbox by id. */

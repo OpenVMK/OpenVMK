@@ -29,6 +29,8 @@ import {
   addIgnore,
   addMessage,
   areFriends,
+  countOutgoingFriendRequests,
+  countUnreadMessages,
   deleteFriendRequest,
   getFriends,
   getMessengerUser,
@@ -83,6 +85,10 @@ const peers = new Map<number, PeerState>();
 
 /** Friends list limit; `ADD_FRIEND_FAILED` exists to report hitting it. */
 const MAX_FRIENDS = 100;
+/** Unanswered friend requests one player may have out at once. */
+const MAX_PENDING_REQUESTS = 50;
+/** Unread instant messages an inbox holds before refusing more. */
+const MAX_UNREAD_IMS = 100;
 
 /** What an online player with no room shows instead of a room name. */
 const NO_ROOM_TITLE = "Map";
@@ -352,6 +358,13 @@ export function handleMessengerCommand(session: MessengerSession, command: numbe
           console.warn(`[${label}] IM to ${recipientId} refused: not a friend`);
           continue;
         }
+        // A full inbox refuses more until some are read: every unread one is
+        // stored for good and delivered at login, so a flood of them was a
+        // bloated table and a stalled login. Staff mail is not counted.
+        if (countUnreadMessages(recipientId, "im") >= MAX_UNREAD_IMS) {
+          console.warn(`[${label}] IM to ${recipientId} refused: inbox full (${MAX_UNREAD_IMS} unread)`);
+          continue;
+        }
         const message = addMessage(recipientId, userId, "im", JSON.stringify(tokens));
         const live = deliverMessage(message, true);
         console.log(
@@ -363,20 +376,31 @@ export function handleMessengerCommand(session: MessengerSession, command: numbe
     }
 
     case CMD.ASK_TO_BE_FRIEND: {
+      // Character names are at most 18; anything longer is no player, and was
+      // logged in full.
       const name = read.str();
-      const target = getMessengerUserByName(name);
+      const target = name.length <= 40 ? getMessengerUserByName(name) : undefined;
       if (!target || target.id === userId) {
-        console.warn(`[${label}] friend request for "${name}" refused: no such player`);
+        console.warn(`[${label}] friend request for "${name.slice(0, 40)}" refused: no such player`);
         return;
       }
       if (areFriends(userId, target.id)) return;
+      // ⚠ Checked BEFORE the reciprocal yes below: it used to skip both caps,
+      // so alts asking first let one list grow past MAX_FRIENDS without limit,
+      // and every room change fans out to the whole list.
+      if (getFriends(userId).length >= MAX_FRIENDS || getFriends(target.id).length >= MAX_FRIENDS) {
+        send(MSG.ADD_FRIEND_FAILED, [{ int: target.id }], "AddFriendFailed (list full)");
+        return;
+      }
       // Asking someone who already asked you is a yes to them.
       if (hasFriendRequest(target.id, userId)) {
         befriend(session, self, target);
         return;
       }
-      if (getFriends(userId).length >= MAX_FRIENDS) {
-        send(MSG.ADD_FRIEND_FAILED, [{ int: target.id }], "AddFriendFailed (own list full)");
+      // Requests are rows too: one account could ask every player.
+      if (countOutgoingFriendRequests(userId) >= MAX_PENDING_REQUESTS) {
+        console.warn(`[${label}] friend request to ${target.name} refused: ${MAX_PENDING_REQUESTS} already pending`);
+        send(MSG.ADD_FRIEND_FAILED, [{ int: target.id }], "AddFriendFailed (too many pending)");
         return;
       }
       // An ignored requester is told nothing — the request just never lands.
@@ -418,6 +442,9 @@ export function handleMessengerCommand(session: MessengerSession, command: numbe
     case CMD.IGNORE_FRIEND_REQUESTS: {
       const requesterId = read.int();
       deleteFriendRequest(requesterId, userId);
+      // ⚠ `friend_ignores` references users(id) with foreign keys on, so an id
+      // that is no user made the INSERT throw — and took the server down.
+      if (requesterId === userId || !getMessengerUser(requesterId)) return;
       addIgnore(userId, requesterId);
       console.log(`[${label}] ignoring friend requests from ${requesterId}`);
       return;
@@ -435,7 +462,9 @@ export function handleMessengerCommand(session: MessengerSession, command: numbe
 
     case CMD.MESSENGER_AVATAR_INFO: {
       const other = getMessengerUser(read.int());
-      if (!other) return;
+      // An account with no character would answer with its LOGIN name — half
+      // the credential, for any id anyone cares to ask about.
+      if (!other || !other.hasCharacter) return;
       send(MSG.MESSENGER_AVATAR_INFO, [{ int: other.id }, { str: wireText(other.name) }], "AvatarInfo");
       return;
     }

@@ -1653,7 +1653,12 @@ export function decodeClientMessage(text: string): { message: ClientMessage; res
 
 /** Read a length-prefixed string parameter from a client message body. */
 export function readClientString(body: string, offset = 0): { value: string; next: number } {
-  const { value: length, next } = decodeToInt(body, offset);
+  const { value: raw, next } = decodeToInt(body, offset);
+  // ⚠ The length is the client's word. A negative one moved `next` BACKWARDS,
+  // so a `for (i < count && at < body.length)` loop re-read the same byte for
+  // up to 2^31 iterations: a ten-byte message hung the server. Clamp it into
+  // what is actually left, so every read moves forward.
+  const length = Math.max(0, Math.min(raw, body.length - next));
   return { value: body.slice(next, next + length), next: next + length };
 }
 
