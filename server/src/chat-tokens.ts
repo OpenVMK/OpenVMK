@@ -114,17 +114,32 @@ export function decodeChat(
 export const SLOGAN_MAX_CHARS = 80;
 
 /**
+ * The messenger compose field's limit. `CMessengerViewMessagesCompose` stops
+ * `mes.messages.messageinput` at 255 and shows `mes.msgtoolong`.
+ */
+export const IM_MAX_CHARS = 255;
+
+/**
  * Trim a signature to what the client's field could have produced.
  *
  * ⚠ The slogan is re-broadcast to every online friend on every room change
  * (`announce`), so an unbounded one turns room hopping into a fan-out
- * amplifier. Every token spends at least one character of the budget — a
- * dictionary word or friend name cannot be measured here, but each is at least
- * that — and free text is cut where the budget runs out.
+ * amplifier.
  */
 export function clampSlogan(tokens: ChatToken[]): ChatToken[] {
+  return clampCanned(tokens, SLOGAN_MAX_CHARS);
+}
+
+/**
+ * Trim canned text to `maxChars`, the size of the client field it came from.
+ * Every token spends at least one character of the budget — a dictionary word
+ * or friend name cannot be measured here, but each is at least that — and free
+ * text is cut where the budget runs out. Anything the real field can hold
+ * comes back unchanged.
+ */
+export function clampCanned(tokens: ChatToken[], maxChars: number): ChatToken[] {
   const out: ChatToken[] = [];
-  let budget = SLOGAN_MAX_CHARS;
+  let budget = maxChars;
   for (const token of tokens) {
     if (budget <= 0) break;
     if (token.kind === "text" || token.kind === "room") {
