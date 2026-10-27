@@ -47,7 +47,7 @@ import {
   type StoredMessage,
 } from "./db.js";
 import { CMD, MSG, decodeToInt, readClientString, wireText, type OutgoingParam } from "./vmk-protocol.js";
-import { clampSlogan, decodeChat, reEmit, tokensToText, type ChatToken } from "./chat-tokens.js";
+import { IM_MAX_CHARS, clampCanned, clampSlogan, decodeChat, reEmit, tokensToText, type ChatToken } from "./chat-tokens.js";
 
 /** Where an online player is, as the friend list shows it. */
 export interface PeerLocation {
@@ -332,10 +332,19 @@ export function handleMessengerCommand(session: MessengerSession, command: numbe
     }
 
     case CMD.SEND_INSTANT_MESSAGE: {
+      // ⚠ `count` is the client's word, bounded only by the frame. The stock
+      // compose view always sends one recipient; a forged frame repeating one
+      // id hundreds of thousands of times made each a synchronous SELECT +
+      // INSERT, freezing every player. Every id is still READ, so the canned
+      // body after them parses, but at most MAX_FRIENDS distinct ids are KEPT.
       const count = read.int();
-      const recipients: number[] = [];
-      for (let i = 0; i < count && read.more(); i++) recipients.push(read.int());
-      const tokens = decodeChat(read.int, read.str, read.more);
+      const recipients = new Set<number>();
+      for (let i = 0; i < count && read.more(); i++) {
+        const id = read.int();
+        if (recipients.size < MAX_FRIENDS && id !== userId) recipients.add(id);
+      }
+      // Stored once per recipient, so it is held to the compose field's size.
+      const tokens = clampCanned(decodeChat(read.int, read.str, read.more), IM_MAX_CHARS);
       if (tokens.length === 0) return;
       for (const recipientId of recipients) {
         // Messages go to friends only, as the compose view only offers friends.
