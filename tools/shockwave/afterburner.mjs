@@ -233,19 +233,38 @@ export function chunkData(cast, entry) {
 }
 
 /**
- * Rebuild a cast with `replacements` (resId -> new decompressed Buffer).
+ * Rebuild a cast with `replacements` (resId -> new decompressed Buffer) and
+ * optional `additions`: NEW chunks, each `{ resId, tag, data, ils, compType,
+ * deflate }`. An `ils` addition is packed into the initial load segment (where
+ * a cast keeps its CASt headers); any other goes in the payload, deflated when
+ * `deflate` is set and stored raw otherwise. `compType` indexes the Fcdr table
+ * (0 = zlib; a JPEG `ediM` uses 1 and is stored raw).
  *
  * Every chunk is re-emitted in map order so offsets stay monotonic; anything
  * not replaced is copied through in its ORIGINAL compressed form, so untouched
- * chunks are byte-identical and only what we edited can differ.
+ * chunks are byte-identical and only what we edited can differ. Additions go
+ * after the existing entries, so give them ids above every existing one.
+ *
+ * ⚠ Adding a chunk only puts its bytes in the file. Nothing loads a member
+ * until KEY* links its children to it and CAS* gives it a slot; the caller
+ * rewrites those two as replacements.
  */
-export function write(cast, replacements) {
+export function write(cast, replacements, additions = []) {
   // ⚠ Nothing to change means change NOTHING. The original payload is not
   // tightly packed — chunks sit at the offsets the map states, with small gaps
   // between them (measured: 9 bytes across item_41.cct). Repacking is perfectly
   // valid, since every offset is explicit, but it makes an untouched cast
   // differ from its source, which would mask real regressions in the walk.
-  if (replacements.size === 0) return rebuild(cast, cast.entries, cast.payload, cast.abmpRaw);
+  if (replacements.size === 0 && additions.length === 0) {
+    return rebuild(cast, cast.entries, cast.payload, cast.abmpRaw);
+  }
+  const taken = new Set(cast.entries.map((e) => e.resId));
+  for (const add of additions) {
+    if (taken.has(add.resId)) throw new Error(`chunk id ${add.resId} already exists`);
+    taken.add(add.resId);
+  }
+  const ilsAdds = additions.filter((a) => a.ils);
+  const payloadAdds = additions.filter((a) => !a.ils);
 
   // ⚠ A replacement aimed at an ILS-RESIDENT chunk is rewritten into a
   // replacement of the ILS itself, because that is the only chunk the payload
@@ -262,7 +281,7 @@ export function write(cast, replacements) {
     const entry = cast.entries.find((e) => e.resId === resId);
     return entry && entry.offset === -1;
   });
-  if (residentEdits.length > 0) {
+  if (residentEdits.length > 0 || ilsAdds.length > 0) {
     if (!ilsEntry || !cast.ilsData) throw new Error("cannot edit an ILS-resident chunk without the ILS");
     const edited = new Map(residentEdits);
     const order = cast.entries
@@ -281,6 +300,8 @@ export function write(cast, replacements) {
         entry.decompLen = bytes.length;
       }
     }
+    // New resident chunks load after everything the cast already had.
+    for (const add of ilsAdds) out.push(writeVarint(add.resId), add.data);
     replacements = new Map(
       [...replacements].filter(([resId]) => !edited.has(resId)),
     );
@@ -326,6 +347,28 @@ export function write(cast, replacements) {
     pieces.push(bytes);
     cursor += bytes.length;
   }
+  for (const add of ilsAdds) {
+    const len = add.data.length;
+    entries.push({ resId: add.resId, offset: -1, compLen: len, decompLen: len, compType: add.compType ?? 0, tag: add.tag });
+  }
+  for (const add of payloadAdds) {
+    const bytes = add.deflate ? deflateSync(add.data) : add.data;
+    entries.push({
+      resId: add.resId,
+      offset: cursor,
+      compLen: bytes.length,
+      decompLen: add.data.length,
+      compType: add.compType ?? 0,
+      tag: add.tag,
+    });
+    pieces.push(bytes);
+    cursor += bytes.length;
+  }
+  // Director lists the map in ascending resource-id order, and so does every
+  // cast we hold; keep added chunks in that order too. Offsets are explicit, so
+  // this reorders the table only, not the bytes. (Shockwave already rejects a
+  // cast whose KEY* rows are out of order; don't hand it a map that is either.)
+  if (additions.length > 0) entries.sort((a, b) => a.resId - b.resId);
 
   // The entry table, without the three leading header varints.
   const table = Buffer.concat(
@@ -344,9 +387,13 @@ export function write(cast, replacements) {
   // OWN second varint is the 751. Recomputing it widened the varint and left
   // the file 8 bytes short. Whatever it means, it does not describe the table,
   // so it is carried through untouched.
+  //
+  // ...unless chunks were ADDED. On vmk_pirates_private.cct it reads 214, the
+  // highest resource id in the map, so it is raised to cover the new ids.
+  const highest = Math.max(cast.mapHeader[1], ...additions.map((a) => a.resId));
   const map = Buffer.concat([
     writeVarint(cast.mapHeader[0]),
-    writeVarint(cast.mapHeader[1]),
+    writeVarint(highest),
     writeVarint(entries.length),
     table,
   ]);
