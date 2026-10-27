@@ -1033,7 +1033,13 @@ export class PotcMatch {
     if (!s) return;
     switch (action) {
       case 1:
-        if (shipAlive(s) && data.length >= 2) this.queue([1, s.ref, data[0] | 0, data[1] | 0]);
+        if (shipAlive(s) && data.length >= 2) {
+          // A steer sets the heading, so only a ship's LAST one in a turn
+          // matters. Each used to be queued, simulated and broadcast to every
+          // player, so steer spam grew every turn without bound.
+          this.queued = this.queued.filter((e) => !(e[0] === 1 && e[1] === s.ref));
+          this.queue([1, s.ref, data[0] | 0, data[1] | 0]);
+        }
         return;
       case 4:
         this.broadside(c, data[0] === 1 ? 1 : 0);

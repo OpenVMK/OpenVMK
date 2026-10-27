@@ -30,6 +30,7 @@
 import { randomBytes } from "node:crypto";
 import {
   createPendingPhoto,
+  deletePendingPhotos,
   getCamera,
   getPhoto,
   getPhotos,
@@ -75,11 +76,21 @@ const media = (w: number, h: number, bytes: Uint8Array): WireValue => ({
 });
 const imageList = (value: WireValue): WireValue => ({ t: "p", v: [[{ t: "y", v: "image" }, value]] });
 
-/** The `#image` media out of a `[#image: …, #time: …, #cs: …]` upload. */
-function uploadedImage(content: WireValue): { w: number; h: number; bytes: Uint8Array } | null {
-  if (content.t !== "p") return null;
-  for (const [k, v] of content.v) {
-    if (k.t === "y" && k.v.toLowerCase() === "image" && v.t === "m") {
+/**
+ * The `#image` media out of a `[#image: …, #time: …, #cs: …]` upload, at most
+ * `maxW` x `maxH`.
+ *
+ * ⚠ `content` is parsed JSON straight off the socket, so every shape is checked
+ * at runtime: the WireValue type is what the camera sends, not a guarantee.
+ */
+function uploadedImage(content: WireValue, maxW: number, maxH: number): { w: number; h: number; bytes: Uint8Array } | null {
+  if (content.t !== "p" || !Array.isArray(content.v)) return null;
+  for (const pair of content.v as unknown[]) {
+    if (!Array.isArray(pair) || pair.length < 2) continue;
+    const [k, v] = pair as [WireValue, WireValue];
+    if (k?.t === "y" && typeof k.v === "string" && k.v.toLowerCase() === "image" && v?.t === "m") {
+      if (typeof v.d !== "string" || !Number.isInteger(v.w) || !Number.isInteger(v.h)) return null;
+      if (v.w <= 0 || v.h <= 0 || v.w > maxW || v.h > maxH) return null;
       const bytes = new Uint8Array(Buffer.from(v.d, "base64"));
       // The camera only ever makes indices 1..64 (`(255 - avg) / 4 + 1`), so
       // a 0 or anything above 64 is a broken capture, not a photo. The first
@@ -87,7 +98,7 @@ function uploadedImage(content: WireValue): { w: number; h: number; bytes: Uint8
       // which the catalog's thumbnail ink draws as nothing at all, leaving an
       // invisible photo nobody could click to delete.
       const valid = bytes.every((b) => b >= 1 && b <= 64);
-      if (valid && v.w > 0 && v.h > 0 && v.w <= 1024 && v.h <= 1024 && bytes.length === v.w * v.h) {
+      if (valid && bytes.length === v.w * v.h) {
         return { w: v.w, h: v.h, bytes };
       }
     }
@@ -95,8 +106,23 @@ function uploadedImage(content: WireValue): { w: number; h: number; bytes: Uint8
   return null;
 }
 
+/** A full picture's bound (the camera's is smaller). */
+const PICTURE_MAX = 1024;
+/**
+ * The thumbnail is 80x53. Twice that is room for any capture the camera can
+ * make, and stops a "thumbnail" being a second full-size picture.
+ */
+const THUMB_MAX_W = 160;
+const THUMB_MAX_H = 106;
+/** Same bound as `766 EditCaption`. The camera itself always sends "/" here. */
+const CAPTION_MAX = 90;
+
 const text = (content: WireValue): string =>
-  content.t === "s" ? content.v : content.t === "n" ? String(content.v) : "";
+  content.t === "s" && typeof content.v === "string"
+    ? content.v
+    : content.t === "n" && typeof content.v === "number"
+      ? String(content.v)
+      : "";
 
 /** One photo-socket connection. `send` writes a JSON text frame. */
 export function createPhotoSession(send: (json: string) => void, remote: string, deps: PhotoSocketDeps) {
@@ -128,24 +154,29 @@ export function createPhotoSession(send: (json: string) => void, remote: string,
       case "SAVE_PICTURE_CAPTION": {
         // `storePicture` sends "SAVE_PICTURE_CAPTION /<text>"; the camera
         // always passes EMPTY, so this is "/". The real caption comes by 766.
-        caption = text(content).replace(/^\s*\//, "").trim();
+        caption = text(content).replace(/^\s*\//, "").trim().slice(0, CAPTION_MAX);
         reply("PICTURE_CAPTION_RECEIVED", str("1"));
         return;
       }
       case "SAVE_THUMBNAIL": {
-        const image = uploadedImage(content);
+        const image = uploadedImage(content, THUMB_MAX_W, THUMB_MAX_H);
         if (!image || getCamera(me).film <= 0) {
           deps.log(`[photo] user ${me}: thumbnail refused (${image ? "no film" : "bad image"})`);
           reply("BINDATA_AUTHKEYERROR", str("0"));
           return;
         }
+        // ⚠ The thumbnail costs no film (the PICTURE does), so repeating it
+        // used to leave a new picture-less row each time: unbounded DB growth,
+        // and each one could be deleted for credits. A player has at most one
+        // upload in flight, so any older unfinished row is dropped first.
+        deletePendingPhotos(me);
         pending = createPendingPhoto(me, caption);
         setPhotoThumb(pending, image.w, image.h, image.bytes);
         reply("THUMBNAIL_RECEIVED", str(`${pending} 0`));
         return;
       }
       case "SAVE_PICTURE": {
-        const image = uploadedImage(content);
+        const image = uploadedImage(content, PICTURE_MAX, PICTURE_MAX);
         if (!image || pending === null || !useFilm(me)) {
           deps.log(`[photo] user ${me}: picture refused (${!image ? "bad image" : pending === null ? "no thumbnail first" : "no film"})`);
           reply("BINDATA_AUTHKEYERROR", str("0"));
@@ -219,13 +250,23 @@ export function createPhotoSession(send: (json: string) => void, remote: string,
 
   return {
     feed(textFrame: string): void {
-      let frame: { subject?: string; content?: WireValue };
+      // ⚠ This socket accepts frames before LOGIN, and nothing above it
+      // catches: a throw here took the whole game server down. `null`, a
+      // non-object, or a field of the wrong type must all be shrugged off.
+      let frame: unknown;
       try {
         frame = JSON.parse(textFrame);
       } catch {
         return;
       }
-      handle(String(frame.subject ?? ""), frame.content ?? { t: "v" });
+      if (!frame || typeof frame !== "object") return;
+      const { subject, content } = frame as { subject?: unknown; content?: unknown };
+      const value = content && typeof content === "object" ? (content as WireValue) : ({ t: "v" } as WireValue);
+      try {
+        handle(typeof subject === "string" ? subject : "", value);
+      } catch (err) {
+        deps.log(`[photo] ${remote}: frame refused (${err instanceof Error ? err.message : String(err)})`);
+      }
     },
   };
 }

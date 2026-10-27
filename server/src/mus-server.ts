@@ -239,7 +239,9 @@ import {
   type MessengerPeer,
 } from "./messenger.js";
 import {
+  IM_MAX_CHARS,
   cannedText,
+  clampCanned,
   clampSlogan,
   decodeChat,
   reEmit,
@@ -915,8 +917,6 @@ interface DevSession {
 
 /** userId -> session */
 const sessions = new Map<number, DevSession>();
-/** ticket -> userId */
-const tickets = new Map<string, number>();
 
 /**
  * Live game connections, keyed by user id.
@@ -1846,6 +1846,27 @@ const PHOTO_ALBUM_CAPACITY = Number(process.env.VMK_PHOTO_ALBUM_CAPACITY ?? 50);
 /** "You will get 5 credits for every photo" (wiki, How to take a picture) — on delete. */
 const PHOTO_DELETE_CREDITS = 5;
 
+/** Shortest Jungle Cruise that is scored and paid (a quit can end one at once). */
+const JC_MIN_REWARD_MS = 60_000;
+
+/** Per-connection message budget: see `runClientMessage`. */
+const COMMAND_BURST = 300;
+const COMMAND_RATE = 60;
+
+/**
+ * Guest room name and description limits: `CRoomInfoInterface` and
+ * `CCatalogRoomsView` stop at these and show `reg.roomname.toolong` /
+ * `reg.roomdesc.toolong`. Both are listed to everyone in the navigator.
+ */
+const ROOM_NAME_MAX = 30;
+const ROOM_DESC_MAX = 255;
+
+/** Most ints a figure message is read for (a real one is 12–14). */
+const FIGURE_INTS_MAX = 32;
+
+/** Most of a client-supplied body or string any log line repeats. */
+const LOG_BODY_MAX = 512;
+
 /** Most pins a lanyard holds: `CInvPagePins` greys WEAR at 15 worn. */
 const MAX_WORN_PINS = 15;
 
@@ -2235,6 +2256,25 @@ const CONFIGURABLE = new Map<number, string[]>([
   [126, ["fee", "credits"]],
   [90, ["fee", "credits"]],
 ]);
+
+/** Bounds on a configure message's `(key, value)` pairs. */
+const CONFIG_PAIRS_MAX = 16;
+const CONFIG_TEXT_MAX = 64;
+
+/**
+ * What a player may store from a configure message: only the keys the item's
+ * dialog shows, never `credits` (the server's own tally).
+ *
+ * ⚠ The raw patch used to be MERGED into `config_json` whatever its keys, so
+ * each forged frame grew one row by megabytes until `JSON.stringify` threw.
+ * Returns null for an item with nothing to configure.
+ */
+function settableConfig(typeCode: number, patch: Record<string, string>): Record<string, string> | null {
+  const keys = CONFIGURABLE.get(typeCode)?.filter((k) => k !== "credits");
+  if (!keys) return null;
+  const clean = Object.fromEntries(keys.filter((k) => k in patch).map((k) => [k, patch[k]]));
+  return Object.keys(clean).length > 0 ? clean : null;
+}
 
 /**
  * "Invisible Public Room Chair With Height Zero" — furnimap type code 283.
@@ -2677,7 +2717,9 @@ const NAME_PARTS_B = ["Star", "Wave", "Falcon", "Lantern", "Compass", "Cutlass",
 /** Five suggestions, as GeneratedNames expects. */
 function suggestNames(count: number): string[] {
   const out = new Set<string>();
-  while (out.size < count) {
+  // Bounded: one DB query per try, and once the name pool fills it would never
+  // find `count`. A short list is a fine answer.
+  for (let tries = 0; out.size < count && tries < count * 50; tries++) {
     const a = NAME_PARTS_A[Math.floor(Math.random() * NAME_PARTS_A.length)];
     const b = NAME_PARTS_B[Math.floor(Math.random() * NAME_PARTS_B.length)];
     const suffix = Math.floor(Math.random() * 900) + 100;
@@ -2776,7 +2818,6 @@ function ensureSession(userId: number): DevSession {
       loginName: `Guest${userId}`,
     };
     sessions.set(userId, session);
-    tickets.set(session.ticket, userId);
     console.log(`[session] created userId=${userId}`);
   }
   return session;
@@ -6181,8 +6222,16 @@ function createVmkSession(
     jcGame?.stop();
     sendAvatarData();
     const userId = live ? live.userId : 0;
+    const startedAt = Date.now();
     const game = new JungleCruiseGame(send, label, (end) => {
       if (!userId) return;
+      // ⚠ EXIT GAME settles like an end, so start-then-quit paid 20 credits
+      // (plus a score row and a mail) in three messages, as fast as a script
+      // could loop it. A cruise has to have actually been played.
+      if (Date.now() - startedAt < JC_MIN_REWARD_MS) {
+        console.log(`[${label}] Jungle Cruise ended after ${Math.round((Date.now() - startedAt) / 1000)} s: too short to score or pay`);
+        return;
+      }
       recordScore(userId, JC_GAME_CODE, end.score);
       const reward = claimJcReward(userId);
       sendCredits();
@@ -6566,7 +6615,11 @@ function createVmkSession(
     }
 
     if (command === CMD.SEND_NEW_NAME) {
-      const { value: proposed } = readClientString(body);
+      // Registration only. After it, a name changes through staff (SetName).
+      if (live && getUserById(live.userId)?.has_character !== 0) return;
+      // ⚠ Judged AND kept trimmed: the rules apply to `trim()`, so keeping the
+      // raw string let ~1 MB of whitespace padding through to every room.
+      const proposed = readClientString(body).value.trim();
       const verdict = judgeCharacterName(proposed, live?.userId);
       if (verdict.ok) {
         characterName = proposed;
@@ -6606,8 +6659,14 @@ function createVmkSession(
       // ⚠ `CRegPage2._GatherData` sends the SAME message with NO trailing style
       // (it reads the figure from the session instead). Discriminate by parity:
       // sex + 2*parts is ODD, sex + 2*parts + style is EVEN.
+      // ⚠ Registration only: nothing checked this, so a finished character
+      // could resend it and rename themselves for good, past staff.
+      if (live && getUserById(live.userId)?.has_character !== 0) {
+        console.warn(`[${label}] CreateAvatar refused: registration is already complete`);
+        return;
+      }
       const nameRead = readClientString(body);
-      const proposed = nameRead.value;
+      const proposed = nameRead.value.trim();
       const verdict = judgeCharacterName(proposed, live?.userId);
 
       if (!verdict.ok) {
@@ -6620,8 +6679,10 @@ function createVmkSession(
         return;
       }
 
+      // sex + 6 parts x (set, colour) + style is 14; anything past a generous
+      // bound is not a figure, and was stored and logged in full.
       const ints: number[] = [];
-      for (let at = nameRead.next; at < body.length; ) {
+      for (let at = nameRead.next; at < body.length && ints.length < FIGURE_INTS_MAX; ) {
         const read = decodeToInt(body, at);
         if (read.next <= at) break; // never spin on a malformed frame
         ints.push(read.value);
@@ -7141,19 +7202,19 @@ function createVmkSession(
         offset = next;
         return value;
       };
-      const readCanned = (): string => {
+      const readCanned = (maxChars: number): string => {
         const count = readInt();
         if (!Number.isFinite(count) || count <= 0 || count > 512) return "";
         let taken = 0;
         const tokens = decodeChat(readInt, readStr, () => offset < body.length && taken++ < count);
         // Plain text, never `tokensToText` — that is the debug rendering and
         // stores `<word:N>` for anything the server's dictionary cannot resolve.
-        return tokensToPlainText(tokens).trim();
+        return tokensToPlainText(clampCanned(tokens, maxChars)).trim().slice(0, maxChars);
       };
       const code = readInt();
       const pageId = offset < body.length ? readInt() : 0;
-      const name = readCanned();
-      const description = readCanned();
+      const name = readCanned(ROOM_NAME_MAX);
+      const description = readCanned(ROOM_DESC_MAX);
       if (!live) return;
 
       const product = pageById(pageId, playerSex())?.products.find((p) => p.code === code);
@@ -7722,12 +7783,12 @@ function createVmkSession(
       const count = decodeToInt(body, at);
       at = count.next;
       const patch: Record<string, string> = {};
-      for (let i = 0; i < count.value && at < body.length; i++) {
+      for (let i = 0; i < Math.min(count.value, CONFIG_PAIRS_MAX) && at < body.length; i++) {
         const key = readClientString(body, at);
         at = key.next;
         const value = readClientString(body, at);
         at = value.next;
-        patch[key.value] = value.value;
+        patch[key.value.slice(0, CONFIG_TEXT_MAX)] = value.value.slice(0, CONFIG_TEXT_MAX);
       }
       const item = getRoomItem(ref.value);
       if (!item || item.room !== currentRoomName) return;
@@ -7770,7 +7831,9 @@ function createVmkSession(
           `CurrentItemConfiguration ref=${ref.value} (saved)`,
         );
       } else {
-        setRoomItemConfig(ref.value, patch);
+        const clean = settableConfig(item.typeCode, patch);
+        if (!clean) return;
+        setRoomItemConfig(ref.value, clean);
       }
       console.log(
         `[${label}] configured ref=${ref.value} type=${item.typeCode} ` +
@@ -7791,12 +7854,12 @@ function createVmkSession(
       const ok = readInt();
       const count = readInt();
       const patch: Record<string, string> = {};
-      for (let i = 0; i < count && at < body.length; i++) {
+      for (let i = 0; i < Math.min(count, CONFIG_PAIRS_MAX) && at < body.length; i++) {
         const key = readClientString(body, at);
         at = key.next;
         const value = readClientString(body, at);
         at = value.next;
-        patch[key.value] = value.value;
+        patch[key.value.slice(0, CONFIG_TEXT_MAX)] = value.value.slice(0, CONFIG_TEXT_MAX);
       }
 
       const item = getRoomItem(ref);
@@ -7838,7 +7901,9 @@ function createVmkSession(
         return;
       }
 
-      setRoomItemConfig(ref, patch);
+      const clean = settableConfig(item.typeCode, patch);
+      if (!clean) return;
+      setRoomItemConfig(ref, clean);
       // Status 2 closes the dialog. 3 is the "collected N credits" path, which
       // needs the turnstile's takings modelled and is not implemented.
       send(
@@ -8297,7 +8362,9 @@ function createVmkSession(
         case CMD.DELETE_PHOTO: {
           const id = readInt();
           const photo = getPhoto(id);
-          if (!photo || photo.ownerId !== me || photo.place === "wall") return;
+          // ⚠ `width === 0` is an unfinished upload (a thumbnail, no picture,
+          // no film spent). Paying for those was a free-credits loop.
+          if (!photo || photo.ownerId !== me || photo.place === "wall" || photo.width === 0) return;
           deletePhoto(id);
           // "You will get 5 credits for every photo" — paid when one is deleted.
           const credits = (getUserById(me)?.credits ?? 0) + PHOTO_DELETE_CREDITS;
@@ -8765,7 +8832,10 @@ function createVmkSession(
         return value;
       };
 
-      const tokens = decodeChat(readInt, readStr, () => offset < body.length);
+      // Re-broadcast to the whole room, so held to a client field's size: the
+      // chat bar sets no explicit limit in its Lingo, and 255 is the longest
+      // canned field the client has (messenger compose).
+      const tokens = clampCanned(decodeChat(readInt, readStr, () => offset < body.length), IM_MAX_CHARS);
       if (tokens.length === 0) return;
 
       // Staff commands, before anything is broadcast — a command must never
@@ -9186,6 +9256,17 @@ function createVmkSession(
           send(MSG.TRADE_RESPONSE, [{ int: target }, { int: 0 }], "TradeResponse 0 (refused)");
           return;
         }
+        // ⚠ Nothing swept these, and a repeat sent the target another popup:
+        // a request to an alt in the same room grew the map without bound.
+        // Expired ones go now, and one asker has one request open at a time.
+        const t = Date.now();
+        for (const [rid, r] of tradeRequests) {
+          if (r.expires <= t) tradeRequests.delete(rid);
+          else if (r.from === me) {
+            if (r.to === target) return; // already asked; no second popup
+            tradeRequests.delete(rid);
+          }
+        }
         const id = nextTradeRequest++;
         tradeRequests.set(id, { from: me, to: target, room: currentRoomName!, expires: Date.now() + TRADE_REQUEST_MS });
         them.send(MSG.TRADE_REQUEST, [{ int: me }, { int: id }], `TradeRequest from ${me} (#${id})`);
@@ -9561,14 +9642,29 @@ function createVmkSession(
       // `(int setId, int colour)` per part — no name and no trailing room
       // style, unlike CREATE_AVATAR. Read every int; the pairs never go ragged
       // because a -1 part is followed by a -1 colour.
+      // 6 parts x 2 = 12. Stored, re-parsed on every wardrobe lookup and logged,
+      // so a forged ~200k-int body cost on every one of those.
       const figure: number[] = [];
-      for (let at = 0; at < body.length; ) {
+      for (let at = 0; at < body.length && figure.length < 12; ) {
         const read = decodeToInt(body, at);
         if (read.next <= at) break; // never spin on a malformed frame
         figure.push(read.value);
         at = read.next;
       }
       if (figure.length === 0 || !live) return;
+
+      // ⚠ The builder only offers garments you own or are already wearing
+      // (GET_FIGURE_LIST). Nothing checked that here, and GET_ITEM_LIST grants
+      // whatever is worn into the inventory — so naming any garment in a
+      // forged figure gave it to you, to keep or sell.
+      if (WARDROBE_MODE === "owned") {
+        const allowed = new Set([...ownedClothingSets(), ...wornClothingSets()]);
+        const stolen = figure.filter((v, i) => i % 2 === 0 && isGarment(v) && !allowed.has(v));
+        if (stolen.length > 0) {
+          console.warn(`[${label}] figure change refused: garment(s) not owned [${stolen.join(", ")}]`);
+          return;
+        }
+      }
 
       const outfit = getOutfit(live.userId);
       const sex = outfit?.sex ?? 0;
@@ -9849,10 +9945,10 @@ function createVmkSession(
         return value;
       };
       /** One canned block: its own count, then that many tokens. */
-      const readCanned = (): string => {
+      const readCanned = (maxChars: number): string => {
         const count = readInt();
         if (!Number.isFinite(count) || count <= 0 || count > 512) return "";
-        const tokens = [];
+        const tokens: ChatToken[] = [];
         for (let i = 0; i < count && offset < body.length; i++) {
           const token = readInt();
           if (token === 0 || token === -2) tokens.push({ kind: "text" as const, text: readStr() });
@@ -9861,15 +9957,18 @@ function createVmkSession(
           else if (token > 0) tokens.push({ kind: "word" as const, index: token, capitalised: false });
           else tokens.push({ kind: "censored" as const, length: Math.min(64, -token) });
         }
-        return tokensToText(tokens);
+        // ⚠ Stored and listed to every navigator, so held to the client's own
+        // field sizes. Plain text, as BUY_ROOM stores: `tokensToText` is the
+        // debug rendering and persisted `<word:N>` into room names.
+        return tokensToPlainText(clampCanned(tokens, maxChars)).trim().slice(0, maxChars);
       };
 
       const byId = command === CMD.EDIT_ROOM_INFO_BY_ID;
       const targetId = byId ? readInt() : undefined;
       if (byId) readInt(); // outer name count — duplicated inside the block
-      const newName = readCanned();
+      const newName = readCanned(ROOM_NAME_MAX);
       if (byId) readInt(); // outer description count
-      const newDesc = readCanned();
+      const newDesc = readCanned(ROOM_DESC_MAX);
 
       // Which room? Either the one named, or the one we are standing in.
       const room = targetId !== undefined ? getGuestRoom(targetId) : currentGuestRoom();
@@ -10283,17 +10382,54 @@ function createVmkSession(
       // and it lands here, verbatim, next to the send history dumped on
       // disconnect. Numeric command ids work — the catalogue uses `send(17, …)`
       // — and 999 is unused by any registered command table.
-      const text = body.replace(/\x02/g, " ").trim();
+      const text = body.slice(0, LOG_BODY_MAX).replace(/\x02/g, " ").trim();
       console.log(`[${label}] *** CLIENT DEBUG: ${text || "(empty)"}`);
       return;
     }
     // Log the BYTES, not just the length. Working out an unimplemented
     // command's payload from the client's Lingo alone is guesswork until you
     // can check it against something real, and the body is the only evidence.
+    // Only the head: a forged 1 MB body became ~9 MB of synchronous log.
+    const head = body.slice(0, LOG_BODY_MAX);
     console.log(
       `[${label}] << command ${command} (${body.length}b body) — no handler yet` +
-        `${body.length ? ` | ${[...body].map((c) => c.charCodeAt(0).toString(16).padStart(2, "0")).join(" ")} | ${JSON.stringify(body)}` : ""}`,
+        `${head.length ? ` | ${[...head].map((c) => c.charCodeAt(0).toString(16).padStart(2, "0")).join(" ")} | ${JSON.stringify(head)}` : ""}`,
     );
+  };
+
+  /*
+   * ⚠ One WebSocket frame can carry ~200k five-byte messages, all handled
+   * synchronously, so any per-message cost — a DB write, a broadcast, a log
+   * line — was multiplied by that from a single send. The budget refills at
+   * COMMAND_RATE a second up to COMMAND_BURST; a real client never comes close
+   * (a login is a few dozen messages, play is a handful a second). Running out
+   * means a script, and the connection is closed.
+   */
+  let commandBudget = COMMAND_BURST;
+  let budgetCheckedAt = Date.now();
+  let flooded = false;
+
+  /**
+   * Every client message goes through here. A handler that throws is logged and
+   * the session carries on: before, nothing caught it and one bad message on
+   * any connection took the whole server down for everyone.
+   */
+  const runClientMessage = (command: number, body: string): void => {
+    if (flooded) return;
+    const t = Date.now();
+    commandBudget = Math.min(COMMAND_BURST, commandBudget + ((t - budgetCheckedAt) / 1000) * COMMAND_RATE);
+    budgetCheckedAt = t;
+    if (--commandBudget < 0) {
+      flooded = true;
+      console.warn(`[${label}] closing: over ${COMMAND_RATE} messages/s sustained (last command ${command})`);
+      onClose("message flood");
+      return;
+    }
+    try {
+      handleMessage(command, body);
+    } catch (err) {
+      console.error(`[${label}] command ${command} failed (${body.length}b body): ${err instanceof Error ? err.stack ?? err.message : String(err)}`);
+    }
   };
 
   /** Parse whole frames out of `text`, returning whatever is left over. */
@@ -10303,7 +10439,8 @@ function createVmkSession(
       const decoded = decodeClientMessage(rest);
       if (!decoded) return rest;
       rest = decoded.rest;
-      handleMessage(decoded.message.command, decoded.message.body);
+      runClientMessage(decoded.message.command, decoded.message.body);
+      if (flooded) return "";
       // Message 11 flips the client into encrypted mode mid-stream, so anything
       // still buffered behind it is hex ciphertext, not plaintext frames.
       if (rc4) return rest;
@@ -10333,7 +10470,8 @@ function createVmkSession(
       const decoded = decodeClientMessage(rest);
       if (!decoded) return rest;
       rest = decoded.rest;
-      handleMessage(decoded.message.command, decoded.message.body);
+      runClientMessage(decoded.message.command, decoded.message.body);
+      if (flooded) return "";
     }
   };
 
@@ -10462,8 +10600,9 @@ function handleHttpConnection(socket: Socket, initial: Buffer) {
       const userId = Number(json.userId ?? 1);
       const ticket = String(json.ticket ?? md5Ticket());
       const loginName = String(json.loginName ?? `Guest${userId}`);
+      // (A ticket -> user map used to be filled here too: never read, and one
+      // entry per /play load, forever. Logins resolve tickets from the DB.)
       sessions.set(userId, { userId, ticket, loginName });
-      tickets.set(ticket, userId);
       console.log(`[dev] registered userId=${userId}`);
       sendHttp(socket, 200, JSON.stringify({ ok: true, userId }), "application/json");
     } catch (err) {
