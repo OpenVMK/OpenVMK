@@ -120,7 +120,7 @@ node tools/list-room-codes.mjs --md
 | 136 | Empty Dark Ride Room | `dark_ride_room` |  |
 | 137 | Winter Wonderland Guest Room | `winter_wonderland` |  |
 | 138 | Skull Rock Guest Room | `pirates_private` |  |
-| 139 | Haunted Mansion Conservatory Guest Room | `haunted_private` |  |
+| 139 | Haunted Mansion Conservatory Holiday Edition | `haunted_private` |  |
 | 140 | Penny Arcade | `penny_arcade` |  |
 | 141 | Monsters Inc Laugh Floor | `monsters_laugh_floor` |  |
 | 1001 | Pirates of the Caribbean Game Lobby | `pirates_game_preshow` |  |
