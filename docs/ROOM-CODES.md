@@ -119,7 +119,7 @@ node tools/list-room-codes.mjs --md
 | 110 | Mermaid Lagoon | `dark_ride_room` |  |
 | 136 | Empty Dark Ride Room | `dark_ride_room` |  |
 | 137 | Winter Wonderland Guest Room | `winter_wonderland` |  |
-| 138 | Skull Rock Guest Room | `pirates_private` |  |
+| 138 | Skull Rock Holiday Edition | `pirates_private` |  |
 | 139 | Haunted Mansion Conservatory Holiday Edition | `haunted_private` |  |
 | 140 | Penny Arcade | `penny_arcade` |  |
 | 141 | Monsters Inc Laugh Floor | `monsters_laugh_floor` |  |
