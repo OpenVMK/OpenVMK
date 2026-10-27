@@ -21,6 +21,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { figureSetsFile } from "./avatar-sets.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const REPO = join(here, "..", "..");
@@ -244,12 +245,11 @@ let figure: Figure | null = null;
 function figureSets(): Figure {
   if (figure) return figure;
   figure = { setList: new Map(), contents: new Map(), colours: new Map(), casts: new Map() };
-  const source = [
-    join(ARCHIVE, "siteref", "homepage", "download", "figuresets_29"),
-    join(REPO, "assets", "overlay", "siteref", "homepage", "download", "figuresets_29"),
-    join(ARCHIVE, "siteref", "homepage", "download", "figuresets_28"),
-    join(REPO, "assets", "overlay", "siteref", "homepage", "download", "figuresets_28"),
-  ].find((p) => existsSync(p));
+  // ⚠ The SAME file the game reads — overlay before archive, via `downloadFile`
+  // (see avatar-sets.ts). A bespoke list here once put the archive first, so
+  // edits made only to the overlay copy (the surf-shirt SetList entries) were
+  // invisible to Housekeeping while the game drew them fine.
+  const source = figureSetsFile();
   if (!source) return figure;
   const text = readFileSync(source, "latin1");
   const line = (key: string) => new RegExp(`^${key}\\s*=(.*)$`, "m").exec(text)?.[1] ?? "";

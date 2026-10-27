@@ -326,7 +326,16 @@ function buildDefault(
  * which is also why "Spooky Specials" sold items _28 cannot draw.
  */
 const FIGURESETS = ["figuresets_29", "figuresets_28"];
-const figureSetsFile = (): string | null =>
+/**
+ * THE figure-set file, resolved exactly as the game path does (overlay before
+ * archive, `_29` before `_28`). Everything that reads figure sets — avatar
+ * creation, drawable-set checks, and Housekeeping's item art — must go through
+ * this, or they disagree: the overlay copy carries edits (e.g. the surf-shirt
+ * SetList entries) that the archive copy does not, so a reader that finds the
+ * archive first renders nothing for them. (On a release there is no archive, so
+ * only a dev checkout with `shockwave/` present hits that divergence.)
+ */
+export const figureSetsFile = (): string | null =>
   FIGURESETS.map(downloadFile).find((path): path is string => path !== null) ?? null;
 
 /**
