@@ -9597,7 +9597,11 @@ function createVmkSession(
       // Hair and face are your BODY, not your wardrobe — always offered in
       // full, and never gated on ownership, which is why Disney shipped no
       // `item.` names for those bands.
-      const body = all.filter((id) => !isGarment(id));
+      // The worn hair/face is unioned in too: the catalogue hides hat-shaped
+      // hair sets (`HAT_HAIR_SETS`), and someone created before that still
+      // wears one.
+      const wornBody = outfit ? figureSetIds(outfit.figure).filter((id) => !isGarment(id)) : [];
+      const body = [...all.filter((id) => !isGarment(id)), ...wornBody];
       // Clothing is offered only if you own it. What you are WEARING is unioned
       // in regardless, so the builder can always redraw the current figure even
       // if a grant was missed.

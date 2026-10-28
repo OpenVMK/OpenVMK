@@ -186,6 +186,25 @@ const BLOCKED_SETS = new Set(
     .filter((id) => Number.isInteger(id) && id > 0),
 );
 
+/**
+ * HAIR sets whose artwork is a hat. Never offered in the hair picker.
+ *
+ * Disney's own figureset (`_28` and `_29` alike) lists these in the hr bands,
+ * but the `hr_<n>` frames they draw are hat-shaped and untinted — each is the
+ * hair-slot twin of a real hat, sharing its part number:
+ *   20005  hr_9   Musketeer Hat            (41014 draws ht 9)
+ *   20006  hr_11  Peter Pan Hat            (41015 draws ht 11)
+ *   20007  hr_17  Traditional Mickey Ears
+ *   30005  hr_15  Traditional Mickey Ears (female cut)
+ *   20008  hr_20  Pirate Hat with Parrot   (41019 draws ht 20)
+ *   40000  hr_20  Pirate Hat with Parrot   — unisex band, so in BOTH pickers
+ * Every real hair is drawn near-white so its colour can tint it; these are
+ * drawn in their final colours, which is how to spot another one.
+ *
+ * Separate from `BLOCKED_SETS` so overriding that list cannot bring them back.
+ */
+const HAT_HAIR_SETS = new Set([20005, 20006, 20007, 20008, 30005, 40000]);
+
 interface RegistrationClothing {
   ids: Set<number>;
   /** The 1000-bands the list covers; other bands are left alone. */
@@ -444,7 +463,7 @@ export function loadAvatarCatalogue(): AvatarCatalogue {
   // `VMK_AVATAR_SET_LIMIT` slots for its band and then vanish, so the band
   // would silently offer one fewer item than asked for.
   const registration = registrationClothing(ROOT);
-  let offered = ids;
+  let offered = ids.filter((id) => !HAT_HAIR_SETS.has(id));
   if (BLOCKED_SETS.size > 0) {
     const blocked = ids.filter((id) => BLOCKED_SETS.has(id));
     if (blocked.length > 0) {
