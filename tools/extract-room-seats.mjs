@@ -97,6 +97,7 @@ let seats = 0;
 let fromName = 0;
 let fromTable = 0;
 let inferred = 0;
+let added = 0;
 for (const [room, geo] of Object.entries(geometry.rooms ?? {})) {
   const found = [];
   const pos = new Map();
@@ -129,6 +130,20 @@ for (const [room, geo] of Object.entries(geometry.rooms ?? {})) {
     }
     found.push({ tile, dir, z: pos.get(tile)[2], marker: name, source, item: seatItemFor(name) });
   }
+  // Hand-placed seats for rooms whose layout names none (Town Square's
+  // benches): seat-facing.json `add` maps tile ref -> dir, or -> { dir, item }
+  // when the bench is not height 10 (66).
+  for (const [refText, spec] of Object.entries(facing[room]?.add ?? {})) {
+    const tile = Number(refText);
+    if (!pos.has(tile)) {
+      console.warn(`  ${room}: added seat ${refText} is not a tile; skipped`);
+      continue;
+    }
+    if (found.some((s) => s.tile === tile)) continue;
+    const { dir, item = 66 } = typeof spec === "number" ? { dir: spec } : spec;
+    found.push({ tile, dir, z: pos.get(tile)[2], marker: "added", source: "added", item });
+    added++;
+  }
   if (found.length === 0) continue;
   found.sort((a, b) => a.tile - b.tile);
   rooms[room] = found;
@@ -138,7 +153,7 @@ for (const [room, geo] of Object.entries(geometry.rooms ?? {})) {
 writeFileSync(OUT, JSON.stringify({ generated: new Date().toISOString(), rooms }, null, 2));
 
 console.log(`${seats} seat tile(s) across ${Object.keys(rooms).length} room(s)`);
-console.log(`facing: ${fromName} from the tile name, ${fromTable} from seat-facing.json, ${inferred} inferred (bench -> floor centre)`);
+console.log(`facing: ${fromName} from the tile name, ${fromTable} from seat-facing.json, ${inferred} inferred (bench -> floor centre), ${added} hand-placed (seat-facing.json add)`);
 console.log(`wrote ${OUT}\n`);
 for (const [room, list] of Object.entries(rooms).sort((a, b) => b[1].length - a[1].length)) {
   const guessed = list.filter((s) => s.source === "inferred").length;

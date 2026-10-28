@@ -1,5 +1,5 @@
 {
-  "//": "Facing for public-room seats whose tile NAME carries no _dir_N, where the default (perpendicular to the bench, toward the floor's centre; tools/extract-room-seats.mjs) is wrong. Per room: seat tile ref -> direction (server clockwise index: 1 = up-right, 3 = down-right, 5 = down-left, 7 = up-left), or \"*\" for the whole room. Checked against the room art in logs/room-doorways.html (tools/render-room-doorways.mjs).",
+  "//": "Facing for public-room seats whose tile NAME carries no _dir_N, where the default (perpendicular to the bench, toward the floor's centre; tools/extract-room-seats.mjs) is wrong. Per room: seat tile ref -> direction (server clockwise index: 1 = up-right, 3 = down-right, 5 = down-left, 7 = up-left), or \"*\" for the whole room. Rooms whose layout names no seats at all (Town Square) list hand-placed seats under \"add\": tile ref -> direction, or -> { \"dir\": N, \"item\": 86 } for a seat that is not height 10 (66). Checked against the room art in logs/room-doorways.html (tools/render-room-doorways.mjs).",
   "rooms": {
     "drivein": {
       "//": "The cars point at the screen on the upper left; the red deck chairs sit against the poster wall and face out.",
@@ -23,8 +23,9 @@
       "211": 3, "234": 3
     },
     "monorail_train": {
-      "//": "Two sofas back to back mid-lounge: the near one faces the DJ end (the default), the far one the other way.",
-      "82": 3, "103": 3, "118": 3
+      "//": "Two sofas back to back mid-lounge: the near one faces the DJ end (the default), the far one the other way. The purple couch against the top wall (couch_seat_*) has no sit tiles: its raised tiles 280-282 (z 6) are added, facing out of the wall (down-left).",
+      "82": 3, "103": 3, "118": 3,
+      "add": { "280": 5, "281": 5, "282": 5 }
     },
     "tomorrowland_hub": {
       "//": "Rocket seats face the rocket's nose: up-left. hub_rocketride_enter moves the rocket in toward the upper left, leave_blur exits into the tube further up-left, and each seat's rocket_exit tile is on its up-left side.",
@@ -33,6 +34,55 @@
     "spacemountain": {
       "//": "sit_front (y 103) sits ahead of sit_back (y 151) in the same rocket, so both face its nose, up-right. The inferred default turned sit_back around.",
       "369": 1, "372": 1
+    },
+    "mainstreet_square": {
+      "//": "The layout names no seats. Two benches on the bottom walk, each two tiles along y, facing the Emporium sign (up-left).",
+      "add": { "306": 7, "293": 7, "192": 7, "174": 7 }
+    },
+    "vmk_central": {
+      "//": "The layout names no seats, but the theatre chairs are its only raised tiles (z 12-18): six two-seat rows along x, facing the Build Your Ride screen (up-right).",
+      "add": {
+        "70": 1, "71": 1, "73": 1, "74": 1,
+        "115": 1, "116": 1, "118": 1, "119": 1,
+        "156": 1, "157": 1, "159": 1, "160": 1
+      }
+    },
+    "hub2": {
+      "//": "Central Plaza. The layout names no seats; the three benches are its only raised tiles, two along y each, backs to the upper left, facing down-right.",
+      "add": { "188": 3, "216": 3, "297": 3, "318": 3, "515": 3, "529": 3 }
+    },
+    "castle_courtyard": {
+      "//": "Castle Forecourt. The layout names no seats; the two benches are its only raised tiles, two along y each, backs to the upper left, facing down-right.",
+      "add": { "316": 3, "320": 3, "324": 3, "328": 3 }
+    },
+    "monorail_station": {
+      "//": "The layout names no seats; the four red chairs by the front railing are its only tiles raised off the platform (z 12-30). The two pairs face each other: 141/155 down-right (toward the stairs back to the land), 144/159 up-left.",
+      "add": { "141": 3, "155": 3, "144": 7, "159": 7 }
+    },
+    "tent": {
+      "//": "Explorer's Tent. The layout names no seats; the crate (140) and the stump (141) by the campfire face the fire.",
+      "add": { "140": 1, "141": 7 }
+    },
+    "nautilus": {
+      "//": "Captain's Quest Quarters. The organ stool (24) faces out toward the red carpet (down-left), not into the organ.",
+      "24": 5
+    },
+    "new_orleans_square": {
+      "//": "The arbor chairs (40, 54, 71) sit round a table at (200, -12): each faces it. The waterfront benches face the water (down-left), not the plaza (the default, up-right).",
+      "54": 3, "71": 1,
+      "222": 5, "223": 5, "224": 5, "225": 5
+    },
+    "disney_gallery": {
+      "//": "VMK Gallery. The right-hand bench (1, 3) faces out into the room (down-right), not into its wall.",
+      "1": 3, "3": 3
+    },
+    "storybookland": {
+      "//": "The layout names no seats; these are its raised tiles. 151/416 face \"it's a small world\" (up-right), 81/82 face them (down-left); 77 and 147 face each other.",
+      "add": { "151": 1, "416": 1, "81": 5, "82": 5, "77": 5, "147": 1 }
+    },
+    "musical_mainstreet": {
+      "//": "Main Street. The layout names no seats; the bench by VMK Central is its only raised pair (36, 37), back to the building, facing the street (down-left).",
+      "add": { "36": 5, "37": 5 }
     },
     "splashmountain": {
       "//": "The stumps and the channel-side bench face down-right; the bench against the tree trunk faces down-left, toward the Tom Sawyer's Island exit. Checked against the original.",

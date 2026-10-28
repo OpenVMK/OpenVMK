@@ -26,6 +26,8 @@ export interface ExitRule {
   navigator?: number;
   /** Doorway tiles to arrive on, in the destination (or this room for "same"). */
   arrive?: number[];
+  /** Direction to face on arrival (server clockwise index); default keeps the walk's facing. */
+  face?: number;
   flag?: string;
   /** Entering the Monorail Station: WHICH land's platform (a monorail stop id). */
   stop?: number;

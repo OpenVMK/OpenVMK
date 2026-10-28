@@ -107,13 +107,20 @@ for (const [name, room] of Object.entries(geometry).sort()) {
   }
   // Seats, labelled with ref and current facing (from room-seats.json) so
   // assets/seat-facing.json can be authored from this view.
+  // Hand-placed seats (seat-facing.json `add`) have no tile name, so walk the
+  // union of named `sit` tiles and room-seats.json.
   const seatInfo = new Map((seats[name] ?? []).map((s) => [s.tile, s]));
-  for (const [ref, tileName] of Object.entries(room.names ?? {})) {
-    if (!/sit/i.test(tileName) || !pos.has(Number(ref))) continue;
-    const seat = seatInfo.get(Number(ref));
-    // Blue = facing from Disney's name or seat-facing.json; yellow = inferred.
-    const guessed = seat?.source === "inferred";
-    svg += `<polygon points="${diamond(Number(ref))}" fill="${guessed ? "#eab308" : "#3b82f6"}" fill-opacity=".65"/>`;
+  const seatRefs = new Set([
+    ...Object.entries(room.names ?? {}).filter(([, n]) => /sit/i.test(n)).map(([r]) => Number(r)),
+    ...seatInfo.keys(),
+  ]);
+  for (const ref of seatRefs) {
+    if (!pos.has(ref)) continue;
+    const seat = seatInfo.get(ref);
+    // Blue = facing from Disney's name or seat-facing.json; yellow = inferred;
+    // cyan = hand-placed.
+    const fill = seat?.source === "inferred" ? "#eab308" : seat?.source === "added" ? "#06b6d4" : "#3b82f6";
+    svg += `<polygon points="${diamond(ref)}" fill="${fill}" fill-opacity=".65"/>`;
     const [x, y, z] = pos.get(Number(ref));
     const [lx, ly] = scr(x + s / 2, y + s / 2, z);
     // Direction index -> screen arrow (clockwise from "away", room-geometry.ts).
@@ -167,7 +174,7 @@ h2 .codes{font-size:13px;font-weight:normal;color:#9ca3af;margin-left:8px}
 .named{font:bold 10px system-ui;fill:#f3e8ff;stroke:#000;stroke-width:2.5px;paint-order:stroke;text-anchor:middle}
 .ref{font:8px system-ui;fill:#fde68a;stroke:#000;stroke-width:2px;paint-order:stroke;text-anchor:middle;display:none}
 body.refs .ref{display:inline}
-</style><h1>Room doorways</h1><p>Exits: green = mapped, yellow = mapped but inferred, red = no rule. Seats: arrow = the way the avatar faces; blue = from the data, yellow = inferred. Purple = other named tiles. Filter with #cast,cast</p>
+</style><h1>Room doorways</h1><p>Exits: green = mapped, yellow = mapped but inferred, red = no rule. Seats: arrow = the way the avatar faces; blue = from the data, yellow = inferred, cyan = hand-placed. Purple = other named tiles. Filter with #cast,cast</p>
 <p><label><input type="checkbox" id="refs"> show all tile numbers</label></p>${cards.join("\n")}
 <script>
 document.getElementById("refs").addEventListener("change", (e) => document.body.classList.toggle("refs", e.target.checked));

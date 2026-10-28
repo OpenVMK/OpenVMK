@@ -21,6 +21,10 @@
 //                     (`2831 SpaceListRoomTypeTrigger`) instead of moving
 //   flag: "..."       the match is inferred, not confirmed by the guide
 //
+// `pad: [refs]` instead of `at` names plain floor tiles that act as the exit,
+// for teleporters drawn as room art with no exit tiles under them. `face: N`
+// turns the avatar that way on arrival (server clockwise index).
+//
 // Rooms with no entry here (guest rooms and the minor public ones) send every
 // exit "back"; see server/src/room-exits.ts.
 //
@@ -82,7 +86,17 @@ const AUTHORED = {
   ] },
   [C.vmkCentral]: { cast: "vmk_central", exits: [{ at: 1, to: C.mainStreet, label: "Main Street" }] },
   [C.sciFi]: { cast: "drivein", exits: [{ at: 411, to: C.esplanade, label: "VMK Esplanade" }] },
-  [C.emporium]: { cast: "emporium", exits: [{ at: 112, to: C.townSquare, label: "Town Square" }] },
+  // The teleporters are room art with no exit tiles under them, hence `pad`.
+  // Their tiles are the ones the layout marks MUL="1", as are the matching
+  // teleporters in the shops they lead to.
+  [C.emporium]: { cast: "emporium", exits: [
+    { at: 112, to: C.townSquare, label: "Town Square" },
+    { pad: [131, 148], to: C.shrunkenNeds, label: "Jungle Cruise Teleporter" },
+    { pad: [303, 304], to: C.horseshoe, label: "Big Thunder Mountain Teleporter" },
+    { pad: [309, 310, 312], to: C.smallWorldShop, label: "Tea Cup Teleporter" },
+    // Step out of Stitch's pod facing out of it (down-right), not into its back wall.
+    { pad: [200, 201], to: C.tomorrowlandHub, arrive: 164, face: 3, label: "Stitch's Teleporter" },
+  ] },
   [C.pennyArcade]: { cast: "penny_arcade", exits: [{ at: 0, to: C.mainStreet, label: "Main Street" }] },
   [C.musicLobby]: { cast: "musicmix", exits: [
     { at: 255, to: C.musicGame, label: "Street Party Music Game" },
@@ -123,7 +137,10 @@ const AUTHORED = {
     { at: 0, to: C.centralPlaza, label: "Central Plaza" },
     { at: 157, to: C.treehouse, label: "Pirate Treehouse" },
   ] },
-  [C.shrunkenNeds]: { cast: "shrunken_neds_shop", exits: [{ at: 214, to: C.bazaar, label: "Adventureland Bazaar" }] },
+  [C.shrunkenNeds]: { cast: "shrunken_neds_shop", exits: [
+    { at: 214, to: C.bazaar, label: "Adventureland Bazaar" },
+    { pad: [2, 3], to: C.emporium, label: "Jungle Cruise Teleporter (boat)" },
+  ] },
   [C.treehouse]: { cast: "treehouse", exits: [
     { at: 264, to: C.bazaar, label: "Walk the Plank to the Bazaar" },
     { at: 241, to: C.bazaar, label: "Adventureland Bazaar" },
@@ -170,7 +187,10 @@ const AUTHORED = {
     { at: 330, to: C.hmLobby, label: "Haunted Mansion Lobby" },
     { at: 176, to: C.castleForecourt, label: "Castle Forecourt" },
   ] },
-  [C.horseshoe]: { cast: "horseshoe_shop", exits: [{ at: 251, to: C.frontierlandHub, label: "Frontierland Hub" }] },
+  [C.horseshoe]: { cast: "horseshoe_shop", exits: [
+    { at: 251, to: C.frontierlandHub, label: "Frontierland Hub" },
+    { pad: [50, 51], to: C.emporium, label: "Big Thunder Mountain Teleporter (mine car)" },
+  ] },
   [C.frontierlandDock]: { cast: "pier", exits: [
     { at: 180, to: C.steamboat, label: "Mark Twain" },
     { at: 141, to: C.steamboat, label: "Mark Twain" },
@@ -306,7 +326,10 @@ const AUTHORED = {
     { at: 366, to: "same", arrive: 398, label: "up to the upper ground" }, // link_lower
     { at: 398, to: "same", arrive: 366, label: "down to the ground" }, // link_upper
   ] },
-  [C.smallWorldShop]: { cast: "small_world_shop", exits: [{ at: 91, to: C.storybookland, label: "Storybookland" }] },
+  [C.smallWorldShop]: { cast: "small_world_shop", exits: [
+    { at: 91, to: C.storybookland, label: "Storybookland" },
+    { pad: [3, 15], to: C.emporium, label: "Tea Cup Teleporter (blue cup)" },
+  ] },
   [C.inTheSky]: { cast: "inthesky", exits: [
     { at: 299, to: C.storybookland, label: "Storybookland" },
     { at: 90, to: C.matterhorn, label: "Matterhorn" },
@@ -424,10 +447,23 @@ for (const [code, { cast, exits }] of Object.entries(AUTHORED)) {
   const doorways = doorwaysOf(room);
   const doorwayOf = (ref) => doorways.find((d) => d.tiles.includes(ref));
   const built = [];
+  const refs = new Set();
+  for (let i = 0; i < room.tiles.length; i += 4) refs.add(room.tiles[i]);
   for (const exit of exits) {
-    const door = doorwayOf(exit.at);
-    if (!door) { problems.push(`${code} ${cast}: ${exit.at} is not an exit tile (${exit.label})`); continue; }
-    const rule = { tiles: door.tiles, label: exit.label };
+    let tiles;
+    if (exit.pad) {
+      // Plain floor tiles that act as an exit (the Emporium's teleporters):
+      // the layout has no exit tiles there, but the server takes any tile a
+      // rule lists (room-exits.ts `exitAt`).
+      const missing = exit.pad.filter((r) => !refs.has(r));
+      if (missing.length) { problems.push(`${code} ${cast}: pad ${missing.join(",")} not tiles (${exit.label})`); continue; }
+      tiles = exit.pad;
+    } else {
+      const door = doorwayOf(exit.at);
+      if (!door) { problems.push(`${code} ${cast}: ${exit.at} is not an exit tile (${exit.label})`); continue; }
+      tiles = door.tiles;
+    }
+    const rule = { tiles, label: exit.label };
     if (exit.navigator !== undefined) rule.navigator = exit.navigator;
     else rule.to = exit.to;
     if (exit.arrive !== undefined) {
@@ -449,6 +485,7 @@ for (const [code, { cast, exits }] of Object.entries(AUTHORED)) {
         else rule.arrive = target.tiles;
       }
     }
+    if (exit.face !== undefined) rule.face = exit.face;
     if (exit.flag) rule.flag = exit.flag;
     built.push(rule);
   }
