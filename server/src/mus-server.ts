@@ -162,7 +162,7 @@ import {
 import { Ghost } from "./ghosts.js";
 import { GatorWaiter, SEAT } from "./gator-waiter.js";
 import { seasonalLayout, seasonalTileMap, useSeasonalLayout } from "./room-geometry.js";
-import { doorBackTo, exitAt, remapRoomTiles, type ExitRule } from "./room-exits.js";
+import { doorBackTo, exitAt, exitTilesTo, remapRoomTiles, type ExitRule } from "./room-exits.js";
 import { seedPublicFurni } from "./public-furni.js";
 import {
   FW_LOBBY_ROOM,
@@ -3205,6 +3205,13 @@ function createVmkSession(
    * you). Consumed by `enterRoom`.
    */
   let pendingDoor: { code: number; tiles: number[] } | null = null;
+  /**
+   * The doorway we last walked out of, and the room it was in. Coming back
+   * from where it led lands on it again, when that room has several doorways
+   * to here (the Quest Deck's two into the Shrinking Machine) — otherwise the
+   * first one would always win.
+   */
+  let leftThrough: { code: number; tiles: number[]; to: number } | null = null;
   /** Entering the Waterpark Pool: the slide to ride once the avatar is placed. */
   let pendingSlide: (typeof WATERPARK_SLIDES)[number] | null = null;
   /**
@@ -5988,6 +5995,11 @@ function createVmkSession(
       return;
     }
     let doorway = rule.arrive ?? (from !== undefined ? doorBackTo(code, from) : null);
+    if (!rule.arrive && from !== undefined && leftThrough?.code === code && leftThrough.to === from &&
+        exitTilesTo(code, from).includes(leftThrough.tiles[0])) {
+      doorway = leftThrough.tiles;
+    }
+    leftThrough = from !== undefined ? { code: from, tiles: rule.tiles, to: code } : null;
     if (rule.stop !== undefined) pendingStationStop = rule.stop;
     if (rule.train !== undefined) pendingTrain = rule.train;
     // Up a land's monorail stairs: arrive at the top of the SAME stairs — the

@@ -328,8 +328,8 @@ const AUTHORED = {
   ] },
   [C.questDeck]: { cast: "spacemountain", exits: [
     { at: 365, to: C.questTrack, label: "Autopia Quest Track" },
-    { at: 76, to: C.shrinkingMachine, label: "Inner-Space Shrinking Machine" },
-    { at: 228, to: C.shrinkingMachine, label: "Inner-Space Shrinking Machine" },
+    { at: 76, to: C.shrinkingMachine, arrive: 0, label: "Inner-Space Shrinking Machine" },
+    { at: 228, to: C.shrinkingMachine, arrive: 0, label: "Inner-Space Shrinking Machine" },
     // Doorway #3 (91, 107, 121, 133) is the rocket's DOCK, not a way to the Hub
     // on foot: you stand on it to ride the rocket shuttle, and land on it coming
     // back (see mus-server.ts). As a plain exit it skipped the ride.
