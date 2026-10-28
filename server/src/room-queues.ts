@@ -61,6 +61,13 @@ export interface QueueDef {
    * hook (`setStageHook`) runs when the performer arrives.
    */
   hosted?: boolean;
+  /**
+   * A BOOTH rather than a stage: after `stage`, the turn moves on through these
+   * tiles in order, `holdMs` on each, then walks `exit`. Every tile holds one
+   * person, so the line keeps feeding in behind — friends in line pose side by
+   * side. (VMK Central's photo booth: one face cut-out per tile.)
+   */
+  poses?: number[];
 }
 
 const gates = new Map<string, (roomInstance: string) => boolean>();
@@ -157,6 +164,27 @@ export const QUEUES: QueueDef[] = [
     // Facing the DJ mixer — recorded from the user turned to it.
     stageFacing: 3,
   },
+  /**
+   * VMK Central's photo booth: the stone arch with three face cut-outs, the
+   * camera on its tripod in front. The room layout names none of it; the
+   * booth is the lone column x=2 (213, 193, 172, 152, front to back) between
+   * the wall and the roped-off camera area, reached at either end by x=1
+   * tiles (232 at the front, 130 at the back). Only the first three tiles
+   * have a face; 152 at the back is a bare walkway (the user). In at the
+   * front, one face after another, out at the back — on out to 108, clear of
+   * the arch, so you end up somewhere you can see (the user).
+   */
+  {
+    name: "VMK Central photo booth",
+    room: "vmk_central",
+    line: [268, 267, 251, 232],
+    stage: 213,
+    poses: [193, 172],
+    exit: [152, 130, 107, 108],
+    holdMs: Number(process.env.VMK_PHOTO_FACE_MS ?? 5_000),
+    // Into the camera: it stands at +x of the cut-outs (screen down-right).
+    stageFacing: 3,
+  },
 ];
 
 /** What the engine needs from a player's connection. */
@@ -169,6 +197,14 @@ export interface QueueMember {
   walk(tiles: number[], onDone?: () => void, face?: number): void;
 }
 
+/** Someone on one of a booth's tiles (`QueueDef.poses`). */
+interface Poser {
+  member: QueueMember;
+  /** Their time on this tile is up: move on as soon as the next is free. */
+  done: boolean;
+  timer?: ReturnType<typeof setTimeout>;
+}
+
 interface Running {
   def: QueueDef;
   roomInstance: string;
@@ -176,7 +212,11 @@ interface Running {
   waiting: Array<{ member: QueueMember; place: number }>;
   performer: QueueMember | null;
   timer?: ReturnType<typeof setTimeout>;
+  /** A booth's tiles, `[stage, ...poses]`; unused (empty) for other queues. */
+  booth: Array<Poser | null>;
 }
+
+const boothTiles = (def: QueueDef) => [def.stage, ...(def.poses ?? [])];
 
 /** Keyed `${roomInstance}|${queueName}` — a room instance is the occupancy key. */
 const running = new Map<string, Running>();
@@ -190,7 +230,7 @@ export function queuesIn(geometryRoom: string | undefined): QueueDef[] {
 
 /** Every tile a queue owns — not walkable by hand, except the join tile. */
 export function managedTiles(def: QueueDef): number[] {
-  return [...def.line, def.stage, ...def.exit];
+  return [...def.line, ...boothTiles(def), ...def.exit];
 }
 
 /** The queue (in this geometry room) owning `tile`, if any. */
@@ -208,6 +248,7 @@ export function queuedIn(roomInstance: string, userId: number): { def: QueueDef;
   for (const [key, run] of running) {
     if (!key.startsWith(`${roomInstance}|`)) continue;
     if (run.performer?.userId === userId) return { def: run.def, onStage: true };
+    if (run.booth.some((p) => p?.member.userId === userId)) return { def: run.def, onStage: true };
     if (run.waiting.some((w) => w.member.userId === userId)) return { def: run.def, onStage: false };
   }
   return undefined;
@@ -216,9 +257,15 @@ export function queuedIn(roomInstance: string, userId: number): { def: QueueDef;
 /** A player arrived on the join tile. */
 export function joinQueue(roomInstance: string, def: QueueDef, member: QueueMember): void {
   const key = keyOf(roomInstance, def);
-  const run = running.get(key) ?? { def, roomInstance, waiting: [], performer: null };
+  const run = running.get(key) ?? {
+    def,
+    roomInstance,
+    waiting: [],
+    performer: null,
+    booth: def.poses ? boothTiles(def).map(() => null) : [],
+  };
   running.set(key, run);
-  if (run.performer?.userId === member.userId || run.waiting.some((w) => w.member.userId === member.userId)) return;
+  if (queuedIn(roomInstance, member.userId)) return;
   if (run.waiting.length >= def.line.length) return; // full: the join tile itself is taken
   run.waiting.push({ member, place: 0 }); // standing on line[0]
   console.log(`[queue] ${def.name} (${roomInstance}): user ${member.userId} joined, ${run.waiting.length} waiting`);
@@ -245,14 +292,33 @@ export function leaveQueue(roomInstance: string, userId: number): "waiting" | "p
       advance(run);
       return "performer";
     }
+    const b = run.booth.findIndex((p) => p?.member.userId === userId);
+    if (b >= 0) {
+      clearTimeout(run.booth[b]!.timer);
+      run.booth[b] = null;
+      advance(run);
+      return "performer";
+    }
   }
   return null;
 }
 
-/** A performer asked to get down early: walk the exit now. */
+/**
+ * A performer asked to get down early: walk the exit now. In a booth, cut the
+ * pose short instead — they move on as soon as the next tile is free (walking
+ * out from the middle would go straight through the people posing).
+ */
 export function stepDown(roomInstance: string, userId: number): boolean {
   for (const [key, run] of running) {
-    if (!key.startsWith(`${roomInstance}|`) || run.performer?.userId !== userId) continue;
+    if (!key.startsWith(`${roomInstance}|`)) continue;
+    const poser = run.booth.find((p) => p?.member.userId === userId);
+    if (poser) {
+      clearTimeout(poser.timer);
+      poser.done = true;
+      advance(run);
+      return true;
+    }
+    if (run.performer?.userId !== userId) continue;
     clearTimeout(run.timer);
     finishTurn(run);
     return true;
@@ -306,7 +372,9 @@ function finishTurn(run: Running): void {
 function advance(run: Running): void {
   const { def } = run;
   const open = def.gate === undefined || (gates.get(def.gate)?.(run.roomInstance) ?? false);
-  if (!run.performer && run.waiting.length > 0 && open) {
+  if (def.poses) {
+    advanceBooth(run, open);
+  } else if (!run.performer && run.waiting.length > 0 && open) {
     const front = run.waiting.shift()!;
     run.performer = front.member;
     const path = def.line.slice(front.place + 1).concat(def.stage);
@@ -327,6 +395,50 @@ function advance(run: Running): void {
       run.timer = setTimeout(() => finishTurn(run), def.holdMs);
     }, def.stageFacing);
   }
+  closeUp(run);
+}
+
+/**
+ * Move a booth along, back tile first so each frees the one behind it: whoever
+ * is done steps to the next tile once it is empty (or out along the exit from
+ * the last), and the front of the line takes the first tile when it frees.
+ */
+function advanceBooth(run: Running, open: boolean): void {
+  const { def, booth } = run;
+  const tiles = boothTiles(def);
+  for (let i = booth.length - 1; i >= 0; i--) {
+    const poser = booth[i];
+    if (!poser?.done) continue;
+    if (i === booth.length - 1) {
+      booth[i] = null;
+      poser.member.walk(def.exit);
+    } else if (!booth[i + 1]) {
+      booth[i] = null;
+      pose(run, i + 1, poser.member, [tiles[i + 1]]);
+    }
+  }
+  if (!booth[0] && run.waiting.length > 0 && open) {
+    const front = run.waiting.shift()!;
+    console.log(`[queue] ${def.name}: user ${front.member.userId} steps into the booth`);
+    pose(run, 0, front.member, def.line.slice(front.place + 1).concat(def.stage));
+  }
+}
+
+/** Walk `member` onto booth tile `i` and hold them there `holdMs`. */
+function pose(run: Running, i: number, member: QueueMember, path: number[]): void {
+  const poser: Poser = { member, done: false };
+  run.booth[i] = poser;
+  member.walk(path, () => {
+    if (run.booth[i] !== poser) return; // left on the way
+    poser.timer = setTimeout(() => {
+      poser.done = true;
+      advance(run);
+    }, run.def.holdMs);
+  }, run.def.stageFacing);
+}
+
+function closeUp(run: Running): void {
+  const { def } = run;
   // Everyone else closes up: the front waiting person to the front place, etc.
   run.waiting.forEach((w, i) => {
     const target = def.line.length - 1 - i;
