@@ -3204,7 +3204,7 @@ function createVmkSession(
    * doorway in `code` (the one leading back, so stepping straight out returns
    * you). Consumed by `enterRoom`.
    */
-  let pendingDoor: { code: number; tiles: number[] } | null = null;
+  let pendingDoor: { code: number; tiles: number[]; face?: number } | null = null;
   /**
    * The doorway we last walked out of, and the room it was in. Coming back
    * from where it led lands on it again, when that room has several doorways
@@ -4693,6 +4693,7 @@ function createVmkSession(
         doorway[Math.floor(doorway.length / 2)],
         new Set(occupiedTiles(currentRoomName, live ? live.userId : 1)),
       );
+      if (pendingDoor.face !== undefined) facing = pendingDoor.face;
       spawnSource = "doorway";
     }
     pendingDoor = null;
@@ -5690,8 +5691,22 @@ function createVmkSession(
    * tower: `teleport_upper` (on the walkway) <-> `teleport_sub` (the rocket
    * level). No client code handles them — like the queue blocks, it was the
    * server's job. Finish a walk on one end and you come out at the other.
+   *
+   * The Steamboat's balcony box is the same shape: its two chairs
+   * (`left_sit10` / `right_sit10`) are a floor of their own with no link, and
+   * the deck tiles `go_left_chair` / `go_right_chair` are the way up. Landing
+   * on a seat tile sits you down (`sendPulse`). Those are `quiet`: you are
+   * simply put in the chair, with no beam effect.
    */
-  const BEAM_PAIRS: Array<[string, string]> = [["teleport_upper", "teleport_sub"]];
+  const BEAM_PAIRS: Array<[string, string, { quiet?: boolean }?]> = [
+    ["teleport_upper", "teleport_sub"],
+    ["go_left_chair", "left_sit10", { quiet: true }],
+    ["go_right_chair", "right_sit10", { quiet: true }],
+  ];
+  const isQuietBeamEnd = (tile: number): boolean => {
+    const name = tileName(currentGeometryRoom, tile);
+    return BEAM_PAIRS.some(([a, b, opts]) => opts?.quiet && (name === a || name === b));
+  };
   const beamTargetAt = (tile: number): number | null => {
     const name = tileName(currentGeometryRoom, tile);
     if (!name) return null;
@@ -5709,6 +5724,14 @@ function createVmkSession(
   const beamTo = (to: number, then?: () => void): void => {
     const room = currentRoomName;
     if (!room) return;
+    if (isQuietBeamEnd(to)) {
+      const landed = placeNear(to);
+      // `placeNear` only relocates; a standing pulse there sits you on a seat.
+      sendPulse(landed, LEGS_STAND);
+      console.log(`[${label}] moved to ${landed} in ${room}`);
+      then?.();
+      return;
+    }
     ridingUntil = Date.now() + TELEPORT_OUT_MS + TELEPORT_IN_MS + 200;
     setMagic(MAGIC_TELEPORT_OUT);
     setTimeout(() => {
@@ -6010,7 +6033,7 @@ function createVmkSession(
       const tiles = exitTilesWithIds(ROOM_CODES.get(MONORAIL_STATION), pier ? STATION_PIER_STAIRS : STATION_GROUND_STAIRS);
       if (tiles.length) doorway = tiles;
     }
-    pendingDoor = doorway ? { code, tiles: doorway } : null;
+    pendingDoor = doorway ? { code, tiles: doorway, face: rule.face } : null;
     console.log(
       `[${label}] exit "${rule.label}" -> ${code} (${ROOM_NAMES.get(code) ?? ROOM_CODES.get(code) ?? "?"})` +
         `${rule.flag ? ` [inferred: ${rule.flag}]` : ""}`,
