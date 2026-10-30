@@ -444,6 +444,12 @@ async function api(req: IncomingMessage, me: User, path: string, url: URL): Prom
     return { gameUp: !r.offline, rooms: r.rooms ?? [] };
   }
 
+  if (path === "room-styles") {
+    // Guest-room styles for the grant form; the game server knows which load.
+    const r = await bridge("room-styles");
+    return { gameUp: !r.offline, styles: r.styles ?? [] };
+  }
+
   if (path === "alert-all" && method === "POST") {
     need(me, "alert");
     const text = str(body.text, 240);
@@ -1314,6 +1320,19 @@ async function userAction(
       if (!r.ok) throw new HkError(400, String(r.error));
       log("bring", id, String(mine.roomId));
       return { message: `Brought ${label} to ${mine.roomTitle ?? mine.roomId}.` };
+    }
+
+    case "give_room": {
+      // A free extra guest room, as /giveroom gives; the player gets a staff
+      // message saying where to find it.
+      need(me, "admin");
+      const code = int(body.code, "room style");
+      const r = await bridge("giveroom", { userId: id, code });
+      if (r.offline) throw new HkError(502, "The game server is not reachable, so no room was given.");
+      if (!r.ok) throw new HkError(400, `No room given: ${String(r.error)}.`);
+      const room = r.room as { id: number; name: string; style: number };
+      log("give_room", id, `room ${room.id} "${room.name}" (style ${room.style})`);
+      return { message: `Gave ${label} a new guest room (${room.id}).` };
     }
 
     case "goto": {

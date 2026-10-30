@@ -927,9 +927,28 @@ const USER_TABS_RENDER = {
     return chatlogView(new URLSearchParams({ user: String(id) }), false);
   },
 
-  async rooms({ id }) {
-    const r = await api(`users/${id}/rooms`);
-    return roomsTable(r.rooms, {});
+  async rooms({ id, name, admin, doAction }) {
+    const [r, s] = await Promise.all([api(`users/${id}/rooms`), admin ? api("room-styles") : null]);
+    const list = roomsTable(r.rooms, {});
+    if (!admin) return list;
+    // Grant a guest room style: a free extra room, as the in-game /giveroom gives.
+    let grant;
+    if (!s.gameUp) {
+      grant = h("div", { class: "alert alert-warning" }, "The game server is not reachable, so rooms cannot be given right now.");
+    } else {
+      const style = h("select", {}, s.styles.map((x) => h("option", { value: x.code }, `${x.name} (${x.code})`)));
+      const give = h("button", { class: "btn btn-success", type: "submit" }, icon("home"), "Give room");
+      grant = h("form", { class: "panel mt", onsubmit: async (e) => {
+        e.preventDefault();
+        const label = style.selectedOptions[0]?.textContent ?? style.value;
+        if (await modal("Give a guest room?", { text: `${name} gets a new ${label} room, free, and a staff message saying where to find it.`, confirm: "Give room" })) {
+          doAction("give_room", { code: Number(style.value) }, give);
+        }
+      } },
+        h("div", { class: "panel-heading" }, "Give a guest room"),
+        h("div", { class: "panel-body flex" }, style, give));
+    }
+    return h("div", {}, list, grant);
   },
 
   async friends({ id }) {

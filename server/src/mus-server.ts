@@ -757,6 +757,41 @@ function loadRoomNames(): Map<number, string> {
 }
 
 /**
+ * Room codes offered as guest-room styles: their casts load and their space is
+ * a private room (`*_private`, `*_room`). The list `/giveroom` prints and /hk
+ * offers. Any loadable code can still be given by number.
+ */
+function guestRoomStyles(): Array<{ code: number; space: string; name: string }> {
+  return [...ROOM_CODES.entries()]
+    .filter(([code, space]) => LOADABLE_ROOMS.has(code) && /private|_room$/.test(space))
+    .map(([code, space]) => ({ code, space, name: ROOM_NAMES.get(code) ?? space }))
+    .sort((a, b) => a.name.localeCompare(b.name) || a.code - b.code);
+}
+
+/**
+ * A NEW guest room for `userId`, built on room `code` — `/giveroom` and the /hk
+ * grant. Free, unlike the shop's `BUY_ROOM`; same `addGuestRoom`. Starts with
+ * the style's own description, as a bought room does. `notify` sends the
+ * player a staff message saying where to find it. Returns the reason instead
+ * of a room when the code cannot be used.
+ */
+function giveGuestRoom(userId: number, characterName: string, code: number, notify: boolean): GuestRoom | string {
+  const space = ROOM_CODES.get(code);
+  if (!space || !LOADABLE_ROOMS.has(code)) {
+    return `room code ${code} ${space ? `(${space}) has no loadable casts` : "does not exist"}`;
+  }
+  const room = addGuestRoom(userId, code, `${characterName}'s Room`, loadRoomTexts("desc").get(code) ?? "");
+  if (notify) {
+    sendStaffMessage(
+      userId,
+      `You've been given a new guest room: ${ROOM_NAMES.get(code) ?? space}. ` +
+        `Find it under My Rooms in the Guest Rooms navigator.`,
+    );
+  }
+  return room;
+}
+
+/**
  * `room.<N>.name` / `room.<N>.desc` from the texts.
  *
  * Descriptions matter for guest rooms: a new room starts with the blurb of the
@@ -3859,16 +3894,9 @@ function createVmkSession(
         // shop's; this one is free and may target another player.
         const code = ints[0];
         if (code === undefined) {
-          const styles = [...ROOM_CODES.entries()]
-            .filter(([id, space]) => LOADABLE_ROOMS.has(id) && /private|_room$/.test(space))
-            .map(([id, space]) => `${id}=${space}`);
+          const styles = guestRoomStyles().map((s) => `${s.code}=${s.space}`);
           reply("/giveroom <roomCode> [player name] - give a guest room (yourself if no name)");
           reply(`private styles: ${styles.join(" ")}`);
-          return true;
-        }
-        const space = ROOM_CODES.get(code);
-        if (!space || !LOADABLE_ROOMS.has(code)) {
-          reply(`room code ${code} ${space ? `(${space}) has no loadable casts` : "does not exist"}`);
           return true;
         }
         // The name is everything after the code, so names with spaces work.
@@ -3878,22 +3906,14 @@ function createVmkSession(
           reply(`no player named "${targetName}"`);
           return true;
         }
-        const room = addGuestRoom(
-          target.id,
-          code,
-          `${target.name}'s Room`,
-          loadRoomTexts("desc").get(code) ?? "",
-        );
-        reply(`gave room ${room.id} "${room.name}" (${code} = ${space}) to ${target.name}`);
-        if (target.id !== live.userId) {
-          sendStaffMessage(
-            target.id,
-            `You've been given a new guest room: ${ROOM_NAMES.get(code) ?? space}. ` +
-              `Find it under My Rooms in the Guest Rooms navigator.`,
-          );
+        const given = giveGuestRoom(target.id, target.name, code, target.id !== live.userId);
+        if (typeof given === "string") {
+          reply(given);
+          return true;
         }
+        reply(`gave room ${given.id} "${given.name}" (${code} = ${ROOM_CODES.get(code)}) to ${target.name}`);
         console.log(
-          `[${label}] ${characterName} gave room ${room.id} (${code} = ${space}) to ${target.name} (${target.id})`,
+          `[${label}] ${characterName} gave room ${given.id} (${code} = ${ROOM_CODES.get(code)}) to ${target.name} (${target.id})`,
         );
         return true;
       }
@@ -10861,6 +10881,21 @@ function handleHkBridge(
       conn?.rename(name);
       messengerRenamed(userId);
       json(200, { ok: true });
+      return;
+    }
+
+    case "room-styles":
+      // Only this process knows which room codes have loadable casts.
+      json(200, { ok: true, styles: guestRoomStyles() });
+      return;
+
+    case "giveroom": {
+      const target = Number.isInteger(userId) ? getUserById(userId) : undefined;
+      if (!target) return json(200, { ok: false, error: "no such player" });
+      const given = giveGuestRoom(target.id, target.character_name ?? target.username, Number(input.code), true);
+      if (typeof given === "string") return json(200, { ok: false, error: given });
+      console.log(`[hk-bridge] gave room ${given.id} (style ${given.style}) to ${target.username} (${target.id})`);
+      json(200, { ok: true, room: { id: given.id, name: given.name, style: given.style } });
       return;
     }
 
