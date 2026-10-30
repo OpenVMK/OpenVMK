@@ -1536,25 +1536,47 @@ async function pageCatalog(params) {
         h("button", { class: "btn btn-danger btn-sm", type: "button", title: "Remove from this page", onclick: () => { page.products.splice(i, 1); touched(true); } }, "✕")));
   }
 
-  /** The guest-room page's add panel: a room code (its rooms.bg art and RoomDescHd text) and the space it builds. */
+  /**
+   * The guest-room page's add panel. Rooms are the ones the texts name
+   * (RoomDescHd.<code>); picking one fills in the space it is built from when
+   * the server could match it by name. Rooms already on the page are left out.
+   */
   function addRoomPanel(page) {
-    const code = h("input", { type: "number", min: 1, step: 1, placeholder: "Room code, e.g. 5008", style: "width:170px" });
+    const listed = new Set(page.products.map((p) => p.code));
+    const offer = r.rooms.filter((room) => !listed.has(room.code));
+    if (offer.length === 0) {
+      return h("div", { class: "panel" }, h("div", { class: "panel-heading" }, "Every named guest room is already on this page."));
+    }
+    const room = h("select", { onchange: () => fill() },
+      offer.map((o) => h("option", { value: o.code }, `${o.name} (#${o.code})${o.art ? "" : " — no shop picture"}`)));
     const space = h("select", {}, r.spaces.map((s) => h("option", { value: s }, s)));
     const price = h("input", { type: "number", min: 0, step: 1, placeholder: "Price", style: "width:110px" });
+    const preview = h("img", { class: "cat-room-thumb", alt: "" });
+    const fill = () => {
+      const picked = offer.find((o) => o.code === Number(room.value));
+      if (picked?.space) space.value = picked.space;
+      preview.removeAttribute("src");
+      itemPicture(picked.code, "room").then((url) => {
+        if (url && Number(room.value) === picked.code) preview.src = url;
+      });
+    };
+    fill();
     return h("div", { class: "panel" },
       h("div", { class: "panel-heading" }, "Add a guest room to this page"),
       h("div", { class: "panel-body" },
-        h("p", { class: "muted small", style: "margin-top:0" }, "The shop draws the room from rooms.bg.<code> and names it from RoomDescHd.<code>; the space is the public room it is built from."),
         h("div", { class: "flex" },
-          code, space, price,
-          h("button", { class: "btn btn-success", type: "button", onclick: () => {
-            const n = Number(code.value.trim());
-            if (!Number.isInteger(n) || n <= 0) return toast("Enter the room code.", true);
-            const p = price.value.trim();
-            if (p === "" || !Number.isInteger(Number(p)) || Number(p) < 0) return toast("Set a price in whole credits.", true);
-            page.products.push({ code: n, name: `Room ${n}`, price: Number(p), inventoryType: 1, level: 2, metadata: space.value, singleUse: false, origin: "staff" });
-            touched(true);
-          } }, icon("home"), "Add room"))));
+          preview,
+          h("div", { class: "form-row", style: "margin:0" },
+            h("div", {}, h("label", {}, "Room"), room),
+            h("div", {}, h("label", {}, "Built from"), space),
+            h("div", {}, h("label", {}, "Price"), price),
+            h("div", {}, h("label", {}, " "), h("button", { class: "btn btn-success", type: "button", onclick: () => {
+              const picked = offer.find((o) => o.code === Number(room.value));
+              const p = price.value.trim();
+              if (p === "" || !Number.isInteger(Number(p)) || Number(p) < 0) return toast("Set a price in whole credits.", true);
+              page.products.push({ code: picked.code, name: picked.name, price: Number(p), inventoryType: 1, level: 2, metadata: space.value, singleUse: false, origin: "staff" });
+              touched(true);
+            } }, icon("home"), "Add room"))))));
   }
 
   function productRow(page, item, i) {

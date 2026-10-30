@@ -234,11 +234,6 @@ const EXTRA_SHOPS: CatalogShop[] = [
     ],
   },
 ];
-let itemNameCache: Map<number, string> | null = null;
-let productNameCache: Map<number, string> | null = null;
-let shopNameCache: Map<number, string> | null = null;
-let roomNameCache: Map<number, string> | null = null;
-
 /** An item's display name from the external texts (`item.<code>`). */
 export function itemName(code: number): string {
   return texts().items.get(code) ?? `item.${code}`;
@@ -261,17 +256,20 @@ interface Texts {
   items: Map<number, string>;
   products: Map<number, string>;
   shopNames: Map<number, string>;
+  /** RoomDescHd.<catalogue code> */
   rooms: Map<number, string>;
+  /** room.<n>.name, keyed like room.code.<n> */
+  publicRooms: Map<number, string>;
 }
 
+let cachedTexts: Texts | null = null;
 function texts(): Texts {
-  if (itemNameCache && productNameCache && shopNameCache && roomNameCache) {
-    return { items: itemNameCache, products: productNameCache, shopNames: shopNameCache, rooms: roomNameCache };
-  }
-  itemNameCache = new Map();
-  productNameCache = new Map();
-  shopNameCache = new Map();
-  roomNameCache = new Map();
+  if (cachedTexts) return cachedTexts;
+  const itemNameCache = new Map<number, string>();
+  const productNameCache = new Map<number, string>();
+  const shopNameCache = new Map<number, string>();
+  const roomNameCache = new Map<number, string>();
+  const publicRooms = new Map<number, string>();
   const file = join(here, "..", "..", "assets", "overlay", "external_texts.txt");
   if (existsSync(file)) {
     for (const line of readFileSync(file, "latin1").split(/\r?\n/)) {
@@ -285,9 +283,12 @@ function texts(): Texts {
       // getText ignores case; the file spells the client's RoomDescHd in lower case.
       const room = /^\s*roomdeschd\.(\d+)\s*=\s*(.+?)\s*$/i.exec(line);
       if (room && room[2]) roomNameCache.set(Number(room[1]), room[2]);
+      const publicRoom = /^\s*room\.(\d+)\.name\s*=\s*(.+?)\s*$/.exec(line);
+      if (publicRoom && publicRoom[2]) publicRooms.set(Number(publicRoom[1]), publicRoom[2]);
     }
   }
-  return { items: itemNameCache, products: productNameCache, shopNames: shopNameCache, rooms: roomNameCache };
+  cachedTexts = { items: itemNameCache, products: productNameCache, shopNames: shopNameCache, rooms: roomNameCache, publicRooms };
+  return cachedTexts;
 }
 
 /** Every space a guest-room product may name, for the editor's picker. */
@@ -296,14 +297,38 @@ export function guestRoomSpaces(): string[] {
 }
 
 /**
- * Space names a guest-room product may carry as metadata: the values of
- * `room.code.<n>` (mus-server.ts `ROOM_CODES` reads the same file). `BUY_ROOM`
+ * The guest rooms the shop can show: every `RoomDescHd.<code>` text, with the
+ * space it is built from when that can be read off the texts. The catalogue
+ * code (5008) and the room it builds (room.code.53 = mad_hatter_private) are
+ * only linked by NAME — RoomDescHd.5008 and room.53.name are both "Mad
+ * Hatter's Tea Party" — so the space is matched by name, ignoring the "Guest
+ * Room" / "Room" suffixes the two lists add inconsistently. No match leaves
+ * `space` unset; staff pick it.
+ */
+export function guestRooms(): Array<{ code: number; name: string; space?: string }> {
+  const key = (name: string) =>
+    name.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\b(guest|private|room)\b/g, "").replace(/\s+/g, " ").trim();
+  const spaceByName = new Map<string, string>();
+  const { publicRooms } = texts();
+  // Lowest room number first, as BUY_ROOM prefers it; the first claim on a name wins.
+  for (const [n, space] of [...roomCodes()].sort((a, b) => a[0] - b[0])) {
+    const name = publicRooms.get(n);
+    if (name && !spaceByName.has(key(name))) spaceByName.set(key(name), space);
+  }
+  return [...texts().rooms]
+    .sort((a, b) => a[0] - b[0])
+    .map(([code, name]) => ({ code, name, space: spaceByName.get(key(name)) }));
+}
+
+/**
+ * `room.code.<n>` -> space (mus-server.ts `ROOM_CODES` reads the same file).
+ * The values are what a guest-room product may carry as metadata; `BUY_ROOM`
  * refuses a product whose metadata names no room.
  */
-let roomSpacesCache: Set<string> | null = null;
-function roomSpaces(): Set<string> {
-  if (roomSpacesCache) return roomSpacesCache;
-  roomSpacesCache = new Set();
+let roomCodesCache: Map<number, string> | null = null;
+function roomCodes(): Map<number, string> {
+  if (roomCodesCache) return roomCodesCache;
+  roomCodesCache = new Map();
   const root = join(here, "..", "..");
   for (const candidate of [process.env.VMK_EXTERNAL_VARS ?? "", join(root, "assets", "external_variables_casts.txt")]) {
     if (!candidate) continue;
@@ -311,11 +336,13 @@ function roomSpaces(): Set<string> {
     if (!existsSync(path)) continue;
     for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
       const match = /^room\.code\.(\d+)=(.*)$/.exec(line);
-      if (match) roomSpacesCache.add(match[2].trim());
+      if (match) roomCodesCache.set(Number(match[1]), match[2].trim());
     }
   }
-  return roomSpacesCache;
+  return roomCodesCache;
 }
+
+const roomSpaces = (): Set<string> => new Set(roomCodes().values());
 
 function catalogueFile(): CatalogueFile | null {
   const path = process.env.VMK_CATALOGUE ?? join(here, "..", "..", "assets", "catalogue.json");
