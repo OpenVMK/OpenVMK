@@ -1,4 +1,4 @@
-// vmk_shrinking_room_handler.cct / CTextScroller / setSpeed
+// vmk_shrinking_room_handler.cct (Disney's file, archived as vmk_grotto_handler.cct) / CNautilusGrottoComponent / Init
 
 import {
   callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
@@ -9,7 +9,8 @@ import {
   type LingoMe, type LingoValue,
 } from "../lingo/lingo-runtime.js";
 
-export function setSpeed(_me: LingoMe, t_fps: LingoValue) {
-  setMeProp(_me, "m_iSpeed", lingoBinary("div", 1000, t_fps));
+export function Init(_me: LingoMe) {
+  setMeProp(_me, "m_bReady", 1);
+  callMethod("HandleGate", _me, 0)
 }
 

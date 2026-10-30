@@ -1,4 +1,4 @@
-// vmk_shrinking_room_handler.cct / CTextScrollRendererText / deconstruct
+// vmk_shrinking_room_handler.cct (Disney's file, archived as vmk_grotto_handler.cct) / CNautilusGrottoComponent / deconstruct
 
 import {
   callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
@@ -10,6 +10,8 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function deconstruct(_me: LingoMe) {
-  callNamed("removeWriter", meProp(_me, "m_sWriterID"))
+  callNamed("unregisterMessage", symbol("room_ready"), callMethod("getID", _me), symbol("Init"))
+  callNamed("unregisterMessage", symbol("room_leave"), callMethod("getID", _me), symbol("Release"))
+  return 1;
 }
 
