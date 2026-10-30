@@ -266,11 +266,12 @@ function prepareLayer(img, layer) {
   return c;
 }
 
-/** Resolves to a data URL of the composed item picture, or null. */
+/** Resolves to a data URL of the composed item picture, or null. Category "room" is a guest room's shop picture. */
 function itemPicture(code, category) {
   const key = `${code}:${category ?? ""}`;
   if (!iconCache.has(key)) {
-    iconCache.set(key, api(`icon/${code}${category ? `?cat=${category}` : ""}`)
+    const query = category === "room" ? "?room=1" : category ? `?cat=${category}` : "";
+    iconCache.set(key, api(`icon/${code}${query}`)
       .then(({ icon: spec }) => composeLayers(spec.layers))
       .catch(() => null));
   }
@@ -1511,7 +1512,53 @@ async function pageCatalog(params) {
     });
   }
 
+  /** A guest room is not an item: its row is the shop picture, name, price and the space it builds. */
+  function roomRow(page, item, i) {
+    const thumb = h("img", { class: "cat-room-thumb", alt: "", title: `rooms.bg.${item.code}` });
+    itemPicture(item.code, "room").then((url) => {
+      if (url) thumb.src = url;
+      else thumb.replaceWith(h("div", { class: "cat-room-thumb", title: `No rooms.bg.${item.code} picture` }, "?"));
+    });
+    const spaces = r.spaces.includes(item.metadata) ? r.spaces : [item.metadata, ...r.spaces];
+    return h("tr", { "data-code": item.code },
+      h("td", {}, thumb),
+      h("td", {}, item.name ?? `Room ${item.code}`, h("div", { class: "muted small" }, `#${item.code}`)),
+      h("td", {}, h("input", { type: "number", min: 0, step: 1, value: item.price, style: "width:90px", oninput: (e) => {
+        const v = e.target.value.trim();
+        item.price = v === "" ? NaN : Number(v);
+        touched();
+      } })),
+      h("td", {}, h("select", { onchange: (e) => { item.metadata = e.target.value; touched(); } },
+        spaces.map((s) => h("option", { value: s, selected: s === item.metadata }, s)))),
+      h("td", { class: "nowrap" },
+        moveButtons(page.products, i, () => touched(true)),
+        " ",
+        h("button", { class: "btn btn-danger btn-sm", type: "button", title: "Remove from this page", onclick: () => { page.products.splice(i, 1); touched(true); } }, "✕")));
+  }
+
+  /** The guest-room page's add panel: a room code (its rooms.bg art and RoomDescHd text) and the space it builds. */
+  function addRoomPanel(page) {
+    const code = h("input", { type: "number", min: 1, step: 1, placeholder: "Room code, e.g. 5008", style: "width:170px" });
+    const space = h("select", {}, r.spaces.map((s) => h("option", { value: s }, s)));
+    const price = h("input", { type: "number", min: 0, step: 1, placeholder: "Price", style: "width:110px" });
+    return h("div", { class: "panel" },
+      h("div", { class: "panel-heading" }, "Add a guest room to this page"),
+      h("div", { class: "panel-body" },
+        h("p", { class: "muted small", style: "margin-top:0" }, "The shop draws the room from rooms.bg.<code> and names it from RoomDescHd.<code>; the space is the public room it is built from."),
+        h("div", { class: "flex" },
+          code, space, price,
+          h("button", { class: "btn btn-success", type: "button", onclick: () => {
+            const n = Number(code.value.trim());
+            if (!Number.isInteger(n) || n <= 0) return toast("Enter the room code.", true);
+            const p = price.value.trim();
+            if (p === "" || !Number.isInteger(Number(p)) || Number(p) < 0) return toast("Set a price in whole credits.", true);
+            page.products.push({ code: n, name: `Room ${n}`, price: Number(p), inventoryType: 1, level: 2, metadata: space.value, singleUse: false, origin: "staff" });
+            touched(true);
+          } }, icon("home"), "Add room"))));
+  }
+
   function productRow(page, item, i) {
+    if (page.layout === 3) return roomRow(page, item, i);
     const clothing = item.inventoryType === 2;
     const off = preview !== "" && clothing && item.level !== 2 && String(item.level) !== preview;
     const select = (options, value, onchange) =>
@@ -1526,9 +1573,6 @@ async function pageCatalog(params) {
         touched();
       } })),
       h("td", {}, clothing ? select([[2, "Both"], [0, "Boys"], [1, "Girls"]], item.level, (e) => { item.level = Number(e.target.value); touched(true); }) : h("span", { class: "muted" }, "—")),
-      page.layout === 3
-        ? h("td", {}, h("input", { type: "text", value: item.metadata, style: "width:140px", oninput: (e) => { item.metadata = e.target.value; touched(); } }))
-        : null,
       h("td", { style: "text-align:center" }, h("input", { type: "checkbox", title: "Single use", checked: item.singleUse, onchange: (e) => { item.singleUse = e.target.checked; touched(); } })),
       h("td", { class: "nowrap" },
         moveButtons(page.products, i, () => touched(true)),
@@ -1551,6 +1595,7 @@ async function pageCatalog(params) {
       touched(true);
     } }, draft.map((s) => h("option", { value: s.nameId, selected: s === shop }, shopLabel(s))));
     const pageIndex = shop.pages.indexOf(page);
+    const rooms = page.layout === 3;
 
     editor.replaceChildren(
       h("div", { class: "panel" },
@@ -1585,15 +1630,15 @@ async function pageCatalog(params) {
             } }, "Delete page")))),
       h("div", { class: "cat-page-issues" }),
       h("div", { class: "flex mb" },
-        h("strong", { class: "grow" }, `${page.products.length} item(s)`),
-        h("label", { style: "font-weight:400;margin:0" }, "Preview as ",
+        h("strong", { class: "grow" }, rooms ? `${page.products.length} room(s)` : `${page.products.length} item(s)`),
+        rooms ? null : h("label", { style: "font-weight:400;margin:0" }, "Preview as ",
           h("select", { onchange: (e) => { preview = e.target.value; renderEditor(); } },
             [["", "everyone"], ["0", "a boy"], ["1", "a girl"]].map(([v, l]) => h("option", { value: v, selected: v === preview }, l))))),
       table(
-        ["", "Item", "Type", "Price", "Who", page.layout === 3 ? "Space" : null, "Single use", ""].filter((x) => x !== null),
+        rooms ? ["", "Room", "Price", "Built from", ""] : ["", "Item", "Type", "Price", "Who", "Single use", ""],
         page.products.map((item, i) => productRow(page, item, i)),
         "This shelf is empty."),
-      h("div", { class: "panel" },
+      rooms ? addRoomPanel(page) : h("div", { class: "panel" },
         h("div", { class: "panel-heading" }, "Add an item to this page"),
         h("div", { class: "panel-body" },
           picker.el,

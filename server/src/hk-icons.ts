@@ -65,7 +65,8 @@ function addManifest(into: Map<string, Member[]>, cast: string, text: string): v
     // member_id, member_type, member_name, script_id, chunk_id, fourcc, asset_path, reg_x, reg_y
     if (c[1] !== "bitmap" || !c[6]?.endsWith(".png")) continue;
     const name = c[2];
-    if (!name || !/^(item_|std_|poster_)/.test(name)) continue;
+    // rooms.bg.<code>: the guest-room pictures in the shop (`roomIconFor`).
+    if (!name || !/^(item_|std_|poster_|rooms\.bg\.)/.test(name)) continue;
     let list = into.get(name);
     if (!list) into.set(name, (list = []));
     list.push({ cast, png: c[6], regX: Number(c[7]) || 0, regY: Number(c[8]) || 0 });
@@ -89,7 +90,7 @@ function index(): Map<string, Member[]> {
       if (existsSync(file)) addManifest(built, cast, readFileSync(file, "latin1"));
     }
   }
-  console.log(`[hk-icons] indexed ${built.size} item/clothing bitmaps (blocking fallback)`);
+  console.log(`[hk-icons] indexed ${built.size} item/clothing/room bitmaps (blocking fallback)`);
   return (members = built);
 }
 
@@ -125,7 +126,7 @@ export function warmIcons(): Promise<void> {
     await Promise.all(Array.from({ length: 16 }, worker));
     // A blocking caller may have raced us; keep whichever finished first.
     members ??= built;
-    console.log(`[hk-icons] indexed ${members.size} item/clothing bitmaps in ${Date.now() - started} ms (background)`);
+    console.log(`[hk-icons] indexed ${members.size} item/clothing/room bitmaps in ${Date.now() - started} ms (background)`);
   })();
   return warming;
 }
@@ -382,6 +383,17 @@ export function iconFor(code: number, category?: number): IconSpec {
   }
   cache.set(key, spec);
   return spec;
+}
+
+/**
+ * A guest room as the shop shows it: the `rooms.bg.<code>` picture
+ * `CCatalogRoomsView` feeds into its preview.
+ */
+export function roomIconFor(code: number): IconSpec {
+  const bg = member(`rooms.bg.${code}`);
+  return bg
+    ? { code, kind: "single", layers: [{ url: urlOf(bg), regX: bg.regX, regY: bg.regY, x: 0, y: 0 }] }
+    : { code, kind: "none", layers: [] };
 }
 
 /** Is this code drawable furniture per the furnimap? (Give-item category guess.) */
