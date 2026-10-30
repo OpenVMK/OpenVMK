@@ -764,6 +764,15 @@ export function validateCatalog(shops: StoredShop[]): CatalogIssue[] {
   }
 
   for (const shop of shops) {
+    // The client always draws the Rooms tab (CCatalogRoomsView) and fills it from
+    // the layout-3 page; the shop is the one whose name contains "rooms", the same
+    // test createComponentWindow uses to keep it out of the furniture list.
+    if ((shopNames.get(shop.nameId) ?? "").toLowerCase().includes("rooms")) {
+      if (shop.hidden) error("The client always shows the Rooms tab, so this shop cannot be hidden.", { shop: shop.nameId });
+      if (!shop.pages.some((p) => !p.hidden && p.layout === 3)) {
+        error("The Rooms tab needs a shown guest-room page (layout 3).", { shop: shop.nameId });
+      }
+    }
     if (shop.hidden) continue;
     const name = shopNames.get(shop.nameId);
     if (name === undefined) {
