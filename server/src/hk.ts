@@ -71,6 +71,7 @@ import {
   describeCatalogChanges,
   displayName,
   guestRoomSpaces,
+  guestRooms,
   itemName,
   parseCatalogDraft,
   roomName,
@@ -899,6 +900,9 @@ async function api(req: IncomingMessage, me: User, path: string, url: URL): Prom
         })),
       })),
       spaces: guestRoomSpaces(),
+      // What the guest-room page's "Add room" picker offers; `art` mirrors the
+      // client's memberExists("rooms.bg." & code) test.
+      rooms: guestRooms().map((room) => ({ ...room, art: roomIconFor(room.code).kind !== "none" })),
       issues: validateCatalog(shops),
     };
   }
