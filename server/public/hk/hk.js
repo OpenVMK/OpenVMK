@@ -1368,6 +1368,8 @@ async function pageCatalog(params) {
   state.leaveGuard = () => edited;
 
   const shopLabel = (shop) => (shop ? shop.name ?? `cat.name.${shop.nameId} (no text)` : "?");
+  // The client's own test for the rooms shop (createComponentWindow: name contains "rooms").
+  const isRoomsShop = (shop) => (shop.name ?? "").toLowerCase().includes("rooms");
   const findPage = (id) => {
     for (const shop of draft) {
       const page = shop.pages.find((p) => p.id === id);
@@ -1474,11 +1476,12 @@ async function pageCatalog(params) {
     tree.replaceChildren(...draft.map((shop, si) => {
       const count = (pred) => issues.filter(pred).length;
       const shopErrors = count((i) => i.shop === shop.nameId && !i.page && i.level === "error");
+      const fixed = isRoomsShop(shop);
       return h("div", { class: `cat-shop${shop.hidden ? " off" : ""}` },
         h("div", { class: "cat-shop-head" },
           h("strong", { class: "grow" }, shopLabel(shop)),
           shopErrors ? h("span", { class: "label label-danger" }, shopErrors) : null,
-          h("label", { class: "small", style: "font-weight:400;margin:0", title: "Sent to players" },
+          fixed ? null : h("label", { class: "small", style: "font-weight:400;margin:0", title: "Sent to players" },
             h("input", { type: "checkbox", checked: !shop.hidden, onchange: (e) => { shop.hidden = !e.target.checked; touched(); } }), " shown"),
           moveButtons(draft, si, () => touched())),
         shop.note ? h("div", { class: "muted small" }, shop.note) : null,
@@ -1493,7 +1496,8 @@ async function pageCatalog(params) {
               errs ? h("span", { class: "label label-danger" }, errs) : null,
               warns ? h("span", { class: "label label-warning" }, warns) : null));
           }),
-          h("li", {}, h("button", { class: "btn-link small", type: "button", onclick: () => addPage(shop) }, "+ Add page"))));
+          // The rooms view shows only the guest-room list; another page there would never be seen.
+          fixed ? null : h("li", {}, h("button", { class: "btn-link small", type: "button", onclick: () => addPage(shop) }, "+ Add page"))));
     }));
   }
 
@@ -1618,6 +1622,9 @@ async function pageCatalog(params) {
     } }, draft.map((s) => h("option", { value: s.nameId, selected: s === shop }, shopLabel(s))));
     const pageIndex = shop.pages.indexOf(page);
     const rooms = page.layout === 3;
+    // The client always shows the Rooms tab and fills it from this page, so it
+    // cannot be hidden, moved, deleted or turned into a shelf.
+    const fixed = rooms && isRoomsShop(shop);
 
     editor.replaceChildren(
       h("div", { class: "panel" },
@@ -1627,15 +1634,15 @@ async function pageCatalog(params) {
         h("div", { class: "panel-body" },
           h("div", { class: "form-row" },
             h("div", {}, h("label", {}, "Title"), h("input", { type: "text", list: "cat-titles", value: page.title, maxlength: 60, oninput: (e) => { page.title = e.target.value; touched(); } }), titleList),
-            h("div", {}, h("label", {}, "Shop"), moveTo),
-            h("div", {}, h("label", {}, "Layout"), h("select", { onchange: (e) => { page.layout = Number(e.target.value); touched(true); } },
+            fixed ? null : h("div", {}, h("label", {}, "Shop"), moveTo),
+            fixed ? null : h("div", {}, h("label", {}, "Layout"), h("select", { onchange: (e) => { page.layout = Number(e.target.value); touched(true); } },
               h("option", { value: 1, selected: page.layout === 1 }, "Shelf"),
               h("option", { value: 3, selected: page.layout === 3 }, "Guest rooms"))),
-            h("div", {}, h("label", {}, "Shown"), h("label", { style: "font-weight:400" },
+            fixed ? null : h("div", {}, h("label", {}, "Shown"), h("label", { style: "font-weight:400" },
               h("input", { type: "checkbox", checked: !page.hidden, onchange: (e) => { page.hidden = !e.target.checked; touched(); } }), " sent to players"))),
           h("div", { class: "form-row" },
             h("div", { class: "grow" }, h("label", {}, "Note (staff only)"), h("input", { type: "text", value: page.note, maxlength: 500, oninput: (e) => { page.note = e.target.value; touched(); } }))),
-          h("div", { class: "flex" },
+          fixed ? null : h("div", { class: "flex" },
             moveButtons(shop.pages, pageIndex, () => touched(true)),
             h("button", { class: "btn btn-danger btn-sm", type: "button", onclick: async () => {
               const ok = await modal("Delete this page?", {
