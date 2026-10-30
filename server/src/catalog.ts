@@ -18,12 +18,29 @@
  * This file previously invented both the shop assignment (by regex over item
  * names) and the prices (a footprint-size formula). Both are gone. If a row
  * looks wrong now, the fix is in the data or the extractor, not here.
+ *
+ * STAFF EDITS. The recovered data is now the SEED, not the live source: on
+ * first start `seedRows` copies it (plus EXTRA_SHOPS, minus SKIPPED_SHOPS, with
+ * SKIPPED_PAGES as hidden rows) into the database (catalog-store.ts), and the
+ * /hk catalogue editor changes it from there. Every row keeps an `origin` —
+ * 'recovered', 'rebuilt' (EXTRA_SHOPS) or 'staff' — so what came from the dump
+ * stays distinguishable from what was added or repriced by hand. The rules the
+ * client imposes on that data are checked by `validateCatalog` before a save.
  */
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { previewable, composites } from "./furni-footprint.js";
 import { drawableClothingSets } from "./avatar-sets.js";
+import {
+  STAFF_PAGE_ID_BASE,
+  catalogVersion,
+  loadStoredCatalog,
+  seedStoredCatalog,
+  type StoredPage,
+  type StoredProduct,
+  type StoredShop,
+} from "./catalog-store.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -112,6 +129,9 @@ interface CatalogueFile {
  *        in the dump but not in our external_texts, so it would render blank
  *        here. Restoring it is a deliberate choice about seasonal content plus
  *        a text-file edit, not something to do silently.
+ *
+ * Left out of the seed entirely, pages and all, so the /hk editor never lists
+ * them. They survive only in assets/catalogue.json.
  */
 const SKIPPED_SHOPS = new Map<number, string>([
   [43, "no cat.name.43 exists in any text source"],
@@ -127,8 +147,9 @@ const MAX_SHOPS = Number(process.env.VMK_SHOP_MAX_SHOPS ?? Infinity);
 const MAX_PAGES = Number(process.env.VMK_SHOP_MAX_PAGES ?? Infinity);
 const MAX_ITEMS = Number(process.env.VMK_SHOP_MAX_ITEMS ?? Infinity);
 
-/** Keyed by sex — see `catalog`. */
+/** Keyed by sex — see `catalog`. Valid for `cachedVersion` of the stored rows. */
 const cached = new Map<number, CatalogShop[]>();
+let cachedVersion = -1;
 
 /**
  * Shops the recovered dump does not have, rebuilt from other evidence. This is
@@ -164,7 +185,8 @@ export const CAMERA_PAGE_ID = 700;
  * Products that grant a camera and/or film instead of an inventory item. The
  * codes are Disney's (`product.7001` / `product.6001`). The PRICES ARE
  * PLACEHOLDERS: no source gives the camera's, and a later fan server sold film for 200.
- * `VMK_CAMERA_PRICE` / `VMK_FILM_PRICE` override them.
+ * `VMK_CAMERA_PRICE` / `VMK_FILM_PRICE` override them, but only when the
+ * database is first seeded; after that the price is edited in /hk.
  */
 export const CAMERA_PRODUCTS = new Map<number, { camera: boolean; film: number }>([
   [7001, { camera: true, film: 3 }],
@@ -213,29 +235,61 @@ const EXTRA_SHOPS: CatalogShop[] = [
   },
 ];
 let itemNameCache: Map<number, string> | null = null;
-let shopNameCache: Set<number> | null = null;
+let productNameCache: Map<number, string> | null = null;
+let shopNameCache: Map<number, string> | null = null;
 
 /** An item's display name from the external texts (`item.<code>`). */
 export function itemName(code: number): string {
   return texts().items.get(code) ?? `item.${code}`;
 }
 
-function texts(): { items: Map<number, string>; shopNames: Set<number> } {
-  if (itemNameCache && shopNameCache) {
-    return { items: itemNameCache, shopNames: shopNameCache };
+/** The tab name the client will draw for a shop (`cat.name.<id>`), if any. */
+export function shopName(nameId: number): string | undefined {
+  return texts().shopNames.get(nameId);
+}
+
+function texts(): { items: Map<number, string>; products: Map<number, string>; shopNames: Map<number, string> } {
+  if (itemNameCache && productNameCache && shopNameCache) {
+    return { items: itemNameCache, products: productNameCache, shopNames: shopNameCache };
   }
   itemNameCache = new Map();
-  shopNameCache = new Set();
+  productNameCache = new Map();
+  shopNameCache = new Map();
   const file = join(here, "..", "..", "assets", "overlay", "external_texts.txt");
   if (existsSync(file)) {
     for (const line of readFileSync(file, "latin1").split(/\r?\n/)) {
       const item = /^\s*item\.(\d+)\s*=\s*(.+?)\s*$/.exec(line);
       if (item && item[2]) itemNameCache.set(Number(item[1]), item[2]);
-      const shop = /^\s*cat\.name\.(\d+)\s*=/.exec(line);
-      if (shop) shopNameCache.add(Number(shop[1]));
+      // The shelf and purchase dialog prefer `product.` over `item.` (see EXTRA_SHOPS).
+      const product = /^\s*product\.(\d+)\s*=\s*(.+?)\s*$/.exec(line);
+      if (product && product[2]) productNameCache.set(Number(product[1]), product[2]);
+      const shop = /^\s*cat\.name\.(\d+)\s*=\s*(.*?)\s*$/.exec(line);
+      if (shop) shopNameCache.set(Number(shop[1]), shop[2] ?? "");
     }
   }
-  return { items: itemNameCache, shopNames: shopNameCache };
+  return { items: itemNameCache, products: productNameCache, shopNames: shopNameCache };
+}
+
+/**
+ * Space names a guest-room product may carry as metadata: the values of
+ * `room.code.<n>` (mus-server.ts `ROOM_CODES` reads the same file). `BUY_ROOM`
+ * refuses a product whose metadata names no room.
+ */
+let roomSpacesCache: Set<string> | null = null;
+function roomSpaces(): Set<string> {
+  if (roomSpacesCache) return roomSpacesCache;
+  roomSpacesCache = new Set();
+  const root = join(here, "..", "..");
+  for (const candidate of [process.env.VMK_EXTERNAL_VARS ?? "", join(root, "assets", "external_variables_casts.txt")]) {
+    if (!candidate) continue;
+    const path = isAbsolute(candidate) ? candidate : join(root, candidate);
+    if (!existsSync(path)) continue;
+    for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
+      const match = /^room\.code\.(\d+)=(.*)$/.exec(line);
+      if (match) roomSpacesCache.add(match[2].trim());
+    }
+  }
+  return roomSpacesCache;
 }
 
 function catalogueFile(): CatalogueFile | null {
@@ -310,10 +364,10 @@ function drawableSets(): Set<number> {
  * Pages removed from the recovered data.
  *
  * 31 "Spooky Specials" — seasonal Halloween content under the Clothing shop.
- * Removed at request; it is genuine OpenVMK-era data, so it lives on in
- * assets/catalogue.json and comes back by deleting this entry.
+ * Removed at request; it is genuine OpenVMK-era data, so it is seeded HIDDEN
+ * and comes back by unhiding it in the /hk catalogue editor.
  */
-const SKIPPED_PAGES = new Set<number>([31]);
+const SKIPPED_PAGES = new Map<number, string>([[31, "seasonal Halloween page; removed at request"]]);
 
 /**
  * Split long clothing categories so none of them needs the page arrows.
@@ -373,86 +427,78 @@ function splitPage(page: CatalogPage, nextId: () => number): CatalogPage[] {
  * ragged categories full of gaps where the female items were removed.
  */
 export function catalog(sex = 0): CatalogShop[] {
+  // A save from /hk bumps the stored version; drop both sexes' builds when it
+  // moves. Seed first, or a first start would cache the pre-seed version.
+  ensureSeeded();
+  const version = catalogVersion();
+  if (version !== cachedVersion) {
+    cached.clear();
+    cachedVersion = version;
+  }
   const hit = cached.get(sex);
   if (hit) return hit;
-  const data = catalogueFile();
-  if (!data) {
-    cached.set(sex, []);
-    return [];
-  }
+  const stored = storedCatalog();
 
-  const { items: names, shopNames } = texts();
-  const productsByPage = new Map<number, CatalogProduct[]>();
+  const { shopNames } = texts();
   let noArt = 0;
   let undrawable = 0;
-  for (const item of data.items) {
-    if (!renderable(item.code, item.inventoryType)) {
-      undrawable++;
-      continue;
+  const shelf = (products: StoredProduct[]): CatalogProduct[] => {
+    const out: CatalogProduct[] = [];
+    for (const item of products) {
+      if (!renderable(item.code, item.inventoryType)) {
+        undrawable++;
+        continue;
+      }
+      // Clothing is offered only to the sex that can wear it. The mapping had to
+      // be read off the data rather than assumed: every hat is level 2 whether it
+      // sits in the male (21003), female (31001) or later (41000) band, while
+      // tops split 34xxx=1 against 44xxx=0 — so the shorthand that the 4xxxx band
+      // is simply "unisex" is too coarse. Only this column says which.
+      if (item.inventoryType === ITEM_CLOTHING && item.level !== 2 && item.level !== sex) {
+        continue;
+      }
+      if (item.inventoryType === ITEM_FURNITURE && !previewable(item.code)) noArt++;
+      out.push({
+        code: item.code,
+        // The client resolves the name itself; this is for our logs only.
+        name: displayName(item.code),
+        price: item.price,
+        inventoryType: item.inventoryType,
+        level: item.level,
+        metadata: item.metadata,
+        singleUse: item.singleUse,
+      });
     }
-    // Clothing is offered only to the sex that can wear it. The mapping had to
-    // be read off the data rather than assumed: every hat is level 2 whether it
-    // sits in the male (21003), female (31001) or later (41000) band, while
-    // tops split 34xxx=1 against 44xxx=0 — so the shorthand that the 4xxxx band
-    // is simply "unisex" is too coarse. Only this column says which.
-    if (item.inventoryType === ITEM_CLOTHING && item.level !== 2 && item.level !== sex) {
-      continue;
-    }
-    if (item.inventoryType === ITEM_FURNITURE && !previewable(item.code)) noArt++;
-    if (!productsByPage.has(item.page)) productsByPage.set(item.page, []);
-    productsByPage.get(item.page)!.push({
-      code: item.code,
-      // The client resolves `item.<code>` itself; this is for our logs only.
-      name: names.get(item.code) ?? `item.${item.code}`,
-      price: item.price,
-      inventoryType: item.inventoryType,
-      level: item.level,
-      metadata: item.metadata,
-      singleUse: item.singleUse,
-    });
-  }
+    return out;
+  };
 
   let splitId = SPLIT_ID_BASE;
   const nextSplitId = () => splitId++;
-  const pagesByShop = new Map<number, CatalogPage[]>();
-  for (const page of data.pages) {
-    if (SKIPPED_PAGES.has(page.id)) continue;
-    const products = productsByPage.get(page.id) ?? [];
-    if (!pagesByShop.has(page.shop)) pagesByShop.set(page.shop, []);
-    const built: CatalogPage = {
-      id: page.id,
-      title: page.title,
-      layout: page.layout,
-      products: products.slice(0, MAX_ITEMS),
-    };
-    // Only clothing pages are split — they are the ones with the buggy pager.
-    const parts =
-      built.products[0]?.inventoryType === ITEM_CLOTHING
-        ? splitPage(built, nextSplitId)
-        : [built];
-    pagesByShop.get(page.shop)!.push(...parts);
-  }
-
   const skipped: string[] = [];
   const shops: CatalogShop[] = [];
-  for (const shop of data.shops) {
-    const reason = SKIPPED_SHOPS.get(shop.nameId);
-    if (reason) {
-      skipped.push(`${shop.nameId} (${reason})`);
+  for (const shop of stored) {
+    if (shop.hidden) {
+      skipped.push(`${shop.nameId} (${shop.note || "hidden"})`);
       continue;
     }
     if (!shopNames.has(shop.nameId)) {
       skipped.push(`${shop.nameId} (no cat.name.${shop.nameId} in external_texts)`);
       continue;
     }
-    const pages = (pagesByShop.get(shop.id) ?? []).slice(0, MAX_PAGES);
+    const pages: CatalogPage[] = [];
+    for (const page of shop.pages) {
+      if (page.hidden) continue;
+      const built: CatalogPage = {
+        id: page.id,
+        title: page.title,
+        layout: page.layout,
+        products: shelf(page.products).slice(0, MAX_ITEMS),
+      };
+      // Only clothing pages are split — they are the ones with the buggy pager.
+      pages.push(...(built.products[0]?.inventoryType === ITEM_CLOTHING ? splitPage(built, nextSplitId) : [built]));
+    }
     if (pages.length === 0) continue;
-    shops.push({ nameId: shop.nameId, name: `cat.name.${shop.nameId}`, pages });
-  }
-  // Shop 7, VMK Central, is absent from the recovered dump; see EXTRA_SHOPS.
-  for (const extra of EXTRA_SHOPS) {
-    if (!shopNames.has(extra.nameId) || shops.some((s) => s.nameId === extra.nameId)) continue;
-    shops.push(extra);
+    shops.push({ nameId: shop.nameId, name: `cat.name.${shop.nameId}`, pages: pages.slice(0, MAX_PAGES) });
   }
   const result = shops.slice(0, MAX_SHOPS);
   cached.set(sex, result);
@@ -467,7 +513,7 @@ export function catalog(sex = 0): CatalogShop[] {
   console.log(
     `[catalog] ${sex === 1 ? "female" : "male"}: ${result.length} shops, ` +
       `${result.reduce((n, s) => n + s.pages.length, 0)} pages, ${total} products ` +
-      `(recovered from ${data.source.split(" —")[0]})`,
+      `(catalogue version ${version})`,
   );
   if (paged > 0) {
     // Any page over 9 still shows the arrows, and the arrows are the crash.
@@ -533,4 +579,345 @@ export function productByCode(code: number, sex = 0): CatalogProduct | undefined
     }
   }
   return undefined;
+}
+
+/* ------------------------------------------------------------------ editing */
+
+/**
+ * The recovered data as stored rows: what the tables are seeded (and reset)
+ * from. Order is the dump's, which is the order the shelves have always had.
+ */
+export function seedRows(): StoredShop[] | null {
+  const data = catalogueFile();
+  if (!data) return null;
+  const nameIdOf = new Map(data.shops.map((s) => [s.id, s.nameId]));
+  const productsByPage = new Map<number, StoredProduct[]>();
+  for (const item of data.items) {
+    if (!productsByPage.has(item.page)) productsByPage.set(item.page, []);
+    productsByPage.get(item.page)!.push({
+      code: item.code,
+      price: item.price,
+      inventoryType: item.inventoryType,
+      level: item.level,
+      metadata: item.metadata,
+      singleUse: item.singleUse,
+      origin: "recovered",
+    });
+  }
+  const pagesByShop = new Map<number, StoredPage[]>();
+  for (const page of data.pages) {
+    const shop = nameIdOf.get(page.shop) ?? page.shop;
+    if (!pagesByShop.has(shop)) pagesByShop.set(shop, []);
+    pagesByShop.get(shop)!.push({
+      id: page.id,
+      title: page.title,
+      layout: page.layout,
+      hidden: SKIPPED_PAGES.has(page.id),
+      note: SKIPPED_PAGES.get(page.id) ?? "",
+      origin: "recovered",
+      products: productsByPage.get(page.id) ?? [],
+    });
+  }
+  const shops: StoredShop[] = data.shops
+    .filter((shop) => !SKIPPED_SHOPS.has(shop.nameId))
+    .map((shop) => ({
+      nameId: shop.nameId,
+      hidden: false,
+      note: "",
+      origin: "recovered",
+      pages: pagesByShop.get(shop.nameId) ?? [],
+    }));
+  for (const extra of EXTRA_SHOPS) {
+    if (shops.some((s) => s.nameId === extra.nameId)) continue;
+    shops.push({
+      nameId: extra.nameId,
+      hidden: false,
+      note: "",
+      origin: "rebuilt",
+      pages: extra.pages.map((page) => ({
+        id: page.id,
+        title: page.title,
+        layout: page.layout,
+        hidden: false,
+        note: "",
+        origin: "rebuilt",
+        products: page.products.map(({ name: _name, ...product }) => ({ ...product, origin: "rebuilt" })),
+      })),
+    });
+  }
+  return shops;
+}
+
+let seedTried = false;
+/**
+ * Seed the tables on the first ever start. Once per process: with no
+ * catalogue.json either, every shop request would otherwise re-read the disk
+ * and repeat catalogueFile's warning.
+ */
+function ensureSeeded(): void {
+  if (seedTried) return;
+  seedTried = true;
+  if (seedStoredCatalog(seedRows)) console.log("[catalog] seeded the database from the recovered catalogue");
+}
+
+/** The stored rows, hidden ones included. */
+export function storedCatalog(): StoredShop[] {
+  ensureSeeded();
+  return loadStoredCatalog() ?? [];
+}
+
+/** The name a shelf shows: `product.<code>` first, as the client does. */
+export function displayName(code: number): string {
+  const t = texts();
+  return t.products.get(code) ?? t.items.get(code) ?? `item.${code}`;
+}
+
+export interface CatalogIssue {
+  level: "error" | "warning";
+  shop?: number;
+  page?: number;
+  code?: number;
+  message: string;
+}
+
+/**
+ * Titles the furniture view treats as tabs; anything else becomes a sub-row
+ * under the shop. `CCatalogFurniView.createComponentWindow` tests each with
+ * Lingo `contains`, which ignores case.
+ */
+const FURNI_VIEW_TITLES = ["furniture", "pins", "posters", "specials!"];
+
+/**
+ * The client's rules for catalogue data, as far as they are known. ERRORS are
+ * things that break the shop or a purchase and block a save; WARNINGS are
+ * legal but worth a second look. Hidden shops and pages are only checked for
+ * id clashes, since they are never sent.
+ */
+export function validateCatalog(shops: StoredShop[]): CatalogIssue[] {
+  const issues: CatalogIssue[] = [];
+  const error = (message: string, at: Partial<CatalogIssue> = {}) => issues.push({ level: "error", ...at, message });
+  const warn = (message: string, at: Partial<CatalogIssue> = {}) => issues.push({ level: "warning", ...at, message });
+  const { shopNames, items: names, products: productNames } = texts();
+
+  const seenShops = new Set<number>();
+  const seenPages = new Set<number>();
+  for (const shop of shops) {
+    if (seenShops.has(shop.nameId)) error(`Shop cat.name.${shop.nameId} is listed twice.`, { shop: shop.nameId });
+    seenShops.add(shop.nameId);
+    for (const page of shop.pages) {
+      // `17 BUY` names the page by id, so two pages sharing one would sell from either.
+      if (seenPages.has(page.id)) error(`Page id ${page.id} is used twice.`, { shop: shop.nameId, page: page.id });
+      seenPages.add(page.id);
+    }
+  }
+
+  for (const shop of shops) {
+    if (shop.hidden) continue;
+    const name = shopNames.get(shop.nameId);
+    if (name === undefined) {
+      error(`There is no cat.name.${shop.nameId} text, so the tab would be blank.`, { shop: shop.nameId });
+    }
+    const visible = shop.pages.filter((p) => !p.hidden);
+    if (visible.length === 0) warn("No visible pages, so the shop is not sent at all.", { shop: shop.nameId });
+    // The furniture view lists every shop whose name contains neither "clothing"
+    // nor "rooms"; those two have views of their own.
+    const lower = (name ?? "").toLowerCase();
+    const furniView = !lower.includes("clothing") && !lower.includes("rooms");
+    const titles = new Set<string>();
+    for (const page of visible) {
+      const at = { shop: shop.nameId, page: page.id };
+      const title = page.title.trim();
+      if (!title) error("The page has no title.", at);
+      // The index arrives as a property list keyed by title; a second page of
+      // the same name is shadowed by the first.
+      else if (titles.has(title)) error(`Two visible pages in this shop are called "${title}"; the second could never open.`, at);
+      titles.add(title);
+      if (title && furniView && !FURNI_VIEW_TITLES.some((t) => title.toLowerCase().includes(t))) {
+        warn(
+          `"${title}" is not Furniture, Pins, Posters or Specials!, so it shows as a sub-row under the shop, not a tab.`,
+          at,
+        );
+      }
+      if (page.layout !== 1 && page.layout !== 3) error(`Layout ${page.layout} is unknown: 1 is a shelf, 3 the guest-room list.`, at);
+      if (page.products.length === 0) warn("The shelf is empty.", at);
+
+      const codes = new Set<number>();
+      for (const item of page.products) {
+        const spot = { ...at, code: item.code };
+        if (codes.has(item.code)) warn("Listed twice on this page.", spot);
+        codes.add(item.code);
+        if (![ITEM_FURNITURE, ITEM_CLOTHING, ITEM_POSTER, ITEM_PIN].includes(item.inventoryType)) {
+          error(`Inventory type ${item.inventoryType} is not furniture, clothing, poster or pin.`, spot);
+        }
+        if (!Number.isInteger(item.price) || item.price < 0) error("The price must be a whole number of credits.", spot);
+        else if (item.price === 0) warn("Free.", spot);
+        if (page.layout === 3) {
+          // `CCatalogRoomsView` draws these from rooms.bg.<code>; the room is built
+          // from the public room whose room.code names this space (BUY_ROOM).
+          if (!roomSpaces().has(item.metadata)) {
+            error(`A guest room needs a space name from room.code.<n> as its metadata; "${item.metadata}" is not one.`, spot);
+          }
+          continue;
+        }
+        if (item.inventoryType === ITEM_CLOTHING) {
+          if (![0, 1, 2].includes(item.level)) error("Clothing level must be 0 (boys), 1 (girls) or 2 (either).", spot);
+          if (!drawableSets().has(item.code)) warn("No SetList entry or cast for this garment, so it is left off the shelf.", spot);
+        } else if (item.inventoryType === ITEM_FURNITURE && !ADMIT_COMPOSITES && composites(item.code)) {
+          warn("Composite (BLD) item; VMK_SHOP_COMPOSITES=off leaves it off the shelf.", spot);
+        }
+        if (!names.has(item.code) && !productNames.has(item.code)) {
+          warn(`No item.${item.code} or product.${item.code} text, so the shelf shows no name.`, spot);
+        }
+      }
+      // No warning for shelves over 9 items. The unguarded pager (SPLIT_AT)
+      // stopped reproducing, the split is off by default, and the recovered
+      // shelves have always shipped with page arrows.
+    }
+  }
+  return issues;
+}
+
+const ORIGINS = new Set(["recovered", "rebuilt", "staff"]);
+
+/**
+ * A catalogue posted by the /hk editor, checked for SHAPE only (the client's
+ * rules are `validateCatalog`). Pages without an id get a fresh one from
+ * STAFF_PAGE_ID_BASE up, clear of every id `existing` uses.
+ */
+export function parseCatalogDraft(input: unknown, existing: StoredShop[]): StoredShop[] {
+  const fail = (message: string): never => {
+    throw new Error(message);
+  };
+  const int = (v: unknown, what: string): number => (Number.isInteger(v) ? (v as number) : fail(`Bad ${what}.`));
+  const text = (v: unknown, max: number): string => (typeof v === "string" ? v.trim().slice(0, max) : "");
+  const origin = (v: unknown): string => (typeof v === "string" && ORIGINS.has(v) ? v : "staff");
+  if (!Array.isArray(input) || input.length > 200) fail("Expected a list of shops.");
+
+  const used = new Set(existing.flatMap((s) => s.pages.map((p) => p.id)));
+  for (const shop of input as unknown[]) {
+    for (const page of ((shop as { pages?: unknown[] })?.pages ?? []) as Array<{ id?: unknown }>) {
+      if (Number.isInteger(page?.id) && (page.id as number) > 0) used.add(page.id as number);
+    }
+  }
+  let next = Math.max(STAFF_PAGE_ID_BASE, ...[...used].filter((id) => id >= STAFF_PAGE_ID_BASE).map((id) => id + 1));
+
+  let pageCount = 0;
+  let itemCount = 0;
+  return (input as Array<Record<string, unknown>>).map((shop) => {
+    if (!shop || typeof shop !== "object" || !Array.isArray(shop.pages)) fail("Bad shop.");
+    return {
+      nameId: int(shop.nameId, "shop id"),
+      hidden: shop.hidden === true,
+      note: text(shop.note, 500),
+      origin: origin(shop.origin),
+      pages: (shop.pages as Array<Record<string, unknown>>).map((page) => {
+        if (++pageCount > 1000) fail("Too many pages.");
+        if (!page || typeof page !== "object" || !Array.isArray(page.products)) fail("Bad page.");
+        const id = Number.isInteger(page.id) && (page.id as number) > 0 ? (page.id as number) : next++;
+        return {
+          id,
+          title: text(page.title, 60),
+          layout: int(page.layout, "layout"),
+          hidden: page.hidden === true,
+          note: text(page.note, 500),
+          origin: origin(page.origin),
+          products: (page.products as Array<Record<string, unknown>>).map((item) => {
+            if (++itemCount > 10000) fail("Too many products.");
+            if (!item || typeof item !== "object") fail("Bad product.");
+            const code = int(item.code, "item code");
+            if (code <= 0) fail(`Bad item code ${code}.`);
+            return {
+              code,
+              price: int(item.price, `price for ${code}`),
+              inventoryType: int(item.inventoryType, `inventory type for ${code}`),
+              level: int(item.level, `level for ${code}`),
+              metadata: text(item.metadata, 100),
+              singleUse: item.singleUse === true,
+              origin: origin(item.origin),
+            };
+          }),
+        };
+      }),
+    };
+  });
+}
+
+/**
+ * What changed between two catalogues, one line per change, for the staff log.
+ * Also stamps origin 'staff' on every page and product that is new or edited,
+ * so a repriced recovered item no longer claims to be the dump's.
+ */
+export function describeCatalogChanges(before: StoredShop[], after: StoredShop[]): string[] {
+  const lines: string[] = [];
+  const shopLabel = (nameId: number) => shopName(nameId) ?? `cat.name.${nameId}`;
+  const oldShops = new Map(before.map((s) => [s.nameId, s]));
+  const oldPages = new Map<number, { shop: number; page: StoredPage }>();
+  for (const s of before) for (const p of s.pages) oldPages.set(p.id, { shop: s.nameId, page: p });
+
+  // Compare only shops present on both sides, so an add or removal is not also "reordered".
+  const kept = (list: StoredShop[], other: StoredShop[]) =>
+    list.filter((s) => other.some((o) => o.nameId === s.nameId)).map((s) => s.nameId).join();
+  if (kept(before, after) !== kept(after, before)) {
+    lines.push("shop order changed");
+  }
+  const seenPages = new Set<number>();
+  for (const shop of after) {
+    const old = oldShops.get(shop.nameId);
+    if (!old) lines.push(`added shop ${shopLabel(shop.nameId)}`);
+    else if (old.hidden !== shop.hidden) lines.push(`${shop.hidden ? "hid" : "unhid"} shop ${shopLabel(shop.nameId)}`);
+    if (old && old.pages.map((p) => p.id).join() !== shop.pages.filter((p) => oldPages.has(p.id)).map((p) => p.id).join()) {
+      lines.push(`${shopLabel(shop.nameId)}: page order changed`);
+    }
+    for (const page of shop.pages) {
+      seenPages.add(page.id);
+      const label = `${shopLabel(shop.nameId)}/${page.title} (${page.id})`;
+      const prev = oldPages.get(page.id);
+      if (!prev) {
+        page.origin = "staff";
+        lines.push(`added page ${label} with ${page.products.length} item(s)`);
+        for (const item of page.products) item.origin = "staff";
+        continue;
+      }
+      const was = prev.page;
+      if (prev.shop !== shop.nameId) lines.push(`moved page ${label} from ${shopLabel(prev.shop)}`);
+      if (was.title !== page.title) lines.push(`renamed page ${page.id} "${was.title}" -> "${page.title}"`);
+      if (was.hidden !== page.hidden) lines.push(`${page.hidden ? "hid" : "unhid"} page ${label}`);
+      if (was.layout !== page.layout) lines.push(`${label}: layout ${was.layout} -> ${page.layout}`);
+
+      const remaining = [...was.products];
+      for (const item of page.products) {
+        const at = remaining.findIndex((p) => p.code === item.code);
+        const name = `${displayName(item.code)} (${item.code})`;
+        if (at < 0) {
+          item.origin = "staff";
+          lines.push(`${label}: added ${name} at ${item.price}`);
+          continue;
+        }
+        const [old] = remaining.splice(at, 1);
+        const changes: string[] = [];
+        if (old.price !== item.price) changes.push(`price ${old.price} -> ${item.price}`);
+        if (old.inventoryType !== item.inventoryType) changes.push(`type ${old.inventoryType} -> ${item.inventoryType}`);
+        if (old.level !== item.level) changes.push(`level ${old.level} -> ${item.level}`);
+        if (old.metadata !== item.metadata) changes.push(`metadata "${old.metadata}" -> "${item.metadata}"`);
+        if (old.singleUse !== item.singleUse) changes.push(`single use ${item.singleUse ? "on" : "off"}`);
+        if (changes.length) {
+          item.origin = "staff";
+          lines.push(`${label}: ${name} ${changes.join(", ")}`);
+        } else item.origin = old.origin;
+      }
+      for (const old of remaining) lines.push(`${label}: removed ${displayName(old.code)} (${old.code})`);
+      const order = (list: StoredProduct[]) => list.map((p) => p.code).join();
+      const kept = page.products.filter((p) => was.products.some((o) => o.code === p.code));
+      if (order(kept) !== order(was.products.filter((o) => page.products.some((p) => p.code === o.code)))) {
+        lines.push(`${label}: item order changed`);
+      }
+    }
+  }
+  for (const [id, { shop, page }] of oldPages) {
+    if (!seenPages.has(id)) lines.push(`deleted page ${shopLabel(shop)}/${page.title} (${id}) with ${page.products.length} item(s)`);
+  }
+  for (const shop of before) {
+    if (!after.some((s) => s.nameId === shop.nameId)) lines.push(`removed shop ${shopLabel(shop.nameId)}`);
+  }
+  return lines;
 }
