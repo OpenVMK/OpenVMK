@@ -10,7 +10,7 @@
  * tools/set-admin.mjs) opens the portal. Each action needs its matching
  * permission — alert, kick, ban, mute, forcenamechange — and anything that
  * creates value or rewrites an account (give, credits, inventory, password,
- * permissions) needs ALL of them, which is what "admin" already means here
+ * permissions) or the shop catalogue needs ALL of them, which is what "admin" already means here
  * (db.ts `ALL_PERMISSIONS`).
  *
  * Every state-changing call is POST with a per-session CSRF token and is written
@@ -67,7 +67,24 @@ import {
   type SanctionKind,
 } from "./staff-db.js";
 import { clientIp as realClientIp } from "./client-ip.js";
-import { itemName, searchItemNames } from "./catalog.js";
+import {
+  describeCatalogChanges,
+  displayName,
+  itemName,
+  parseCatalogDraft,
+  searchItemNames,
+  seedRows,
+  shopName,
+  storedCatalog,
+  validateCatalog,
+} from "./catalog.js";
+import {
+  CatalogConflict,
+  catalogVersion,
+  resetStoredCatalog,
+  saveStoredCatalog,
+  type StoredShop,
+} from "./catalog-store.js";
 import { isPairedTeleporter } from "./furni-footprint.js";
 import { avatarFor, iconFor, isFurniCode, warmIcons } from "./hk-icons.js";
 
@@ -856,6 +873,62 @@ async function api(req: IncomingMessage, me: User, path: string, url: URL): Prom
       results.push(`${target.character_name ?? target.username}: ${String(out.message ?? "done")}`);
     }
     return { results, missing };
+  }
+
+  // ---- shop catalogue (catalog.ts, catalog-store.ts)
+  // A save replaces the whole catalogue in one transaction and bumps its
+  // version; the game server rebuilds on the next shop open, no bridge needed.
+  if (path === "catalog" && method === "GET") {
+    need(me, "admin");
+    const shops = storedCatalog();
+    return {
+      version: catalogVersion(),
+      shops: shops.map((shop) => ({
+        ...shop,
+        name: shopName(shop.nameId) ?? null,
+        pages: shop.pages.map((page) => ({
+          ...page,
+          products: page.products.map((item) => ({ ...item, name: displayName(item.code) })),
+        })),
+      })),
+      issues: validateCatalog(shops),
+    };
+  }
+
+  if ((path === "catalog" || path === "catalog/check") && method === "POST") {
+    need(me, "admin");
+    const before = storedCatalog();
+    let shops: StoredShop[];
+    try {
+      shops = parseCatalogDraft(body.shops, before);
+    } catch (err) {
+      throw new HkError(400, (err as Error).message);
+    }
+    const issues = validateCatalog(shops);
+    const changes = describeCatalogChanges(before, shops);
+    if (path === "catalog/check") return { issues, changes };
+
+    const errors = issues.filter((i) => i.level === "error");
+    if (errors.length) {
+      throw new HkError(400, `Not saved — ${errors.length} problem(s) to fix first. ${errors[0].message}`);
+    }
+    if (changes.length === 0) return { message: "Nothing changed.", version: catalogVersion() };
+    let version: number;
+    try {
+      version = saveStoredCatalog(shops, int(body.version, "version"));
+    } catch (err) {
+      if (err instanceof CatalogConflict) throw new HkError(409, err.message);
+      throw err;
+    }
+    log("catalog_edit", null, `${changes.length} change(s): ${changes.join("; ")}`);
+    return { message: `Saved ${changes.length} change(s). Players see them the next time they open the shop.`, version };
+  }
+
+  if (path === "catalog/reset" && method === "POST") {
+    need(me, "admin");
+    const version = resetStoredCatalog(seedRows);
+    log("catalog_reset", null, "catalogue reset to the recovered data");
+    return { message: "The catalogue is back to the recovered data.", version };
   }
 
   // ---- staff audit

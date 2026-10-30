@@ -352,6 +352,7 @@ function buildSidebar() {
     link("#/users", "user", "Search for Users"),
     h("div", { class: "head" }, "Content"),
     link("#/items", "box", "Item Browser"),
+    admin ? link("#/catalog", "cart", "Shop Catalogue") : null,
     link("#/public-rooms", "door", "Public Rooms"),
     h("div", { class: "head" }, "Staff"),
     link("#/staff", "shield", "Staff List"),
@@ -390,12 +391,23 @@ const routes = [
   [/^\/clones$/, pageClones],
   [/^\/bulk\/(ban|give|message)$/, pageBulk],
   [/^\/items$/, pageItems],
+  [/^\/catalog$/, pageCatalog],
   [/^\/staff$/, pageStaff],
   [/^\/audit$/, pageAudit],
 ];
 
 let renderToken = 0;
 async function route() {
+  // A page with unsaved work (the catalogue editor) sets state.leaveGuard.
+  if (state.leaveGuard?.() && location.hash !== state.routedHash) {
+    if (!confirm("Leave this page? Your unsaved changes will be lost.")) {
+      history.replaceState(null, "", state.routedHash);
+      markActive();
+      return;
+    }
+  }
+  state.leaveGuard = null;
+  state.routedHash = location.hash;
   const raw = (location.hash || "#/").slice(1);
   const [path, query = ""] = raw.split("?");
   const params = new URLSearchParams(query);
@@ -1322,6 +1334,311 @@ async function pageItems() {
   return h("div", {}, pageHeader("Item Browser"), h("p", { class: "muted" }, "Look up any item by name or type code. Pictures are drawn from the game's own casts."), picker.el);
 }
 
+/* ------------------------------------------------------- shop catalogue */
+
+const PAGE_TITLES = ["Furniture", "Posters", "Pins", "Specials!", "Hats", "Tops", "Bottoms", "Shoes", "Guestrooms"];
+const INVENTORY_TYPES = [[1, "Furniture"], [2, "Clothing"], [3, "Poster"], [4, "Pin"]];
+
+/** ↑ / ↓ buttons that reorder `list[i]`, then call `after`. */
+function moveButtons(list, i, after) {
+  const move = (to) => {
+    [list[i], list[to]] = [list[to], list[i]];
+    after();
+  };
+  return h("span", { class: "cat-move" },
+    h("button", { class: "btn btn-default btn-sm", type: "button", title: "Move up", disabled: i === 0, onclick: () => move(i - 1) }, "↑"),
+    h("button", { class: "btn btn-default btn-sm", type: "button", title: "Move down", disabled: i === list.length - 1, onclick: () => move(i + 1) }, "↓"));
+}
+
+/**
+ * The shop catalogue editor (server: catalog.ts validateCatalog, catalog-store.ts).
+ * Edits stay in the page until Save, which replaces the whole catalogue at once;
+ * every edit is checked against the client's rules by `catalog/check` as you go.
+ */
+async function pageCatalog(params) {
+  if (!state.me?.admin) return h("div", { class: "alert alert-warning mt" }, "The shop catalogue needs full admin permissions.");
+  const r = await api("catalog");
+  const draft = structuredClone(r.shops);
+  let issues = r.issues;
+  let changes = [];
+  let edited = false;
+  let preview = "";
+  let selId = Number(params.get("page")) || draft.find((s) => !s.hidden)?.pages[0]?.id || null;
+  state.leaveGuard = () => edited;
+
+  const shopLabel = (shop) => (shop ? shop.name ?? `cat.name.${shop.nameId} (no text)` : "?");
+  const findPage = (id) => {
+    for (const shop of draft) {
+      const page = shop.pages.find((p) => p.id === id);
+      if (page) return { shop, page };
+    }
+    return null;
+  };
+  // New pages get real ids now, so issues can point at them before the first save.
+  const nextPageId = () => Math.max(2000, ...draft.flatMap((s) => s.pages.map((p) => p.id + 1)));
+
+  const issueBox = h("div", {});
+  const changeBox = h("div", { class: "cat-status" });
+  const tree = h("div", { class: "cat-tree" });
+  const editor = h("div", { class: "cat-editor" });
+  const saveBtn = h("button", { class: "btn btn-primary", type: "button", disabled: true, onclick: () => save() }, "Save");
+  const picker = itemPicker();
+  const addPrice = h("input", { type: "number", min: 0, step: 1, placeholder: "Price", style: "width:110px" });
+
+  let timer = 0;
+  let seq = 0;
+  let checkError = "";
+  function touched(structural = false) {
+    edited = true;
+    renderTree();
+    if (structural) renderEditor();
+    renderStatus();
+    clearTimeout(timer);
+    timer = setTimeout(check, 350);
+  }
+
+  async function check() {
+    const n = ++seq;
+    try {
+      const c = await api("catalog/check", { shops: draft });
+      if (n !== seq) return;
+      issues = c.issues;
+      changes = c.changes;
+      checkError = "";
+    } catch (err) {
+      if (n !== seq) return;
+      checkError = err.message;
+    }
+    renderIssues();
+    renderTree();
+    markEditor();
+    renderStatus();
+  }
+
+  async function save() {
+    const res = await act("catalog", { shops: draft, version: r.version }, saveBtn);
+    if (!res) return;
+    edited = false;
+    history.replaceState(null, "", selId ? `#/catalog?page=${selId}` : "#/catalog");
+    route();
+  }
+
+  function renderStatus() {
+    const errors = issues.filter((i) => i.level === "error").length;
+    saveBtn.disabled = !edited || errors > 0 || Boolean(checkError);
+    if (checkError) {
+      changeBox.replaceChildren(h("span", { class: "label label-danger" }, "Can't check"), " ", checkError);
+    } else if (!edited) {
+      changeBox.replaceChildren(h("span", { class: "muted" }, `No unsaved changes · version ${r.version}`));
+    } else if (changes.length === 0) {
+      changeBox.replaceChildren(h("span", { class: "muted" }, "Checking…"));
+    } else {
+      changeBox.replaceChildren(h("details", {},
+        h("summary", {}, `${changes.length} unsaved change(s)`),
+        h("ul", { class: "cat-issues" }, changes.map((c) => h("li", {}, c)))));
+    }
+  }
+
+  function renderIssues() {
+    const where = (i) => {
+      const shop = draft.find((s) => s.nameId === i.shop);
+      const page = shop?.pages.find((p) => p.id === i.page);
+      return [shopLabel(shop), page ? page.title || "(untitled)" : null, i.code ? `#${i.code}` : null].filter(Boolean).join(" › ");
+    };
+    const row = (i) => h("li", {},
+      i.page ? h("a", { onclick: () => { selId = i.page; renderTree(); renderEditor(); } }, where(i)) : where(i),
+      ": ", i.message);
+    const errors = issues.filter((i) => i.level === "error");
+    const warnings = issues.filter((i) => i.level === "warning");
+    // replaceChildren would print a null as "null"; h() drops it.
+    issueBox.replaceChildren(h("div", {},
+      errors.length ? h("div", { class: "alert alert-danger" }, h("strong", {}, `${errors.length} problem(s) — fix these to save`), h("ul", { class: "cat-issues" }, errors.map(row))) : null,
+      warnings.length ? h("details", { class: "alert alert-warning" }, h("summary", {}, `${warnings.length} warning(s)`), h("ul", { class: "cat-issues" }, warnings.map(row))) : null));
+  }
+
+  async function addPage(shop) {
+    const v = await modal("New page", {
+      text: `In ${shopLabel(shop)}. The furniture view only makes tabs of Furniture, Pins, Posters and Specials!; anything else is a sub-row.`,
+      fields: [{ name: "title", label: "Title", value: "Furniture" }],
+      confirm: "Add page",
+    });
+    if (!v) return;
+    const page = { id: nextPageId(), title: v.title.trim(), layout: 1, hidden: false, note: "", origin: "staff", products: [] };
+    shop.pages.push(page);
+    selId = page.id;
+    touched(true);
+  }
+
+  function renderTree() {
+    tree.replaceChildren(...draft.map((shop, si) => {
+      const count = (pred) => issues.filter(pred).length;
+      const shopErrors = count((i) => i.shop === shop.nameId && !i.page && i.level === "error");
+      return h("div", { class: `cat-shop${shop.hidden ? " off" : ""}` },
+        h("div", { class: "cat-shop-head" },
+          h("strong", { class: "grow" }, shopLabel(shop)),
+          shopErrors ? h("span", { class: "label label-danger" }, shopErrors) : null,
+          h("label", { class: "small", style: "font-weight:400;margin:0", title: "Sent to players" },
+            h("input", { type: "checkbox", checked: !shop.hidden, onchange: (e) => { shop.hidden = !e.target.checked; touched(); } }), " shown"),
+          moveButtons(draft, si, () => touched())),
+        shop.note ? h("div", { class: "muted small" }, shop.note) : null,
+        h("ul", {},
+          shop.pages.map((page) => {
+            const errs = count((i) => i.page === page.id && i.level === "error");
+            const warns = count((i) => i.page === page.id && i.level === "warning");
+            return h("li", {}, h("a", { class: page.id === selId ? "active" : "", onclick: () => { selId = page.id; renderTree(); renderEditor(); } },
+              h("span", { class: "grow" }, page.title || "(untitled)"),
+              h("span", { class: "muted small" }, page.products.length),
+              page.hidden ? h("span", { class: "label label-default" }, "hidden") : null,
+              errs ? h("span", { class: "label label-danger" }, errs) : null,
+              warns ? h("span", { class: "label label-warning" }, warns) : null));
+          }),
+          h("li", {}, h("button", { class: "btn-link small", type: "button", onclick: () => addPage(shop) }, "+ Add page"))));
+    }));
+  }
+
+  /** Issue colours on the product rows, without rebuilding them (keeps input focus). */
+  function markEditor() {
+    const list = editor.querySelector(".cat-page-issues");
+    if (list) {
+      const mine = issues.filter((i) => i.page === selId && !i.code);
+      list.replaceChildren(...mine.map((i) => h("div", { class: `alert alert-${i.level === "error" ? "danger" : "warning"}`, style: "padding:6px 10px;margin-bottom:6px" }, i.message)));
+    }
+    editor.querySelectorAll("tr[data-code]").forEach((tr) => {
+      const mine = issues.filter((i) => i.page === selId && i.code === Number(tr.dataset.code));
+      tr.classList.toggle("bad", mine.some((i) => i.level === "error"));
+      tr.classList.toggle("warn", !mine.some((i) => i.level === "error") && mine.length > 0);
+      tr.title = mine.map((i) => i.message).join("\n");
+    });
+  }
+
+  function productRow(page, item, i) {
+    const clothing = item.inventoryType === 2;
+    const off = preview !== "" && clothing && item.level !== 2 && String(item.level) !== preview;
+    const select = (options, value, onchange) =>
+      h("select", { onchange }, options.map(([v, l]) => h("option", { value: v, selected: Number(v) === value }, l)));
+    return h("tr", { "data-code": item.code, class: off ? "cat-off" : "" },
+      h("td", { class: "nowrap" }, itemImg(item.code, item.inventoryType, true)),
+      h("td", {}, item.name ?? `#${item.code}`, h("div", { class: "muted small" }, `#${item.code}`)),
+      h("td", {}, select(INVENTORY_TYPES, item.inventoryType, (e) => { item.inventoryType = Number(e.target.value); touched(true); })),
+      h("td", {}, h("input", { type: "number", min: 0, step: 1, value: item.price, style: "width:90px", oninput: (e) => {
+        const v = e.target.value.trim();
+        item.price = v === "" ? NaN : Number(v);
+        touched();
+      } })),
+      h("td", {}, clothing ? select([[2, "Both"], [0, "Boys"], [1, "Girls"]], item.level, (e) => { item.level = Number(e.target.value); touched(true); }) : h("span", { class: "muted" }, "—")),
+      page.layout === 3
+        ? h("td", {}, h("input", { type: "text", value: item.metadata, style: "width:140px", oninput: (e) => { item.metadata = e.target.value; touched(); } }))
+        : null,
+      h("td", { style: "text-align:center" }, h("input", { type: "checkbox", title: "Single use", checked: item.singleUse, onchange: (e) => { item.singleUse = e.target.checked; touched(); } })),
+      h("td", { class: "nowrap" },
+        moveButtons(page.products, i, () => touched(true)),
+        " ",
+        h("button", { class: "btn btn-danger btn-sm", type: "button", title: "Remove from this page", onclick: () => { page.products.splice(i, 1); touched(true); } }, "✕")));
+  }
+
+  function renderEditor() {
+    const found = selId ? findPage(selId) : null;
+    if (!found) {
+      editor.replaceChildren(h("div", { class: "empty" }, "Pick a page on the left."));
+      return;
+    }
+    const { shop, page } = found;
+    const titleList = h("datalist", { id: "cat-titles" }, PAGE_TITLES.map((t) => h("option", { value: t })));
+    const moveTo = h("select", { onchange: (e) => {
+      const target = draft.find((s) => s.nameId === Number(e.target.value));
+      shop.pages.splice(shop.pages.indexOf(page), 1);
+      target.pages.push(page);
+      touched(true);
+    } }, draft.map((s) => h("option", { value: s.nameId, selected: s === shop }, shopLabel(s))));
+    const pageIndex = shop.pages.indexOf(page);
+
+    editor.replaceChildren(
+      h("div", { class: "panel" },
+        h("div", { class: "panel-heading" },
+          h("strong", {}, `${shopLabel(shop)} › ${page.title || "(untitled)"}`),
+          h("span", { class: "muted small" }, `page id ${page.id}`)),
+        h("div", { class: "panel-body" },
+          h("div", { class: "form-row" },
+            h("div", {}, h("label", {}, "Title"), h("input", { type: "text", list: "cat-titles", value: page.title, maxlength: 60, oninput: (e) => { page.title = e.target.value; touched(); } }), titleList),
+            h("div", {}, h("label", {}, "Shop"), moveTo),
+            h("div", {}, h("label", {}, "Layout"), h("select", { onchange: (e) => { page.layout = Number(e.target.value); touched(true); } },
+              h("option", { value: 1, selected: page.layout === 1 }, "Shelf"),
+              h("option", { value: 3, selected: page.layout === 3 }, "Guest rooms"))),
+            h("div", {}, h("label", {}, "Shown"), h("label", { style: "font-weight:400" },
+              h("input", { type: "checkbox", checked: !page.hidden, onchange: (e) => { page.hidden = !e.target.checked; touched(); } }), " sent to players"))),
+          h("div", { class: "form-row" },
+            h("div", { class: "grow" }, h("label", {}, "Note (staff only)"), h("input", { type: "text", value: page.note, maxlength: 500, oninput: (e) => { page.note = e.target.value; touched(); } }))),
+          h("div", { class: "flex" },
+            moveButtons(shop.pages, pageIndex, () => touched(true)),
+            h("button", { class: "btn btn-danger btn-sm", type: "button", onclick: async () => {
+              const ok = await modal("Delete this page?", {
+                text: page.origin === "recovered"
+                  ? `"${page.title}" is recovered data. Hiding it keeps it for later; deleting removes it until a reset.`
+                  : `"${page.title}" and its ${page.products.length} item(s) will be removed when you save.`,
+                confirm: "Delete page",
+                danger: true,
+              });
+              if (!ok) return;
+              shop.pages.splice(shop.pages.indexOf(page), 1);
+              selId = null;
+              touched(true);
+            } }, "Delete page")))),
+      h("div", { class: "cat-page-issues" }),
+      h("div", { class: "flex mb" },
+        h("strong", { class: "grow" }, `${page.products.length} item(s)`),
+        h("label", { style: "font-weight:400;margin:0" }, "Preview as ",
+          h("select", { onchange: (e) => { preview = e.target.value; renderEditor(); } },
+            [["", "everyone"], ["0", "a boy"], ["1", "a girl"]].map(([v, l]) => h("option", { value: v, selected: v === preview }, l))))),
+      table(
+        ["", "Item", "Type", "Price", "Who", page.layout === 3 ? "Space" : null, "Single use", ""].filter((x) => x !== null),
+        page.products.map((item, i) => productRow(page, item, i)),
+        "This shelf is empty."),
+      h("div", { class: "panel" },
+        h("div", { class: "panel-heading" }, "Add an item to this page"),
+        h("div", { class: "panel-body" },
+          picker.el,
+          h("div", { class: "flex mt" },
+            addPrice,
+            h("button", { class: "btn btn-success", type: "button", onclick: () => {
+              const item = picker.selected();
+              if (!item) return toast("Pick an item first.", true);
+              const price = addPrice.value.trim();
+              if (price === "" || !Number.isInteger(Number(price)) || Number(price) < 0) return toast("Set a price in whole credits.", true);
+              page.products.push({ code: item.code, name: item.name, price: Number(price), inventoryType: item.category, level: 2, metadata: "", singleUse: false, origin: "staff" });
+              addPrice.value = "";
+              touched(true);
+            } }, icon("cart"), "Add to page")))));
+    markEditor();
+  }
+
+  renderIssues();
+  renderTree();
+  renderEditor();
+  renderStatus();
+  return h("div", {},
+    pageHeader("Shop Catalogue",
+      changeBox,
+      saveBtn,
+      actionsMenu([
+        ["Reset to the recovered data…", async () => {
+          const ok = await modal("Reset the catalogue?", {
+            text: "Every staff edit — prices, added items, new pages — is replaced by the recovered data. This is logged.",
+            confirm: "Reset",
+            danger: true,
+          });
+          if (!ok) return;
+          if (await act("catalog/reset", {})) {
+            edited = false;
+            route();
+          }
+        }],
+      ], "More")),
+    h("p", { class: "muted" },
+      "What players are offered in the shop. Nothing changes for them until you save; then the next time anyone opens the shop they get the new shelves."),
+    issueBox,
+    h("div", { class: "cat-layout" }, tree, editor));
+}
+
 /* ---------------------------------------------------------------- staff */
 
 async function pageStaff() {
@@ -1380,6 +1697,9 @@ async function boot() {
   }
   buildSidebar();
   window.addEventListener("hashchange", route);
+  window.addEventListener("beforeunload", (e) => {
+    if (state.leaveGuard?.()) e.preventDefault();
+  });
   await route();
   pollCalls();
   setInterval(pollCalls, 20000);
