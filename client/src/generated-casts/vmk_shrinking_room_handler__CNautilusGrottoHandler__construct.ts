@@ -1,4 +1,4 @@
-// vmk_shrinking_room_handler.cct / CTextScroller / GetRenderer
+// vmk_shrinking_room_handler.cct (Disney's file, archived as vmk_grotto_handler.cct) / CNautilusGrottoHandler / construct
 
 import {
   callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
@@ -9,7 +9,8 @@ import {
   type LingoMe, type LingoValue,
 } from "../lingo/lingo-runtime.js";
 
-export function GetRenderer(_me: LingoMe) {
-  return meProp(_me, "m_pRenderer");
+export function construct(_me: LingoMe) {
+  callMethod("regMsgList", _me, 1)
+  return 1;
 }
 

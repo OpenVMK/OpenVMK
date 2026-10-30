@@ -382,6 +382,28 @@ export function floorNameOf(roomName: string | undefined, ref: number): string |
   return undefined;
 }
 
+const floorTiles = new Map<string, ReadonlySet<number>>();
+/**
+ * Every tile on the floor with this NAME, or an empty set. `floorNameOf` for
+ * a whole route: a path search asks about every step it tries.
+ */
+export function tilesOnFloor(roomName: string | undefined, name: string): ReadonlySet<number> {
+  if (!roomName) return new Set();
+  const key = `${roomName}\0${name}`;
+  const cached = floorTiles.get(key);
+  if (cached) return cached;
+  load();
+  const source = raw.get(roomName) as (RawRoom & { floors?: Array<{ name?: string }> }) | undefined;
+  const out = new Set<number>();
+  if (source?.floorOf && source.floors) {
+    for (let i = 0; i < source.tiles.length; i += 4) {
+      if (source.floors[source.floorOf[i / 4]]?.name === name) out.add(source.tiles[i]);
+    }
+  }
+  floorTiles.set(key, out);
+  return out;
+}
+
 /** A tile's absolute world position — the client's `GetAbsPos` — or null. */
 export function tileCoords(roomName: string | undefined, ref: number): [number, number, number] | null {
   return room(roomName)?.coords.get(ref) ?? null;

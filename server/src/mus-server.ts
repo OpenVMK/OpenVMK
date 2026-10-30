@@ -157,7 +157,7 @@ import {
 } from "./vmk-protocol.js";
 import {
   directionBetween, exitIdAt, exitTilesWithIds, findPath, insideOf, freeTileNear, isExitTile, spawnTileFor, tileName,
-  tileNamed, tileToward, floorNameOf, tilesApart, roomTiles,
+  tileNamed, tileToward, floorNameOf, tilesApart, roomTiles, tilesOnFloor,
 } from "./room-geometry.js";
 import { Ghost } from "./ghosts.js";
 import { GatorWaiter, SEAT } from "./gator-waiter.js";
@@ -2418,6 +2418,29 @@ let nextSlide = 0;
 const SWIM_FLOOR = "pool";
 const SWIM_EFFECT = 20;
 
+/**
+ * THE INNER-SPACE SHRINKING MACHINE (room 81). Its `spacewalk` floor is
+ * reached from the `gateplatform` across the red gate (`gate` tiles 29/30,
+ * linked to 184/185), and only in an Inner-Space Suit: pin magic 18, the
+ * space walk. The room's handler only drives the gate's light (below), so
+ * nothing in the client enforces this; Disney's texts give the rules — 4588
+ * at the gate, 4594 for teleporting out there, 4530/4532 for ending the suit
+ * in space.
+ */
+const SPACEWALK_FLOOR = "spacewalk";
+/** The tiles between the gate's posts: already past it, suit only. */
+const SPACE_GATE = "gate";
+const SPACE_SUIT_EFFECT = 18;
+/**
+ * The gate's red force field, `2792 [1, state]` (0 shown, 1 hidden): hidden
+ * only on the screen of a suited player standing in the gate, and back as they
+ * step through. The handler is Disney's file archived
+ * as `vmk_grotto_handler.cct` (`CNautilusGrottoComponent.HandleGate`): its
+ * `vmk_anim_9`/`10` are this room's red gate pieces, and the Grotto's sharks
+ * and bubbles. Served as room 81's handler from assets/patches.
+ */
+const SPACE_GATE_ANIM = 1;
+
 /** The seat on a tile, if it is one. */
 function seatAt(room: string | undefined, tile: number): SeatTile | null {
   if (!room) return null;
@@ -3298,6 +3321,8 @@ function createVmkSession(
     dance?: boolean;
     /** A costume is showing (Pirate Costume); put the real outfit back at the end. */
     costume?: boolean;
+    /** The suit's time ran out in space; it comes off once we step off the spacewalk. */
+    overdue?: boolean;
     timer?: NodeJS.Timeout;
   } | null = null;
   /** Timer for the NEXT queued pulse. Undefined means nothing is walking. */
@@ -4883,6 +4908,17 @@ function createVmkSession(
     // pool rooms carry none, so it is the server's call, by the tile's floor.
     // A running pin effect wins; when it ends, `stopMagic` pulses again and
     // this puts the swimming back.
+    // The red gate opens only while a suited player is in it, and shuts
+    // behind them once they are through, either way.
+    const onGate = tileName(currentGeometryRoom, tile) === SPACE_GATE;
+    if (onGate && suited() && !spaceGateOpen) showSpaceGate(true);
+    else if (!onGate && spaceGateOpen) showSpaceGate(false);
+    // A suit that ran out in space comes off back on the platform.
+    if (activeMagic?.overdue && !inSpace(tile)) {
+      setTimeout(() => {
+        if (activeMagic?.overdue && !inSpace()) stopMagic();
+      }, 0);
+    }
     const swimming = floorNameOf(currentGeometryRoom, tile) === SWIM_FLOOR;
     if (!activeMagic) {
       if (swimming) magic = SWIM_EFFECT;
@@ -5186,7 +5222,7 @@ function createVmkSession(
     const toPlate =
       currentTile === lane.plate
         ? []
-        : findPath(currentGeometryRoom, currentTile, lane.plate, blocked, turnstileStepRule(currentRoomName, currentGeometryRoom));
+        : findPath(currentGeometryRoom, currentTile, lane.plate, blocked, stepRule());
     if (currentTile !== lane.plate && toPlate[toPlate.length - 1] !== lane.plate) return;
     const route = [...toPlate, lane.body];
     if (lane.beyond !== null && !blocked.has(lane.beyond)) route.push(lane.beyond);
@@ -5296,6 +5332,41 @@ function createVmkSession(
    * inventory goes nowhere.
    */
   /** Show a magic effect on this avatar now (a pulse on the tile we stand on). */
+  /** The red gate is open on our screen: we are in it, suited. */
+  let spaceGateOpen = false;
+  /**
+   * Is this tile (by default, ours) past the Shrinking Machine's red gate:
+   * out on the spacewalk, or on the `gate` tiles between the posts?
+   */
+  const inSpace = (tile = currentTile) =>
+    tilesOnFloor(currentGeometryRoom, SPACEWALK_FLOOR).has(tile) || tileName(currentGeometryRoom, tile) === SPACE_GATE;
+  const suited = () => activeMagic?.effect === SPACE_SUIT_EFFECT;
+  const suitedInSpace = () => suited() && inSpace();
+  /** Refuse anything that would end the suit while in space. True if refused. */
+  const refuseSuitOff = (code: 4530 | 4532): boolean => {
+    if (!suitedInSpace()) return false;
+    console.log(`[${label}] refused: suit off in space (tile ${currentTile})`);
+    send(MSG.GENERIC_ERROR, [{ int: code }], `GenericError ${code}`);
+    return true;
+  };
+  /**
+   * How we may step here: the room's turnstiles, and the red gate — no step
+   * onto the spacewalk from off it without the suit on. Stepping back off is
+   * always allowed, and so is walking about out there (arriving from the Ray
+   * Room lands you on it).
+   */
+  /** Open or shut the red gate on this player's own screen (SPACE_GATE_ANIM). */
+  const showSpaceGate = (open: boolean): void => {
+    if (tilesOnFloor(currentGeometryRoom, SPACEWALK_FLOOR).size === 0) return;
+    spaceGateOpen = open;
+    send(MSG.ROOM_ANIMATION_STATE, [{ int: SPACE_GATE_ANIM }, { int: open ? 1 : 0 }], `AnimationState space gate ${open ? "open" : "shut"}`);
+  };
+  const stepRule = (): ((from: number, to: number) => boolean) | undefined => {
+    const turnstiles = turnstileStepRule(currentRoomName, currentGeometryRoom);
+    if (tilesOnFloor(currentGeometryRoom, SPACEWALK_FLOOR).size === 0 || suited()) return turnstiles;
+    return (from, to) => !(inSpace(to) && !inSpace(from)) && (turnstiles?.(from, to) ?? true);
+  };
+
   const setMagic = (fx: number) => {
     magic = fx;
     sendPulse(currentTile, LEGS_STAND);
@@ -5408,7 +5479,9 @@ function createVmkSession(
     const end = activeMagic.endEffect;
     if (activeMagic.dance) dancing = false;
     const hadCostume = activeMagic.costume === true;
+    const hadSuit = activeMagic.effect === SPACE_SUIT_EFFECT;
     activeMagic = null;
+    if (hadSuit && spaceGateOpen) showSpaceGate(false);
     // Out of the costume: the real outfit was never overwritten.
     if (hadCostume && me) showFigure(me.figure);
     if (end) {
@@ -5577,6 +5650,7 @@ function createVmkSession(
     if (wornPin && magicOf(wornPin.typeCode)?.sword) return drawSword(pinId);
     const treasure = wornPin ? magicOf(wornPin.typeCode)?.treasure : undefined;
     if (wornPin && treasure) return openChest(pinId, treasure);
+    if (refuseSuitOff(4530)) return false;
     stopMagic(); // one effect at a time
     const pin = startMagic(pinId);
     if (!pin) return false;
@@ -5595,7 +5669,10 @@ function createVmkSession(
       costume: cast.costume !== undefined && me !== null,
     };
     activeMagic.timer = setTimeout(() => {
-      if (activeMagic?.pinId === pinId) stopMagic();
+      if (activeMagic?.pinId !== pinId) return;
+      // Never out of the suit in space (4530): it lasts until we step off.
+      if (suitedInSpace()) activeMagic.overdue = true;
+      else stopMagic();
     }, durationMs);
     setMagic(cast.effect);
     // Into the costume for the effect's length (never saved).
@@ -6875,6 +6952,8 @@ function createVmkSession(
           if (state !== null) send(MSG.ROOM_ANIMATION_STATE, [{ int: 0 }, { int: state }], `RocketState ${state} (joining)`);
         }, 800);
       }
+      // A fresh room starts its gate shut (`Init` -> `HandleGate(0)`).
+      spaceGateOpen = false;
       // Walking into the Steamboat while someone is on stage: show them. Late,
       // like the monorail sync, so the handler is listening and the performer's
       // avatar exists — `ShowScreen` looks it up by ref and reads its outfit.
@@ -9029,10 +9108,14 @@ function createVmkSession(
           ...furnitureTiles(currentRoomName, currentGeometryRoom, live?.userId), // solid furniture
           ...blockedByQueues(currentGeometryRoom), // queue lines: joined, not walked
         ]),
-        turnstileStepRule(currentRoomName, currentGeometryRoom),
+        stepRule(),
       );
       // Clicking the start you are already standing on rides from there.
       const arrival = path.length > 0 ? path[path.length - 1] : currentTile;
+      // The red gate held us back: say why. We still walk as near as it lets.
+      if (arrival !== target && !suited() && inSpace(target) && !inSpace()) {
+        send(MSG.GENERIC_ERROR, [{ int: 4588 }], "GenericError 4588 (spacewalk needs the suit)");
+      }
 
       /**
        * ⚠ ACROSS FLOORS BY BEAM. Floors a beam joins (Tomorrowland Hub's
@@ -9051,7 +9134,7 @@ function createVmkSession(
           ...blockedByQueues(currentGeometryRoom),
         ]);
         for (const [entry, exit] of beamEnds()) {
-          const steps = turnstileStepRule(currentRoomName, currentGeometryRoom);
+          const steps = stepRule();
           const toEntry = entry === currentTile ? [] : findPath(currentGeometryRoom, currentTile, entry, blocked, steps);
           if (entry !== currentTile && toEntry[toEntry.length - 1] !== entry) continue;
           const onward = exit === target ? [] : findPath(currentGeometryRoom, exit, target, blocked, steps);
@@ -9258,7 +9341,7 @@ function createVmkSession(
     }
 
     if (command === CMD.DEACTIVATE_MAGIC_FX) {
-      stopMagic();
+      if (!refuseSuitOff(4530)) stopMagic();
       sendMagicList();
       return;
     }
@@ -9458,6 +9541,14 @@ function createVmkSession(
       };
       const pinId = readInt();
       const tile = readInt();
+      // Teleporting ends the suit, so not from space (4530); and nobody
+      // teleports out onto the spacewalk — that is what the gate is for (4594).
+      if (refuseSuitOff(4530)) return;
+      if (inSpace(tile) && !inSpace()) {
+        console.log(`[${label}] magic teleport ${pinId}: tile ${tile} is on the spacewalk`);
+        send(MSG.GENERIC_ERROR, [{ int: 4594 }], "GenericError 4594 (no teleporting onto the spacewalk)");
+        return;
+      }
       // The room's own rules: you may land only where you could WALK to. Placed
       // furniture (a divider, a wall of items) blocks the route; other avatars
       // do not — you jump over them, you just cannot land on one.
@@ -9469,7 +9560,7 @@ function createVmkSession(
       // teleport past a divider into a space you could not walk into.
       const furniture = furnitureTiles(currentRoomName, currentGeometryRoom, live?.userId);
       const occupied = new Set(occupiedTiles(currentRoomName, live ? live.userId : 1));
-      const route = findPath(currentGeometryRoom, currentTile, tile, furniture, turnstileStepRule(currentRoomName, currentGeometryRoom));
+      const route = findPath(currentGeometryRoom, currentTile, tile, furniture, stepRule());
       const reachable = tile !== currentTile && route.length > 0 && route[route.length - 1] === tile;
       if (furniture.has(tile) || occupied.has(tile) || !reachable) {
         console.log(`[${label}] magic teleport ${pinId}: tile ${tile} is not reachable from ${currentTile}`);
@@ -9521,8 +9612,15 @@ function createVmkSession(
         console.log(`[${label}] refused wear ${ref}: lanyard full (${MAX_WORN_PINS})`);
         return;
       }
-      // Taking off the pin whose magic is running ends it.
-      if (!wear && activeMagic?.pinId === ref) stopMagic();
+      // Taking off the pin whose magic is running ends it — not out in space.
+      if (!wear && activeMagic?.pinId === ref) {
+        if (refuseSuitOff(4532)) {
+          sendWornPins(); // the client already moved it off; put it back
+          queueItemList(1);
+          return;
+        }
+        stopMagic();
+      }
       setPinWorn(ref, live.userId, wear);
       console.log(`[${label}] ${wear ? "wore" : "took off"} pin ${ref} (type ${row.typeCode})`);
       if (!wear) removeWornPin(ref);
