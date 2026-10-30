@@ -70,8 +70,10 @@ import { clientIp as realClientIp } from "./client-ip.js";
 import {
   describeCatalogChanges,
   displayName,
+  guestRoomSpaces,
   itemName,
   parseCatalogDraft,
+  roomName,
   searchItemNames,
   seedRows,
   shopName,
@@ -86,7 +88,7 @@ import {
   type StoredShop,
 } from "./catalog-store.js";
 import { isPairedTeleporter } from "./furni-footprint.js";
-import { avatarFor, iconFor, isFurniCode, warmIcons } from "./hk-icons.js";
+import { avatarFor, iconFor, isFurniCode, roomIconFor, warmIcons } from "./hk-icons.js";
 
 /** Start building /hk's icon index now, off the request path. See warmIcons. */
 export const warmHk = (): Promise<void> => warmIcons();
@@ -453,6 +455,7 @@ async function api(req: IncomingMessage, me: User, path: string, url: URL): Prom
 
   // ---- item pictures and lookup
   if (seg[0] === "icon" && seg[1]) {
+    if (q.get("room")) return { icon: roomIconFor(int(seg[1], "code")) };
     const cat = q.get("cat");
     return { icon: iconFor(int(seg[1], "code"), cat ? int(cat, "category") : undefined) };
   }
@@ -888,9 +891,14 @@ async function api(req: IncomingMessage, me: User, path: string, url: URL): Prom
         name: shopName(shop.nameId) ?? null,
         pages: shop.pages.map((page) => ({
           ...page,
-          products: page.products.map((item) => ({ ...item, name: displayName(item.code) })),
+          products: page.products.map((item) => ({
+            ...item,
+            // Guest rooms are not items: the shop names them from RoomDescHd.<code>.
+            name: page.layout === 3 ? roomName(item.code) ?? `Room ${item.code}` : displayName(item.code),
+          })),
         })),
       })),
+      spaces: guestRoomSpaces(),
       issues: validateCatalog(shops),
     };
   }

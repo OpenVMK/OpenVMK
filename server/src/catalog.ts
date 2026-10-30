@@ -237,6 +237,7 @@ const EXTRA_SHOPS: CatalogShop[] = [
 let itemNameCache: Map<number, string> | null = null;
 let productNameCache: Map<number, string> | null = null;
 let shopNameCache: Map<number, string> | null = null;
+let roomNameCache: Map<number, string> | null = null;
 
 /** An item's display name from the external texts (`item.<code>`). */
 export function itemName(code: number): string {
@@ -248,13 +249,29 @@ export function shopName(nameId: number): string | undefined {
   return texts().shopNames.get(nameId);
 }
 
-function texts(): { items: Map<number, string>; products: Map<number, string>; shopNames: Map<number, string> } {
-  if (itemNameCache && productNameCache && shopNameCache) {
-    return { items: itemNameCache, products: productNameCache, shopNames: shopNameCache };
+/**
+ * A guest-room product's name: `RoomDescHd.<code>`, the heading
+ * `CCatalogRoomsView` shows above the room (written `roomdeschd.` in the file).
+ */
+export function roomName(code: number): string | undefined {
+  return texts().rooms.get(code);
+}
+
+interface Texts {
+  items: Map<number, string>;
+  products: Map<number, string>;
+  shopNames: Map<number, string>;
+  rooms: Map<number, string>;
+}
+
+function texts(): Texts {
+  if (itemNameCache && productNameCache && shopNameCache && roomNameCache) {
+    return { items: itemNameCache, products: productNameCache, shopNames: shopNameCache, rooms: roomNameCache };
   }
   itemNameCache = new Map();
   productNameCache = new Map();
   shopNameCache = new Map();
+  roomNameCache = new Map();
   const file = join(here, "..", "..", "assets", "overlay", "external_texts.txt");
   if (existsSync(file)) {
     for (const line of readFileSync(file, "latin1").split(/\r?\n/)) {
@@ -265,9 +282,17 @@ function texts(): { items: Map<number, string>; products: Map<number, string>; s
       if (product && product[2]) productNameCache.set(Number(product[1]), product[2]);
       const shop = /^\s*cat\.name\.(\d+)\s*=\s*(.*?)\s*$/.exec(line);
       if (shop) shopNameCache.set(Number(shop[1]), shop[2] ?? "");
+      // getText ignores case; the file spells the client's RoomDescHd in lower case.
+      const room = /^\s*roomdeschd\.(\d+)\s*=\s*(.+?)\s*$/i.exec(line);
+      if (room && room[2]) roomNameCache.set(Number(room[1]), room[2]);
     }
   }
-  return { items: itemNameCache, products: productNameCache, shopNames: shopNameCache };
+  return { items: itemNameCache, products: productNameCache, shopNames: shopNameCache, rooms: roomNameCache };
+}
+
+/** Every space a guest-room product may name, for the editor's picker. */
+export function guestRoomSpaces(): string[] {
+  return [...roomSpaces()].sort();
 }
 
 /**
@@ -757,6 +782,7 @@ export function validateCatalog(shops: StoredShop[]): CatalogIssue[] {
           if (!roomSpaces().has(item.metadata)) {
             error(`A guest room needs a space name from room.code.<n> as its metadata; "${item.metadata}" is not one.`, spot);
           }
+          if (!roomName(item.code)) warn(`No RoomDescHd.${item.code} text, so the shop shows no name for this room.`, spot);
           continue;
         }
         if (item.inventoryType === ITEM_CLOTHING) {
