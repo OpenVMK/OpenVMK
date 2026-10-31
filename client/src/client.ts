@@ -8,6 +8,7 @@
  * and only then advance.
  */
 import { DEBUG } from "./debug.js";
+import { startAvatarFavicon } from "./favicon.js";
 import { setUpPage } from "./page.js";
 import { bootClient } from "./lingo/boot-client.js";
 import { advanceFilmLoops } from "./lingo/lingo-cast.js";
@@ -399,6 +400,7 @@ async function main(): Promise<void> {
   movie.addMovieScript({ exitFrame: () => void client.stage.render(context as never) } as never);
   movie.start();
   client.stage.render(context as never);
+  startAvatarFavicon();
 
   status(`boot reached: ${states.join(" -> ")}`);
   /**
