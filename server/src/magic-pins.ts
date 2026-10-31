@@ -53,7 +53,17 @@ export interface MagicPin {
    * (room 88) — 1 bronze, 2 silver, 3 gold. Like the sword it casts no effect.
    */
   treasure?: 1 | 2 | 3;
+  /**
+   * Treasure Detector: the avatar glows (13) and holds the map (hand action
+   * `HAND_TREASURE_MAP`, the client's own case 11) while the player walks about;
+   * pausing after enough walking finds treasure (14 — the glow, coins round
+   * the feet and `MFX-treasure`), which ends the magic early.
+   */
+  detector?: boolean;
 }
+
+/** Treasure Detector's find: `PrepareFx` 14 adds the coin frames to 13's glow. */
+export const TREASURE_FOUND_EFFECT = 14;
 
 /** Base (multi-use) pin code -> its magic. Single-use twins are code + 10000. */
 const PINS = new Map<number, MagicPin>([
@@ -70,7 +80,7 @@ const PINS = new Map<number, MagicPin>([
   [2033, { effect: 10, word: "Whoosh!" }], // Flying Carpet — DrawMagicCarpet
   [2083, { effect: 12, word: "Frosty!" }], // Snowman
   [2084, { effect: 11, endEffect: 15, word: "Dracula!" }], // Turn Into Bat — bat in / bat out
-  [2085, { effect: 14, guess: true, word: "Gold!" }], // Treasure Detector — MFX-treasure (13 also treasure)
+  [2085, { effect: 13, detector: true, word: "Gold!" }], // Treasure Detector — magic_trdet_glow; 14 on a find
   [2126, { effect: 100, word: "Drive!" }], // Autopia Racing Blue
   [2127, { effect: 101, word: "Drive!" }], // Autopia Racing Pink
   [2128, { effect: 102, word: "Drive!" }], // Autopia Racing Yellow
@@ -154,5 +164,8 @@ export function magicTiming(code: number, level: number): { durationMs: number; 
   const stars = Math.min(Math.max(level, 1), 5);
   const magic = magicOf(code);
   if (magic?.teleport) return { durationMs: 0, rechargeS: 10 + (5 - stars) * 10 };
+  // The wiki's table: lasts 0:21 (or until treasure is found), recharges in an
+  // hour, at every star level.
+  if (magic?.detector) return { durationMs: 21_000, rechargeS: 3600 };
   return { durationMs: (20 + stars * 8) * 1000, rechargeS: 60 + (5 - stars) * 30 };
 }

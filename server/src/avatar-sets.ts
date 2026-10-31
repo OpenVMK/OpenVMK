@@ -16,7 +16,7 @@
  * hd 22000/32000/42000, ch 24000/34000/44000, pn 26000/36000/46000,
  * sh 28000/38000/48000.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, castExtracted, downloadFile } from "./paths.js";
 
@@ -356,6 +356,22 @@ const FIGURESETS = ["figuresets_29", "figuresets_28"];
  */
 export const figureSetsFile = (): string | null =>
   FIGURESETS.map(downloadFile).find((path): path is string => path !== null) ?? null;
+
+/**
+ * Which figure-set file, and which edit of it: path + mtime. Every cache built
+ * from the file keys on this. Caching for the life of the process meant a
+ * SetList/CastList edit (the Party Hats) reached the game, which reads the file
+ * per login, while Housekeeping kept drawing the old list until a restart.
+ */
+export function figureSetsStamp(): string {
+  const path = figureSetsFile();
+  if (!path) return "";
+  try {
+    return `${path}@${statSync(path).mtimeMs}`;
+  } catch {
+    return path;
+  }
+}
 
 /**
  * Is this clothing cast (`ch_3_4`, from CastList) loadable? The client loads
