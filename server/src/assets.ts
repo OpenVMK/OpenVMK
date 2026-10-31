@@ -32,7 +32,7 @@ import {
   redirect,
   setSessionCookie,
 } from "./auth.js";
-import { createTicket, databasePath, deleteSession, getUserByTicket, getUserByUsername, pruneExpired } from "./db.js";
+import { createTicket, databasePath, deleteSession, getOutfit, getUserByTicket, getUserByUsername, pruneExpired } from "./db.js";
 import { seasonFromEnv, seasonalCasts } from "./seasons.js";
 import { ARCHIVE, castExtracted, downloadFile } from "./paths.js";
 import { publicUrls, withPublicUrls } from "./public-url.js";
@@ -1688,11 +1688,16 @@ function route(req: IncomingMessage, res: ServerResponse) {
         // this over the config's host/port, which cannot carry a scheme or path
         // — `wss://vmk.example.com/game` behind a proxy is unreachable from them.
         const { gameUrl } = publicUrls(req);
+        // The stored figure draws the tab icon (client/src/favicon.ts) from
+        // login on. None yet — a player still to make their avatar — no icon.
+        const figure = user.has_character ? getOutfit(user.id)?.figure ?? null : null;
         // ⚠ PREPENDED, not spliced into <head>: the built page has no <head>
         // tag, so a replace would silently inject nothing. A classic script
         // runs before the page's module scripts wherever it sits.
         const html =
-          `<script>window.__VMK_GAME_URL = ${JSON.stringify(gameUrl).replace(/</g, "\\u003c")};</script>\n` +
+          `<script>window.__VMK_GAME_URL = ${JSON.stringify(gameUrl).replace(/</g, "\\u003c")};` +
+          (figure ? ` window.__VMK_FIGURE = ${JSON.stringify(figure)};` : "") +
+          `</script>\n` +
           readFileSync(page, "utf8");
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
         res.end(html);
