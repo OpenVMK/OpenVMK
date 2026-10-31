@@ -22,11 +22,11 @@ import { readFile, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { figureSetsFile } from "./avatar-sets.js";
+import { downloadFile } from "./paths.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const REPO = join(here, "..", "..");
 const CASTS = join(REPO, "client", "assets", "casts");
-const ARCHIVE = process.env.VMK_SHOCKWAVE ?? join(REPO, "shockwave");
 
 interface Member {
   cast: string;
@@ -161,9 +161,11 @@ function furni() {
   if (furnimap) return furnimap;
   furnimap = new Map();
   // ⚠ Same pages, same order, as furni-footprint.ts — first definition wins.
+  // Overlay first via `downloadFile`: a release ships no archive, so reading
+  // the archive path left every furniture picture blank there.
   const files = [
     process.env.VMK_FURNIMAP,
-    join(ARCHIVE, "siteref", "homepage", "download", "furnituremaps.0-99_2"),
+    downloadFile("furnituremaps.0-99_2"),
     join(REPO, "assets", "furnimaps", "furnimaps_consolidated.xml"),
   ].filter((p): p is string => Boolean(p) && existsSync(p!));
   const xml = files.map((f) => readFileSync(f, "latin1")).join("\n");
