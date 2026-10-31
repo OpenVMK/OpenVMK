@@ -6909,6 +6909,20 @@ function createVmkSession(
           `[${label}] registration complete for "${live.username}" as "${name}": ` +
             `granted ${granted} starting clothing item(s) [${startingSets.join(", ")}]`,
         );
+        // ⚠ The messenger's only start during registration. `CRegistrationHandler.SetName`
+        // fires `init_messenger` while `m_bRegistrationGoingOn`; a name TYPED on
+        // step 1 gets SetName from SEND_NEW_NAME, but a name PICKED from the
+        // suggestions arrives in CreateAvatar and never did — so `540
+        // MessengerInit` was never sent and staff mail (NPC rewards) sat
+        // undelivered until the next login. A second SetName is harmless:
+        // `InitMessengerOnce` unregisters itself, and mid-registration SetName
+        // sends no NavigatorHandshake.
+        const perms = permissionsFor();
+        send(
+          MSG.SET_NAME,
+          [{ str: name }, { int: perms.length }, ...perms.map((p) => ({ int: p }))],
+          `SetName "${name}" (registration complete)`,
+        );
       }
       // 2514 is deliberately NOT sent here — see CREATE_AVATAR.
       send(MSG.AVAILABLE_GUEST_ROOMS, [{ int: 0 }], "AvailableGuestRooms (none yet)");
