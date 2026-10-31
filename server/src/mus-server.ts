@@ -124,7 +124,7 @@ import {
   transferItem,
   renameCharacter,
 } from "./db.js";
-import { loadAvatarCatalogue, type AvatarCatalogue } from "./avatar-sets.js";
+import { figureSetsStamp, loadAvatarCatalogue, type AvatarCatalogue } from "./avatar-sets.js";
 import {
   CMD,
   MSG,
@@ -151,6 +151,7 @@ import {
   HAND_WAVE,
   HAND_DRINK,
   HAND_CARRY_CUP,
+  HAND_TREASURE_MAP,
   MOUTH_CLOSED,
   MOUTH_TALKING,
   wireText,
@@ -225,7 +226,7 @@ import {
   roomFreed,
   takeFastPass,
 } from "./room-entry-queue.js";
-import { isSingleUsePin, magicOf, magicTiming, startingLevel } from "./magic-pins.js";
+import { isSingleUsePin, magicOf, magicTiming, startingLevel, TREASURE_FOUND_EFFECT } from "./magic-pins.js";
 import { itemName } from "./catalog.js";
 import { NPC_REF_BASE, npcByRef, npcsInRoom, visitNpc, type Npc } from "./npcs.js";
 import {
@@ -2134,6 +2135,32 @@ const SWORD_PRIZES: SwordPrize[] = [
   { name: "Mission Space Costume", items: [41002, 44210, 46000, 48002], category: ITEM_CATEGORY.clothes },
 ];
 
+/**
+ * Treasure Detector Magic ("Gold!"): "you must keep moving around the area
+ * you're in ... when your character pauses, treasure appears around them"
+ * (wiki). How far is "moving around" is lost; DETECTOR_STEPS is tuned. A cast
+ * that never walks that far before its 0:21 runs out finds nothing.
+ *
+ * Prizes: the wiki's last list, from 16 May 2008 until VMK closed.
+ */
+const DETECTOR_STEPS = Number(process.env.VMK_DETECTOR_STEPS ?? 10);
+/** Standing still this long, after enough walking, is a pause. */
+const DETECTOR_PAUSE_MS = 1000;
+/** The coins (`magic_trdet_coins*`) show this long before the magic ends. */
+const DETECTOR_FOUND_MS = 4000;
+const TREASURE_DETECTOR_PRIZES: SwordPrize[] = [
+  { name: "4000 Credits", credits: 4000 },
+  { name: "7500 Credits", credits: 7500 },
+  { name: "a Flying Carpet Single Use", items: [12033], category: ITEM_CATEGORY.pins },
+  { name: "a Jester Hat Teal", items: [41056], category: ITEM_CATEGORY.clothes },
+  { name: "a Mardi Gras Mask", items: [41064], category: ITEM_CATEGORY.clothes },
+  { name: "a Party Hat Pink", items: [41093], category: ITEM_CATEGORY.clothes },
+  { name: "a Party Hat Yellow", items: [41095], category: ITEM_CATEGORY.clothes },
+  { name: "a Random Number Generator Color Blue", items: [132], category: ITEM_CATEGORY.items },
+  { name: "Teal Mickey Ears", items: [41039], category: ITEM_CATEGORY.clothes },
+  { name: "a Tiki Room Opens 1971 Pin", items: [2123], category: ITEM_CATEGORY.pins },
+];
+
 function turnstileFee(config: Record<string, string>): number {
   const fee = Number(config.fee);
   return Number.isInteger(fee) && fee > 0 ? fee : 0;
@@ -2756,10 +2783,13 @@ function avatarBlock(o: RoomOccupant): OutgoingParam[] {
   ];
 }
 
-/** Loaded once, lazily — parsing figuresets_28 is ~66 KB of text. */
+/** Loaded lazily — parsing figuresets is ~66 KB of text — and again when the file is edited. */
 let cachedCatalogue: AvatarCatalogue | null = null;
+let cachedCatalogueStamp = "";
 function avatarCatalogue(): AvatarCatalogue {
-  if (!cachedCatalogue) {
+  const stamp = figureSetsStamp();
+  if (!cachedCatalogue || stamp !== cachedCatalogueStamp) {
+    cachedCatalogueStamp = stamp;
     cachedCatalogue = loadAvatarCatalogue();
     console.log(
       `[avatar] catalogue: ${cachedCatalogue.male.length} male / ` +
@@ -3323,6 +3353,8 @@ function createVmkSession(
     costume?: boolean;
     /** The suit's time ran out in space; it comes off once we step off the spacewalk. */
     overdue?: boolean;
+    /** Treasure Detector: tiles walked this cast, and the pause being timed. */
+    detector?: { steps: number; found?: boolean; pause?: NodeJS.Timeout };
     timer?: NodeJS.Timeout;
   } | null = null;
   /** Timer for the NEXT queued pulse. Undefined means nothing is walking. */
@@ -3383,6 +3415,8 @@ function createVmkSession(
    * through `doHandWorkRight`.
    */
   const handPose = (legs: number, side: "left" | "right"): number => {
+    // The Treasure Detector's map is held in both hands, walking or not.
+    if (activeMagic?.detector) return HAND_TREASURE_MAP;
     // A cup stays in hand on the move — held, not sipped.
     if (cupHand && side === "left" && legs === LEGS_WALK) return HAND_CARRY_CUP;
     if (legs === LEGS_WALK) return HAND_WALK;
@@ -4887,6 +4921,21 @@ function createVmkSession(
     // re-pose) still carry the LOBBY tile — the avatar snapped there and back
     // every time its owner chatted.
     if (currentRoomName?.startsWith("hm#")) return;
+    // Treasure Detector: count the walking; a stand after enough of it starts
+    // the pause that finds the treasure, and any step cancels it.
+    const detector = activeMagic?.detector;
+    if (detector && !detector.found) {
+      if (tile !== currentTile) {
+        detector.steps++;
+        clearTimeout(detector.pause);
+        detector.pause = undefined;
+      } else if (legs === LEGS_STAND && detector.steps >= DETECTOR_STEPS && !detector.pause) {
+        detector.pause = setTimeout(() => {
+          detector.pause = undefined;
+          if (activeMagic?.detector === detector && !walkTimer && currentTile === tile) findTreasure();
+        }, DETECTOR_PAUSE_MS);
+      }
+    }
     pressMusicTiles(currentTile, tile);
     // Stepping into a dark-ride piece's "Animation Area" (the editor's own
     // title) sets it off — riding OR walking; nothing in the client or its
@@ -5476,6 +5525,7 @@ function createVmkSession(
   const stopMagic = (): void => {
     if (!activeMagic) return;
     clearTimeout(activeMagic.timer);
+    clearTimeout(activeMagic.detector?.pause);
     const end = activeMagic.endEffect;
     if (activeMagic.dance) dancing = false;
     const hadCostume = activeMagic.costume === true;
@@ -5667,6 +5717,7 @@ function createVmkSession(
       endEffect: cast.endEffect,
       dance: forceDance,
       costume: cast.costume !== undefined && me !== null,
+      detector: cast.detector ? { steps: 0 } : undefined,
     };
     activeMagic.timer = setTimeout(() => {
       if (activeMagic?.pinId !== pinId) return;
@@ -5679,6 +5730,36 @@ function createVmkSession(
     if (cast.costume && me) showFigure(costumeFigure(me.figure, cast.costume));
     console.log(`[${label}] cast pin ${pinId} (type ${pin.typeCode}, ${pin.level}*) -> effect ${cast.effect} for ${durationMs}ms`);
     return true;
+  };
+
+  /**
+   * The Treasure Detector found something: coins round the feet (effect 14,
+   * with its `MFX-treasure`) for everyone, the prize now, the note once the
+   * coins are done — the magic ends there, "until you find treasure".
+   */
+  const findTreasure = (): void => {
+    const detector = activeMagic?.detector;
+    if (!activeMagic || !detector || detector.found || !live) return;
+    detector.found = true;
+    const pinId = activeMagic.pinId;
+    const userId = live.userId;
+    const name = characterName;
+    clearTimeout(activeMagic.timer);
+    setMagic(TREASURE_FOUND_EFFECT);
+    const prize = TREASURE_DETECTOR_PRIZES[Math.floor(Math.random() * TREASURE_DETECTOR_PRIZES.length)];
+    if (prize.credits) {
+      setCredits(userId, (getUserById(userId)?.credits ?? 0) + prize.credits, "Treasure Detector Magic");
+      sendCredits();
+    }
+    if (prize.items && prize.category !== undefined) {
+      addItems(userId, prize.items, prize.category);
+      queueItemList(1);
+    }
+    console.log(`[${label}] treasure detector ${pinId} found ${prize.name} after ${detector.steps} steps`);
+    activeMagic.timer = setTimeout(() => {
+      if (activeMagic?.pinId === pinId) stopMagic();
+      sendStaffMessage(userId, `Gold! ${name}, your Treasure Detector found ${prize.name}!`);
+    }, DETECTOR_FOUND_MS);
   };
 
   /**

@@ -31,7 +31,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { previewable, composites } from "./furni-footprint.js";
-import { drawableClothingSets } from "./avatar-sets.js";
+import { drawableClothingSets, figureSetsStamp } from "./avatar-sets.js";
 import {
   STAFF_PAGE_ID_BASE,
   catalogVersion,
@@ -405,6 +405,8 @@ function renderable(code: number, inventoryType: number): boolean {
 }
 
 let drawableCache: Set<number> | null = null;
+/** The `figureSetsStamp()` `drawableCache` (and the cached shelves) came from. */
+let drawableStamp = "";
 function drawableSets(): Set<number> {
   if (!drawableCache) {
     drawableCache = drawableClothingSets();
@@ -486,6 +488,14 @@ export function catalog(sex = 0): CatalogShop[] {
   if (version !== cachedVersion) {
     cached.clear();
     cachedVersion = version;
+  }
+  // An edited figure-set file changes which garments are drawable, so the
+  // shelves built from the old list go too.
+  const stamp = figureSetsStamp();
+  if (stamp !== drawableStamp) {
+    cached.clear();
+    drawableCache = null;
+    drawableStamp = stamp;
   }
   const hit = cached.get(sex);
   if (hit) return hit;

@@ -21,7 +21,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { figureSetsFile } from "./avatar-sets.js";
+import { figureSetsFile, figureSetsStamp } from "./avatar-sets.js";
 import { downloadFile } from "./paths.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -244,9 +244,13 @@ interface Figure {
   casts: Map<number, string[]>;
 }
 let figure: Figure | null = null;
+/** The `figureSetsStamp()` `figure` was parsed from: an edited file is re-read. */
+let figureStamp = "";
 
 function figureSets(): Figure {
-  if (figure) return figure;
+  const stamp = figureSetsStamp();
+  if (figure && stamp === figureStamp) return figure;
+  figureStamp = stamp;
   figure = { setList: new Map(), contents: new Map(), colours: new Map(), casts: new Map() };
   // ⚠ The SAME file the game reads — overlay before archive, via `downloadFile`
   // (see avatar-sets.ts). A bespoke list here once put the archive first, so
@@ -363,6 +367,11 @@ const cache = new Map<string, IconSpec>();
  */
 export function iconFor(code: number, category?: number): IconSpec {
   const key = `${code}:${category ?? ""}`;
+  // A garment drawn blank before its SetList entry existed must not stay blank.
+  if (figureSetsStamp() !== figureStamp) {
+    cache.clear();
+    figureSets();
+  }
   const hit = cache.get(key);
   if (hit) return hit;
   let spec: IconSpec = { code, kind: "none", layers: [] };

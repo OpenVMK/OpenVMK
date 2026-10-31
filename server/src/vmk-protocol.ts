@@ -1758,6 +1758,15 @@ export const HAND_CARRY_CUP = 2;
  * sip must be a short burst between spells of `HAND_CARRY_CUP`, never held.
  */
 export const HAND_DRINK = 3;
+/**
+ * Holding the treasure map (Treasure Detector Magic): case 11 = "crr" with
+ * item 50, the still `drk_lfood_50_*` frames (the map art, beside
+ * `magic_trdet_glow` in the magic clothes cast). Send it on BOTH hands: a
+ * flipped facing asks the left hand for `drk_rfood_50`, which does not exist,
+ * and the right hand for `drk_lfood_50`, which does — so exactly one map shows
+ * whichever way the avatar faces. Facing 0 holds it out of sight.
+ */
+export const HAND_TREASURE_MAP = 11;
 
 /** Build the 12 ints in wire order. Anything omitted is 0 (= idle/none). */
 export function avatarActions(a: AvatarActions = {}): number[] {
