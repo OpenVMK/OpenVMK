@@ -22,8 +22,10 @@
 //   flag: "..."       the match is inferred, not confirmed by the guide
 //
 // `pad: [refs]` instead of `at` names plain floor tiles that act as the exit,
-// for teleporters drawn as room art with no exit tiles under them. `face: N`
-// turns the avatar that way on arrival (server clockwise index).
+// for teleporters drawn as room art with no exit tiles under them; the server
+// puts an `68 Invisible Public Room Teleport` on each and plays the teleporter
+// beam out / in through them. `teleport: true` gives a doorway exit the same
+// beams. `face: N` turns the avatar that way on arrival (server clockwise index).
 //
 // Rooms with no entry here (guest rooms and the minor public ones) send every
 // exit "back"; see server/src/room-exits.ts.
@@ -88,12 +90,13 @@ const AUTHORED = {
   [C.sciFi]: { cast: "drivein", exits: [{ at: 411, to: C.esplanade, label: "VMK Esplanade" }] },
   // The teleporters are room art with no exit tiles under them, hence `pad`.
   // Their tiles are the ones the layout marks MUL="1", as are the matching
-  // teleporters in the shops they lead to.
+  // teleporters in the shops they lead to. A pad's FIRST tile is where you
+  // land (inside the teleporter art), so list it first.
   [C.emporium]: { cast: "emporium", exits: [
     { at: 112, to: C.townSquare, label: "Town Square" },
     { pad: [131, 148], to: C.shrunkenNeds, label: "Jungle Cruise Teleporter" },
     { pad: [303, 304], to: C.horseshoe, label: "Big Thunder Mountain Teleporter" },
-    { pad: [309, 310, 312], to: C.smallWorldShop, label: "Tea Cup Teleporter" },
+    { pad: [309, 312, 310], to: C.smallWorldShop, label: "Tea Cup Teleporter" },
     // Step out of Stitch's pod facing out of it (down-right), not into its back wall.
     { pad: [200, 201], to: C.tomorrowlandHub, arrive: 164, face: 3, label: "Stitch's Teleporter" },
   ] },
@@ -189,7 +192,7 @@ const AUTHORED = {
   ] },
   [C.horseshoe]: { cast: "horseshoe_shop", exits: [
     { at: 251, to: C.frontierlandHub, label: "Frontierland Hub" },
-    { pad: [50, 51], to: C.emporium, label: "Big Thunder Mountain Teleporter (mine car)" },
+    { pad: [51, 50], to: C.emporium, label: "Big Thunder Mountain Teleporter (mine car)" },
   ] },
   [C.frontierlandDock]: { cast: "pier", exits: [
     { at: 180, to: C.steamboat, label: "Mark Twain" },
@@ -343,7 +346,7 @@ const AUTHORED = {
   [C.tomorrowlandHub]: { cast: "tomorrowland_hub", exits: [
     { at: 144, to: C.centralPlaza, label: "Central Plaza" },
     { at: 176, to: C.matterhorn, label: "Stitch's Teleporter (far left)" },
-    { at: 164, to: C.emporium, label: "Stitch's Teleporter (middle)" },
+    { at: 164, to: C.emporium, teleport: true, label: "Stitch's Teleporter (middle)" },
     { at: 154, to: C.monorailStation, label: "Stitch's Teleporter (far right)" },
     // `rocket_exit_1/2` (250/252) are NOT a walkable way to Space Mountain: the
     // rocket shuttle carries seated riders there (see mus-server.ts). As plain
@@ -486,6 +489,9 @@ for (const [code, { cast, exits }] of Object.entries(AUTHORED)) {
       }
     }
     if (exit.face !== undefined) rule.face = exit.face;
+    // A pad is a teleporter: the server marks its tiles with item 68 and beams.
+    if (exit.pad) rule.pad = true;
+    if (exit.pad || exit.teleport) rule.teleport = true;
     if (exit.flag) rule.flag = exit.flag;
     built.push(rule);
   }

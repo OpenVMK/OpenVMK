@@ -163,7 +163,7 @@ import {
 import { Ghost } from "./ghosts.js";
 import { GatorWaiter, SEAT } from "./gator-waiter.js";
 import { seasonalLayout, seasonalTileMap, useSeasonalLayout } from "./room-geometry.js";
-import { doorBackTo, exitAt, exitTilesTo, remapRoomTiles, type ExitRule } from "./room-exits.js";
+import { doorBackTo, exitAt, exitTilesTo, padTilesOf, remapRoomTiles, type ExitRule } from "./room-exits.js";
 import { seedPublicFurni } from "./public-furni.js";
 import {
   FW_LOBBY_ROOM,
@@ -2684,6 +2684,19 @@ function queueMarkersFor(room: string | undefined): PlacedItem[] {
   return tiles.map((tile, i) => ({ ref: QUEUE_REF_BASE + i, typeCode: QUEUE_MARKER_TYPE, tile, dir: 3, state: 0 }));
 }
 
+/**
+ * Teleport pads: an invisible `68 Invisible Public Room Teleport` on each tile
+ * of a `pad` exit (the Emporium's teleporters and their partners in the shops).
+ * Its dir-3 block carries `ACT="1"`, which the pointer draws as the teleport
+ * highlight. dir 3 is the only facing with that block.
+ */
+const PAD_REF_BASE = 920000;
+const PAD_MARKER_TYPE = 68;
+function padMarkersFor(code: number | undefined): PlacedItem[] {
+  if (code === undefined) return [];
+  return padTilesOf(code).map((tile, i) => ({ ref: PAD_REF_BASE + i, typeCode: PAD_MARKER_TYPE, tile, dir: 3, state: 0 }));
+}
+
 /** The stored signature tokens, tolerating a row written before this existed. */
 function storedSloganTokens(userId: number): ChatToken[] {
   const raw = getSlogan(userId).json;
@@ -3292,7 +3305,7 @@ function createVmkSession(
    * doorway in `code` (the one leading back, so stepping straight out returns
    * you). Consumed by `enterRoom`.
    */
-  let pendingDoor: { code: number; tiles: number[]; face?: number } | null = null;
+  let pendingDoor: { code: number; tiles: number[]; face?: number; anchor?: number } | null = null;
   /**
    * The doorway we last walked out of, and the room it was in. Coming back
    * from where it led lands on it again, when that room has several doorways
@@ -3340,6 +3353,8 @@ function createVmkSession(
   let trading = 0;
   /** Set when a teleporter sent us into this room: play the arrival effect on `ROOM_START`. */
   let arrivedByTeleport: RoomItem | null = null;
+  /** Arriving through a `teleport` exit: beam in once the avatar exists, then step off (toward `face`). */
+  let arriveBeamingIn: { face?: number } | null = null;
   /** With `arrivedByTeleport`, when a RIDE went through: carry on riding from the partner. */
   let arrivedRiding: RideHop | null = null;
   /** The magic pin effect running on this avatar, if any. */
@@ -4769,7 +4784,7 @@ function createVmkSession(
       const doorway = pendingDoor.tiles;
       currentTile = freeTileNear(
         currentGeometryRoom,
-        doorway[Math.floor(doorway.length / 2)],
+        pendingDoor.anchor ?? doorway[Math.floor(doorway.length / 2)],
         new Set(occupiedTiles(currentRoomName, live ? live.userId : 1)),
       );
       if (pendingDoor.face !== undefined) facing = pendingDoor.face;
@@ -5845,6 +5860,34 @@ function createVmkSession(
     return route;
   };
 
+  /**
+   * Stepping out of a teleporter EXIT's pad after beaming in, as
+   * `teleporterExit` does for a guest teleporter: up to two tiles, ending off
+   * the pad. The pad has no facing of its own, so try the arrival facing
+   * first, then the diagonals toward the viewer; the longest clear route wins.
+   */
+  const padStepOff = (preferred: number | undefined): number[] => {
+    const pads = new Set(currentRoomCode !== undefined ? padTilesOf(currentRoomCode) : []);
+    const blocked = new Set([
+      ...occupiedTiles(currentRoomName, live ? live.userId : 1),
+      ...furnitureTiles(currentRoomName, currentGeometryRoom),
+    ]);
+    let best: number[] = [];
+    for (const dir of new Set([preferred ?? 3, 3, 5, 1, 7])) {
+      const route: number[] = [];
+      let at = currentTile;
+      while (route.length < 2) {
+        const next = tileToward(currentGeometryRoom, at, dir);
+        if (next === null || blocked.has(next)) break;
+        route.push(next);
+        at = next;
+      }
+      while (route.length > 0 && pads.has(route[route.length - 1])) route.pop();
+      if (route.length > best.length) best = route;
+    }
+    return best;
+  };
+
   /** The arrival half of a hop: effect 7 on the partner's pad, then step out. */
   const finishTeleportIn = (partner: RoomItem) => {
     animateTeleporter(partner, TELEPORT_IN_MS);
@@ -6148,7 +6191,20 @@ function createVmkSession(
    * rule for N (room-exits.ts) says whether that leaves the room, hops within
    * it, or opens a themed guest-room list.
    */
-  const takeExit = (rule: ExitRule): void => {
+  const takeExit = (rule: ExitRule, beamedOut = false): void => {
+    // A teleporter exit beams you out (effect 6) first, like a guest-room
+    // teleporter, and only then moves you.
+    if (rule.teleport && !beamedOut && currentRoomName) {
+      const room = currentRoomName;
+      ridingUntil = Date.now() + TELEPORT_OUT_MS + 200;
+      setMagic(MAGIC_TELEPORT_OUT);
+      setTimeout(() => {
+        if (currentRoomName !== room) return; // left some other way meanwhile
+        magic = 0;
+        takeExit(rule, true);
+      }, TELEPORT_OUT_MS);
+      return;
+    }
     const from = currentRoomCode;
     if (rule.navigator !== undefined) {
       // The client answers with GET_POPULAR_BY_TYPE, which opens the list.
@@ -6211,7 +6267,12 @@ function createVmkSession(
       const tiles = exitTilesWithIds(ROOM_CODES.get(MONORAIL_STATION), pier ? STATION_PIER_STAIRS : STATION_GROUND_STAIRS);
       if (tiles.length) doorway = tiles;
     }
-    pendingDoor = doorway ? { code, tiles: doorway, face: rule.face } : null;
+    // Landing on a teleporter (the other end of a pad pair) beams you in. A pad
+    // lands you on its FIRST tile — the one inside the teleporter art — rather
+    // than the doorway's middle, which can be the floor in front of it.
+    const landing = doorway ? exitAt(code, doorway[0], false) : null;
+    pendingDoor = doorway ? { code, tiles: doorway, face: rule.face, anchor: landing?.pad ? doorway[0] : undefined } : null;
+    arriveBeamingIn = landing?.teleport ? { face: rule.face } : null;
     console.log(
       `[${label}] exit "${rule.label}" -> ${code} (${ROOM_NAMES.get(code) ?? ROOM_CODES.get(code) ?? "?"})` +
         `${rule.flag ? ` [inferred: ${rule.flag}]` : ""}`,
@@ -7070,6 +7131,33 @@ function createVmkSession(
         arrivedRiding = null;
         setTimeout(() => (ride ? rideOnFrom(partner, ride) : finishTeleportIn(partner)), 600);
       }
+      // Arrived through a teleporter exit (the Emporium's): beam in on the pad.
+      // Then step off it, as out of a guest teleporter (`finishTeleportIn`).
+      if (arriveBeamingIn) {
+        const face = arriveBeamingIn.face;
+        arriveBeamingIn = null;
+        const room = currentRoomName;
+        setTimeout(() => {
+          if (currentRoomName !== room) return;
+          // Appear facing the way you are about to walk out, not the way you
+          // happened to face going in.
+          const route = padStepOff(face);
+          const out = route.length ? directionBetween(currentGeometryRoom, currentTile, route[0]) : null;
+          if (out !== null) facing = out;
+          setMagic(MAGIC_TELEPORT_IN);
+          setTimeout(() => {
+            if (magic !== MAGIC_TELEPORT_IN || currentRoomName !== room) return;
+            magic = 0;
+            if (route.length === 0) {
+              setMagic(0);
+              return;
+            }
+            const pulses: Array<[tile: number, legs: number, face?: number]> = route.map((t) => [t, LEGS_WALK]);
+            pulses.push([route[route.length - 1], LEGS_STAND]);
+            walkAlong(pulses);
+          }, TELEPORT_IN_MS);
+        }, 600);
+      }
       // "start" — the client has the room's casts and wants its contents.
       // Answer with the player's own avatar, or the room stays empty.
       //
@@ -7259,7 +7347,8 @@ function createVmkSession(
         };
       });
       const queueMarkers = currentGuestRoom() ? [] : queueMarkersFor(currentGeometryRoom);
-      const elements = [...seats, ...placed, ...npcs, ...queueMarkers];
+      const padMarkers = currentGuestRoom() ? [] : padMarkersFor(currentRoomCode);
+      const elements = [...seats, ...placed, ...npcs, ...queueMarkers, ...padMarkers];
       if (elements.length > 0) {
         send(
           MSG.CREATE_ELEMENTS,
