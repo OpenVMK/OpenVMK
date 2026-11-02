@@ -28,6 +28,13 @@ export interface ExitRule {
   arrive?: number[];
   /** Direction to face on arrival (server clockwise index); default keeps the walk's facing. */
   face?: number;
+  /**
+   * The tiles are plain floor, not layout exits (the Emporium's teleporters).
+   * Each gets an `68 Invisible Public Room Teleport` so the client marks it.
+   */
+  pad?: boolean;
+  /** Leaving through it, and arriving on it, plays the teleporter beam out / in. */
+  teleport?: boolean;
   flag?: string;
   /** Entering the Monorail Station: WHICH land's platform (a monorail stop id). */
   stop?: number;
@@ -113,6 +120,12 @@ export function doorBackTo(code: number, fromCode: number): number[] | null {
   load();
   const rule = byCode.get(code)?.find((r) => r.to === fromCode);
   return rule ? rule.tiles : null;
+}
+
+/** Room `code`'s teleport pad tiles (rules with `pad`). */
+export function padTilesOf(code: number): number[] {
+  load();
+  return (byCode.get(code) ?? []).filter((r) => r.pad).flatMap((r) => r.tiles);
 }
 
 export function exitTilesTo(code: number, to: number): number[] {
