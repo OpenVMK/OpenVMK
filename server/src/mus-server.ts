@@ -804,7 +804,15 @@ function loadRoomTexts(field: "name" | "desc"): Map<number, string> {
   const pattern = new RegExp(`^room\\.(\\d+)\\.${field}=(.*)$`);
   for (const path of [join(OVERLAY, "external_texts.txt"), join(ARCHIVE, "external_texts.txt")]) {
     if (!existsSync(path)) continue;
-    for (const line of readFileSync(path, "latin1").split(/\r?\n/)) {
+    const text = readFileSync(path, "latin1");
+    // ⚠ The texts are Windows-1252. Editing the file as UTF-8 turns every ®, ©
+    // or § into U+FFFD (bytes EF BF BD), which the client then draws as a "?"
+    // diamond. It happened once already (repaired 2026-11-02).
+    const damaged = text.split("\xef\xbf\xbd").length - 1;
+    if (damaged > 0 && field === "name") {
+      console.warn(`[texts] ${path}: ${damaged} U+FFFD replacement char(s) — saved as UTF-8? It must stay Windows-1252.`);
+    }
+    for (const line of text.split(/\r?\n/)) {
       const match = pattern.exec(line);
       if (match) values.set(Number(match[1]), match[2].trim());
     }
