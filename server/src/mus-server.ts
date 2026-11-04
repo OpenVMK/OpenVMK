@@ -3450,18 +3450,19 @@ function createVmkSession(
   /**
    * Which pose an arm takes, given what the legs are doing.
    *
-   * Order matters: walking wins (the arms swing with the stride), then dancing,
-   * then a wave. Waving is right-arm only — `prepare()` routes `m_bActWav`
-   * through `doHandWorkRight`.
+   * Order matters: dancing wins, then a wave, then walking (the arms swing with
+   * the stride) — walking interrupts neither emote. Waving is right-arm only —
+   * `prepare()` routes `m_bActWav` through `doHandWorkRight`, which also draws
+   * it over the walk the legs set on that arm.
    */
   const handPose = (legs: number, side: "left" | "right"): number => {
     // The Treasure Detector's map is held in both hands, walking or not.
     if (activeMagic?.detector) return HAND_TREASURE_MAP;
+    if (dancing) return HAND_DANCE;
+    if (waving && side === "right") return HAND_WAVE;
     // A cup stays in hand on the move — held, not sipped.
     if (cupHand && side === "left" && legs === LEGS_WALK) return HAND_CARRY_CUP;
     if (legs === LEGS_WALK) return HAND_WALK;
-    if (dancing) return HAND_DANCE;
-    if (waving && side === "right") return HAND_WAVE;
     if (cupHand && side === "left") return cupHand;
     return HAND_STAND;
   };
@@ -5083,7 +5084,12 @@ function createVmkSession(
     lastPulseAt = Date.now();
     // The pose this pulse sends (same rules as the params below), kept for
     // anyone who enters later — see `RoomOccupant.legs`.
-    const poseLegs = legs === LEGS_WALK || legs >= 5 ? legs : dancing ? LEGS_DANCE : legs;
+    // Dancing overrides the legs and carries on through a walk: the client moves
+    // the avatar from the tile, whatever pose the legs are in. A vehicle (5..13)
+    // is a ride in progress and beats it, and so does driving a magic car, whose
+    // own driving frames play only while the legs say "walk" (`SetCarPantAction`).
+    const drivingCar = legs === LEGS_WALK && magic >= 100;
+    const poseLegs = legs >= 5 || drivingCar ? legs : dancing ? LEGS_DANCE : legs;
     const handLegs = magic >= 100 ? LEGS_STAND : legs;
     if (me) {
       me.tile = tile;
@@ -5111,10 +5117,7 @@ function createVmkSession(
       ...avatarActions({
         headDir: facing,
         bodyDir: facing,
-        // Dancing overrides the legs; walking overrides dancing, because you
-        // cannot do both and the client would render a confused hybrid.
-        // A vehicle (5..13) is a ride in progress and beats dancing too.
-        legs: legs === LEGS_WALK || legs >= 5 ? legs : dancing ? LEGS_DANCE : legs,
+        legs: poseLegs,
         // In a magic car (effects 100+) the arms stay put: the renderer hides
         // the legs under the car (`ActLeftFoot`, m_iMagic > 99) but still
         // swings whatever arms we send, so walking looked like running inside
@@ -10482,14 +10485,22 @@ function createVmkSession(
 
     if (command === CMD.START_ACTION || command === CMD.STOP_ACTION) {
       // Emotes. Body is one int: 0 = dance, 1 = wave
-      // (`CEmoticons.eventProcEmoticons`). Dance is a toggle the player ends
-      // with STOP_ACTION; wave is one-shot and nothing reports its end, so the
-      // server clears it — otherwise the arm stays up forever.
+      // (`CEmoticons.eventProcEmoticons`). Dance lasts until the player turns it
+      // off; wave is one-shot and nothing reports its end, so the server clears
+      // it — otherwise the arm stays up forever.
+      //
+      // ⚠ Either command flips the dance, rather than Start = on and Stop = off:
+      // the client forgets its button state on `room_leave` while the dance
+      // carries into the next room, so its next click says Start to a player
+      // who is already dancing — and they mean "stop".
+      //
+      // Mid-walk, a pose change waits for the next step's pulse: a pulse on the
+      // same tile would snap the avatar to the end of the step it is walking.
       const action = body.length > 0 ? decodeToInt(body, 0).value : 0;
       const starting = command === CMD.START_ACTION;
 
       if (action === EMOTE_DANCE) {
-        dancing = starting;
+        dancing = !dancing;
       } else if (action === EMOTE_WAVE) {
         if (waveTimer) clearTimeout(waveTimer);
         waving = starting;
@@ -10497,7 +10508,7 @@ function createVmkSession(
           waveTimer = setTimeout(() => {
             waveTimer = undefined;
             waving = false;
-            sendPulse(currentTile, LEGS_STAND);
+            if (!walkTimer) sendPulse(currentTile, LEGS_STAND);
           }, WAVE_MS);
         }
       } else {
@@ -10510,7 +10521,7 @@ function createVmkSession(
           `${action === EMOTE_DANCE ? "dance" : "wave"} (dancing=${dancing} waving=${waving})`,
       );
       // Same tile: a pose change, not a move.
-      sendPulse(currentTile, LEGS_STAND);
+      if (!walkTimer) sendPulse(currentTile, LEGS_STAND);
       // Waving down the Gator Waiter from a Blue Bayou table.
       if (starting && action === EMOTE_WAVE && currentRoomName) {
         waiters.get(currentRoomName)?.waved(characterName, currentTile);
