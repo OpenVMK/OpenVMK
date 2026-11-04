@@ -9378,13 +9378,21 @@ function createVmkSession(
       // short walk than a glide across the room. Empty means "don't move".
       // Other avatars are impassable, so clicking an occupied tile walks you
       // as close as the crowd allows instead of standing inside someone.
+      const solidFurniture = furnitureTiles(currentRoomName, currentGeometryRoom, live?.userId);
+      // A seat marked SIT="1" WLK="0" (Tiki Beach Chair, Royal Thrones) is solid
+      // to walk through, but the client's pointer offers it as a seat, so
+      // clicking it has to get you there. The search stops at its target, so
+      // this opens the seat only as the end of the route.
+      if (surfaceOf(currentRoomName, currentGeometryRoom, live?.userId).get(target)?.sit) {
+        solidFurniture.delete(target);
+      }
       const path = findPath(
         currentGeometryRoom, // tiles come from the casts
         currentTile,
         target,
         new Set([
           ...occupiedTiles(currentRoomName, ref), // people
-          ...furnitureTiles(currentRoomName, currentGeometryRoom, live?.userId), // solid furniture
+          ...solidFurniture, // solid furniture
           ...blockedByQueues(currentGeometryRoom), // queue lines: joined, not walked
         ]),
         stepRule(),
