@@ -3386,8 +3386,11 @@ function createVmkSession(
     endEffect?: number;
     /** The effect forced the dance on (Dancing Inferno); undo it when it ends. */
     dance?: boolean;
-    /** A costume is showing (Pirate Costume); put the real outfit back at the end. */
-    costume?: boolean;
+    /**
+     * The costume showing (Pirate Costume), kept so a new room can show it too;
+     * the real outfit goes back at the end.
+     */
+    costume?: number[];
     /** The suit's time ran out in space; it comes off once we step off the spacewalk. */
     overdue?: boolean;
     /** Treasure Detector: tiles walked this cast, and the pause being timed. */
@@ -5279,7 +5282,7 @@ function createVmkSession(
       }
       darkRide.timer = setTimeout(() => {
         if (!darkRide || darkRide.scene !== code) return;
-        magic = 0;
+        magic = magicAfterHop();
         if (next !== undefined) enterDarkScene(next);
         else finishDarkRide();
       }, teleporter ? TELEPORT_OUT_MS : WALK_STEP_MS);
@@ -5297,7 +5300,7 @@ function createVmkSession(
         sendPulse(currentTile, scene.vehicle, scene.entry.dir);
         setTimeout(() => {
           if (!darkRide || darkRide.scene !== code || magic !== MAGIC_TELEPORT_IN) return;
-          magic = 0;
+          magic = magicAfterHop();
           if (Date.now() - lastPulseAt >= WALK_STEP_MS) sendPulse(currentTile, scene.vehicle, facing);
         }, TELEPORT_IN_MS);
       }
@@ -5470,6 +5473,11 @@ function createVmkSession(
     magic = fx;
     sendPulse(currentTile, LEGS_STAND);
   };
+  /**
+   * What a teleport's effects hand back to: a pin effect runs on its own timer
+   * and outlasts the hop, so it is not simply 0.
+   */
+  const magicAfterHop = (): number => activeMagic?.effect ?? 0;
 
   /**
    * Down a Waterpark Pool slide: `_1` (where we arrived) -> `_2` -> `_3` in the
@@ -5578,7 +5586,7 @@ function createVmkSession(
     clearTimeout(activeMagic.detector?.pause);
     const end = activeMagic.endEffect;
     if (activeMagic.dance) dancing = false;
-    const hadCostume = activeMagic.costume === true;
+    const hadCostume = activeMagic.costume !== undefined;
     const hadSuit = activeMagic.effect === SPACE_SUIT_EFFECT;
     activeMagic = null;
     if (hadSuit && spaceGateOpen) showSpaceGate(false);
@@ -5766,7 +5774,7 @@ function createVmkSession(
       effect: cast.effect,
       endEffect: cast.endEffect,
       dance: forceDance,
-      costume: cast.costume !== undefined && me !== null,
+      costume: me ? cast.costume : undefined,
       detector: cast.detector ? { steps: 0 } : undefined,
     };
     activeMagic.timer = setTimeout(() => {
@@ -5929,10 +5937,10 @@ function createVmkSession(
     setMagic(MAGIC_TELEPORT_IN);
     setTimeout(() => {
       if (magic !== MAGIC_TELEPORT_IN) return;
-      magic = 0;
+      magic = magicAfterHop();
       const route = teleporterExit(partner);
       if (route.length === 0) {
-        setMagic(0);
+        setMagic(magicAfterHop());
         return;
       }
       const pulses: Array<[tile: number, legs: number, face?: number]> = route.map((t) => [t, LEGS_WALK]);
@@ -5992,12 +6000,12 @@ function createVmkSession(
     setMagic(MAGIC_TELEPORT_OUT);
     setTimeout(() => {
       if (currentRoomName !== room) return;
-      magic = 0;
+      magic = magicAfterHop();
       const landed = placeNear(to);
       console.log(`[${label}] beamed to ${landed} in ${room}`);
       setMagic(MAGIC_TELEPORT_IN);
       setTimeout(() => {
-        if (magic === MAGIC_TELEPORT_IN) setMagic(0);
+        if (magic === MAGIC_TELEPORT_IN) setMagic(magicAfterHop());
         if (then && currentRoomName === room) {
           ridingUntil = 0;
           then();
@@ -6122,7 +6130,7 @@ function createVmkSession(
     sendPulse(currentTile, ride.vehicle, partner.dir);
     setTimeout(() => {
       if (currentRoomName !== room) return;
-      magic = 0;
+      magic = magicAfterHop();
       const plan = rideOnFromTeleporter(currentGeometryRoom, getRoomItems(room), partner, ride.vehicle);
       console.log(
         `[${label}] ride on from teleporter ${partner.ref}: ` +
@@ -6164,7 +6172,7 @@ function createVmkSession(
     setTimeout(() => {
       if (currentRoomName !== room) return; // left some other way meanwhile
       if (partner.room === room) {
-        magic = 0;
+        magic = magicAfterHop();
         const pad = teleporterPad(partner);
         currentTile = pad;
         facing = face;
@@ -6188,10 +6196,10 @@ function createVmkSession(
       }
       const guestId = /^guest:(\d+)$/.exec(partner.room)?.[1];
       const guest = guestId ? getGuestRoom(Number(guestId)) : undefined;
-      magic = 0;
+      magic = magicAfterHop();
       if (!guest) {
         console.log(`[${label}] teleporter ${item.ref}: partner is in ${partner.room}, not a guest room`);
-        setMagic(0);
+        setMagic(magicAfterHop());
         return;
       }
       pendingArrival = { room: partner.room, partner, facing: face };
@@ -6202,7 +6210,7 @@ function createVmkSession(
         pendingArrival = null;
         arrivedByTeleport = null;
         arrivedRiding = null;
-        setMagic(0);
+        setMagic(magicAfterHop());
       }
     }, TELEPORT_OUT_MS);
   };
@@ -6277,7 +6285,7 @@ function createVmkSession(
       setMagic(MAGIC_TELEPORT_OUT);
       setTimeout(() => {
         if (currentRoomName !== room) return; // left some other way meanwhile
-        magic = 0;
+        magic = magicAfterHop();
         takeExit(rule, true);
       }, TELEPORT_OUT_MS);
       return;
@@ -7224,9 +7232,9 @@ function createVmkSession(
           setMagic(MAGIC_TELEPORT_IN);
           setTimeout(() => {
             if (magic !== MAGIC_TELEPORT_IN || currentRoomName !== room) return;
-            magic = 0;
+            magic = magicAfterHop();
             if (route.length === 0) {
-              setMagic(0);
+              setMagic(magicAfterHop());
               return;
             }
             const pulses: Array<[tile: number, legs: number, face?: number]> = route.map((t) => [t, LEGS_WALK]);
@@ -7316,6 +7324,13 @@ function createVmkSession(
         name: characterName,
         sex: outfit.sex,
         figure: outfit.figure,
+        // Whatever is still going carries into the new room: the costume, and
+        // the pose a dance or the Treasure Detector's map holds, which would
+        // otherwise only come back on the first pulse here.
+        shownFigure: activeMagic?.costume ? costumeFigure(outfit.figure, activeMagic.costume) : undefined,
+        legs: dancing ? LEGS_DANCE : undefined,
+        leftHand: handPose(LEGS_STAND, "left"),
+        rightHand: handPose(LEGS_STAND, "right"),
         tile: currentTile,
         facing,
         badges: live ? getBadges(live.userId) : [],
