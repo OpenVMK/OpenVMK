@@ -22,7 +22,7 @@ import type { RoomItem } from "./db.js";
 import { coveredTiles } from "./furni-footprint.js";
 import { tileToward } from "./room-geometry.js";
 
-type Kind = "start" | "straight" | "turnLeft" | "turnRight" | "teleporter" | "door";
+type Kind = "start" | "straight" | "hill" | "turnLeft" | "turnRight" | "teleporter" | "door";
 
 interface RidePiece {
   kind: Kind;
@@ -49,8 +49,8 @@ const VEHICLE = {
 
 /**
  * Every ride piece we know, by furni type code (names: `item.<code>` in
- * external_texts). Uphill/downhill ride as straights: they run the length of
- * their two-tile footprint. The Space Mountain switch and poles are left out
+ * external_texts). Hills run the length of their two-tile footprint, one way
+ * only: see `exitHeading`. The Space Mountain switch and poles are left out
  * until their behaviour is known, so a ride stops at them.
  */
 const PIECES = new Map<number, RidePiece>([
@@ -72,8 +72,8 @@ const PIECES = new Map<number, RidePiece>([
   [391, { kind: "straight" }],
   [392, { kind: "turnRight" }],
   [393, { kind: "turnLeft" }],
-  [508, { kind: "straight" }], // uphill
-  [509, { kind: "straight" }], // downhill
+  [508, { kind: "hill" }], // uphill
+  [509, { kind: "hill" }], // downhill
   [RIDE_DOOR, { kind: "door" }],
   // Waterslide
   [424, { kind: "teleporter" }],
@@ -81,8 +81,8 @@ const PIECES = new Map<number, RidePiece>([
   [426, { kind: "straight" }],
   [427, { kind: "turnRight" }],
   [428, { kind: "turnLeft" }],
-  [429, { kind: "straight" }], // uphill
-  [430, { kind: "straight" }], // downhill
+  [429, { kind: "hill" }], // uphill
+  [430, { kind: "hill" }], // downhill
   [830, { kind: "start", vehicle: VEHICLE.donutBlizzardBeach }],
   [831, { kind: "start", vehicle: VEHICLE.donutTyphoonLagoon }],
   // Dark ride
@@ -93,8 +93,12 @@ const PIECES = new Map<number, RidePiece>([
   [578, { kind: "straight" }],
   [579, { kind: "turnRight" }],
   [580, { kind: "turnLeft" }],
-  [584, { kind: "straight" }], // uphill
-  [585, { kind: "straight" }], // downhill
+  [584, { kind: "hill" }], // uphill
+  [585, { kind: "hill" }], // downhill
+  // Royal: dark-ride track, its start a recolour of item_576 (Alice's cast). No
+  // source names its vehicle, so the Alice car is a best guess.
+  [1204, { kind: "start", vehicle: VEHICLE.aliceCar }],
+  [1205, { kind: "teleporter" }],
 ]);
 
 export const TURN_ART_OFFSET = new Map<number, number>([
@@ -227,9 +231,10 @@ export function followTrack(
     // you are on it carried riders onto track that was merely adjacent, such as
     // a hill side-on to the start.
     //
-    // ⚠ Direction only, NOT height. Disney's own scenes join flat track to a
-    // hill's upper end and run over raised scenery (dark-rides.json 106, 107,
-    // 109). The rider's height comes from each tile's HGT and may simply jump.
+    // ⚠ Direction only, NOT the height of the neighbouring track. Disney's own
+    // scenes join flat track to a downhill's upper end and run over raised
+    // scenery (dark-rides.json 106, 107, 109). The rider's height comes from
+    // each tile's HGT and may simply jump.
     if (nextItem.ref !== current.ref && exitHeading(geometryRoom, track, nextItem, next, heading) === null) {
       return done("piece does not connect", heading);
     }
@@ -256,13 +261,19 @@ export function followTrack(
  * Which way the piece under `tile` sends a rider who arrived heading
  * `arrived`, or null if the piece does not connect from that side.
  *
- * ⚠ TRACK IS TWO-WAY. Facing 5 is facing 3's art mirrored (and 7 is 1's), so a
- * straight at 1 and at 5 draw the same rails and nothing shows which way it
+ * ⚠ FLAT TRACK IS TWO-WAY. Facing 5 is facing 3's art mirrored (and 7 is 1's), so
+ * a straight at 1 and at 5 draw the same rails and nothing shows which way it
  * "points". Treating straights as one-way stopped rides on track that looked
- * perfectly joined. Only the start has a direction you can see (its arrow).
+ * perfectly joined.
  *
- * - Straights and hills (and a start met mid-track) pass you through if you
- *   arrive along their axis.
+ * ⚠ HILLS ARE ONE-WAY, along their facing. An uphill rises heading its facing
+ * and a downhill falls heading its facing (the furnimap's HGTs and the art
+ * agree on all six hills), so the wrong way round is going down an uphill or up
+ * a downhill. Every hill in Disney's dark-ride scenes is ridden along its facing.
+ *
+ * - Straights (and a start met mid-track) pass you through if you arrive along
+ *   their axis.
+ * - Hills pass you through only if you arrive heading their facing.
  * - A turn at facing d joins the d side to the d+2 side (right) or the d+6
  *   side (left). Entered at its facing it turns you right/left; entered from
  *   the other end it turns you back the other way.
@@ -279,6 +290,7 @@ function exitHeading(
 ): number | null {
   const kind = PIECES.get(item.typeCode)?.kind;
   const d = (item.dir + 8 - (TURN_ART_OFFSET.get(item.typeCode) ?? 0)) % 8;
+  if (kind === "hill") return arrived === d ? arrived : null;
   if (kind !== "turnLeft" && kind !== "turnRight") {
     return arrived % 4 === d % 4 ? arrived : null;
   }
