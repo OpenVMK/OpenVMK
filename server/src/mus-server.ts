@@ -5404,6 +5404,13 @@ function createVmkSession(
         [tiles[tiles.length - 1], LEGS_STAND, face],
       ], onDone);
     },
+    glide: (tile, onDone) => walkAlong([[tile, LEGS_STAND]], onDone),
+    leaveBy: (tile) => {
+      const rule = currentRoomCode === undefined ? null : exitAt(currentRoomCode, tile, true);
+      if (!rule) return;
+      ridingUntil = Date.now() + WALK_STEP_MS;
+      walkAlong([[tile, LEGS_WALK]], () => takeExit(rule));
+    },
   };
 
   /** Snap this avatar onto a free tile near `near` (no walk), for everyone in the room. */
@@ -9362,13 +9369,24 @@ function createVmkSession(
           // ⚠ A MUSIC STAGE HOLDS YOU UNTIL YOUR SONG IS PLAYED OUT. Clicks do
           // nothing; the turn ends with the song, the picker's CANCEL, or the
           // picker timing out — never by walking off mid-performance.
-          if (inQueue.def.hosted) return;
+          if (inQueue.def.hosted || inQueue.def.leavesRoom) return;
           stepDown(currentRoomName, live.userId);
           return;
         }
         leaveQueue(currentRoomName, live.userId);
         placeNear(inQueue.def.line[0]);
         console.log(`[${label}] left the ${inQueue.def.name} line`);
+      }
+      // Arrived from the far side of a one-way drop (the Mine's `jump_d` lands at
+      // the foot of the waterfall): its tiles are the line's, so the only way
+      // out is the exit you came in by.
+      const footOfDrop = inQueue ? undefined : queuesIn(currentGeometryRoom).find(
+        (q) => q.leavesRoom && (q.stage === currentTile || q.exit.includes(currentTile)),
+      );
+      if (footOfDrop && currentRoomCode !== undefined) {
+        const way = exitAt(currentRoomCode, footOfDrop.exit[footOfDrop.exit.length - 1], true);
+        if (way) takeExit(way);
+        return;
       }
       // Clicking anywhere on a line means "get in line": walk to its start.
       const clickedQueue = queueAt(currentGeometryRoom, target);
