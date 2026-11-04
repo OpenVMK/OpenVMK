@@ -5053,6 +5053,17 @@ function createVmkSession(
         seatStack = block.height + 1;
         break;
       }
+      // Not sitting, so standing: walkable furniture with height (a gazebo's
+      // floor, a stage) lifts you onto it. `WalkToTile` adds the HGT of the item
+      // `stack` levels up the tile, so stack 0 leaves you at floor level with
+      // your feet inside the item. Flat items keep stack 0: they add no height,
+      // and it keeps their draw order as it was.
+      if (!seat) {
+        const blocks = getRoomItems(currentRoomName)
+          .map((i) => coveredTiles(currentGeometryRoom, i.tile, i.typeCode, i.dir).get(tile))
+          .filter((b): b is FurniBlock => b !== undefined);
+        if (blocks.some((b) => b.height > 0)) seatStack = blocks.length;
+      }
     }
     // Flying Carpet (effect 10): the client lifts and wobbles the avatar over
     // the carpet but takes the POSE from the legs we send — you ride it
