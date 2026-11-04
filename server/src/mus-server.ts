@@ -187,7 +187,7 @@ import { deHoliday, seasonCastKey, seasonFromEnv, seasonalCasts } from "./season
 import { ARCHIVE, OVERLAY, castExtracted, downloadFile } from "./paths.js";
 import { clientIp, remoteLabel } from "./client-ip.js";
 import { createPhotoSession, issuePhotoToken } from "./photo-server.js";
-import { followTrack, isRideStart, isRideTrack, planRide, rideOnFromTeleporter, type RidePlan } from "./rides.js";
+import { DOOR_OPEN, DOOR_SHUT, followTrack, isRideDoor, isRideStart, isRideTrack, planRide, rideOnFromTeleporter, type RidePlan } from "./rides.js";
 import {
   DARK_RIDE_COURTYARD,
   darkRideOfGate,
@@ -1866,7 +1866,8 @@ function createElements(items: PlacedItem[]): OutgoingParam[] {
       // `PARAMS`: [0, own half id, partner half id]. See `pairHalfId`.
       { int: item.pair ? 5 : 2 },
       { int: item.dir },
-      { int: item.state },
+      // A ride door is only ever open for the one player who opened it.
+      { int: isRideDoor(item.typeCode) ? DOOR_SHUT : item.state },
     );
     if (item.pair) {
       params.push(
@@ -2017,6 +2018,8 @@ const CMD_CLIENT_DEBUG = 999;
  * at better than two a second.
  */
 const USE_DEBOUNCE_MS = Number(process.env.VMK_USE_DEBOUNCE_MS ?? 400);
+/** "It stays open for 30 seconds." */
+const RIDE_DOOR_OPEN_MS = Number(process.env.VMK_RIDE_DOOR_OPEN_MS ?? 30_000);
 /** ref -> when it was last used. See the note at the 584 handler. */
 const lastUse = new Map<number, number>();
 /** Dark-ride scenery: last click, and whether this double-click already opened the editor. */
@@ -2252,8 +2255,8 @@ function scheduleTurnstileClose(ref: number, room: string, geometry: string | un
  * the direction and nothing else, so the state would change on the server and
  * never on screen.
  */
-function broadcastState(item: RoomItem, state: number): void {
-  const params: OutgoingParam[] = [
+function itemStateParams(item: RoomItem, state: number): OutgoingParam[] {
+  return [
     { int: item.ref },
     { int: ITEM_CATEGORY_FURNITURE },
     { int: item.tile },
@@ -2264,6 +2267,11 @@ function broadcastState(item: RoomItem, state: number): void {
     { int: item.dir },
     { int: state },
   ];
+}
+
+function broadcastState(item: RoomItem, state: number): void {
+  // A ride door moved or rotated stays shut for the room: see `createElements`.
+  const params = itemStateParams(item, isRideDoor(item.typeCode) ? DOOR_SHUT : state);
   for (const occupant of occupantsOf(item.room)) {
     occupant.send(MSG.UPDATE_ELEMENT, params, undefined);
   }
@@ -3300,6 +3308,12 @@ function createVmkSession(
   let walkQueue: Array<[tile: number, legs: number, face?: number]> = [];
   /** A ride owns the avatar until this time; clicks to walk are ignored meanwhile. */
   let ridingUntil = 0;
+  /**
+   * Ride doors this player has open, ref -> the pending close. Nobody else sees
+   * them open and nobody else can ride through. Forgotten on leaving the room,
+   * because coming back draws every door shut.
+   */
+  const openRideDoors = new Map<number, ReturnType<typeof setTimeout>>();
   let darkRide: { ride: DarkRide; scene: number; timer?: ReturnType<typeof setTimeout> } | null = null;
   /** What to do when the current walk ends (a teleporter hop). See `walkAlong`. */
   let walkDone: (() => void) | undefined;
@@ -4748,6 +4762,8 @@ function createVmkSession(
       ridingUntil = 0;
     }
     if (!darkRide && ridingUntil === Number.MAX_SAFE_INTEGER) ridingUntil = 0;
+    for (const close of openRideDoors.values()) clearTimeout(close);
+    openRideDoors.clear();
     currentRoomCode = roomCode;
     if (live) logRoomMove("entered", live.userId);
     // Tiles always come from the CASTS, whoever owns the room.
@@ -6006,6 +6022,14 @@ function createVmkSession(
     from: number,
   ): void => {
     for (const step of plan.steps) pulses.push([step.tile, plan.vehicle, step.facing]);
+    if (plan.door) {
+      const door = plan.door;
+      const reachDoor = () => rideIntoDoor(door, plan, hops);
+      ridingUntil = Date.now() + (pulses.length + 2) * WALK_STEP_MS;
+      if (pulses.length === 0) reachDoor();
+      else walkAlong(pulses, reachDoor);
+      return;
+    }
     const last = plan.steps[plan.steps.length - 1];
     const through = plan.end === "teleporter" && last && currentRoomName && hops < MAX_RIDE_HOPS
       ? getRoomItems(currentRoomName).find(
@@ -6020,12 +6044,46 @@ function createVmkSession(
     // The ride throws you off onto the tile past the last piece, the way you
     // were heading — not left standing on track you cannot walk on.
     const end = last?.tile ?? from;
-    const off = rideStepOff(end, plan.endFacing);
+    const off = rideStepOff(end, plan.endFacing) ?? rideStepAside(end, plan.endFacing);
     if (off !== null) pulses.push([off, LEGS_WALK, plan.endFacing]);
     pulses.push([off ?? end, LEGS_STAND, plan.endFacing]);
     ridingUntil = Date.now() + (pulses.length + 1) * WALK_STEP_MS;
     walkAlong(pulses);
   };
+
+  /**
+   * The rider has reached a ride door: through it if this player has it open,
+   * otherwise bounced off the track, to one side if there is room and back to
+   * the room's entrance if not.
+   */
+  const rideIntoDoor = (door: RoomItem, plan: RidePlan, hops: number): void => {
+    const room = currentRoomName;
+    const still = getRoomItem(door.ref);
+    if (!room || still?.room !== room) return;
+    if (openRideDoors.has(door.ref)) {
+      const onward = followTrack(
+        currentGeometryRoom, getRoomItems(room), still, plan.endFacing, plan.vehicle, still.tile, plan.origin,
+      );
+      console.log(`[${label}] ride through door ${door.ref}: ${onward.steps.length} tiles, ended: ${onward.end}`);
+      rideAlong([[still.tile, plan.vehicle, plan.endFacing]], onward, hops, still.tile);
+      return;
+    }
+    console.log(`[${label}] ride bounced off shut door ${door.ref}`);
+    const aside = rideStepAside(currentTile, plan.endFacing);
+    if (aside !== null) {
+      walkAlong([[aside, LEGS_WALK, plan.endFacing], [aside, LEGS_STAND, plan.endFacing]]);
+      ridingUntil = Date.now() + 3 * WALK_STEP_MS;
+      return;
+    }
+    ridingUntil = 0;
+    const spawn = spawnTileFor(currentGeometryRoom);
+    if (spawn !== null) placeNear(spawn);
+    sendPulse(currentTile, LEGS_STAND, facing);
+  };
+
+  /** A free tile to one side of `from`, for a rider thrown off the track. */
+  const rideStepAside = (from: number, heading: number): number | null =>
+    rideStepOff(from, (heading + 2) % 8) ?? rideStepOff(from, (heading + 6) % 8);
 
   /**
    * Where a rider gets off at the end of a ride: the next tile along
@@ -7922,6 +7980,24 @@ function createVmkSession(
           return;
         }
         lastUse.set(ref, now);
+      }
+
+      // A ride door opens for whoever matched its pattern, and for nobody else:
+      // no stored state, no broadcast. `CRoomItemStateAnimator.select` checks the
+      // pattern and sends 584 only on a match; state 2 has no pattern to match,
+      // so a door already open just stays open for its full time.
+      if (isRideDoor(item.typeCode)) {
+        if (!use || openRideDoors.has(ref)) return;
+        send(MSG.UPDATE_ELEMENT, itemStateParams(item, DOOR_OPEN), `UpdateElement ride door ${ref} open`);
+        openRideDoors.set(ref, setTimeout(() => {
+          openRideDoors.delete(ref);
+          const still = getRoomItem(ref);
+          if (still && still.room === currentRoomName) {
+            send(MSG.UPDATE_ELEMENT, itemStateParams(still, DOOR_SHUT), `UpdateElement ride door ${ref} shut`);
+          }
+        }, RIDE_DOOR_OPEN_MS));
+        console.log(`[${label}] ${characterName} opened ride door ${ref}`);
+        return;
       }
 
       // A water cooler pours you a cup — only standing next to it. Falls
