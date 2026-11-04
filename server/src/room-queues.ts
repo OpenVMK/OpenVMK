@@ -68,6 +68,12 @@ export interface QueueDef {
    * side. (VMK Central's photo booth: one face cut-out per tile.)
    */
   poses?: number[];
+  /**
+   * The turn ends by LEAVING THE ROOM: from the stage straight through the last
+   * `exit` tile, which must be a room exit, and committed once on the stage. The
+   * stage is reached in one standing glide, not a walk (the waterfall).
+   */
+  leavesRoom?: boolean;
 }
 
 const gates = new Map<string, (roomInstance: string) => boolean>();
@@ -185,6 +191,25 @@ export const QUEUES: QueueDef[] = [
     // Into the camera: it stands at +x of the cut-outs (screen down-right).
     stageFacing: 3,
   },
+  /**
+   * Injun Joe's Cave's waterfall, the wiki's "Top Middle (water)" exit to Big
+   * Thunder Mountain Mine. Disney's tiles, `room.cave2.object.xml`: `fall` 97 at
+   * the top, linked to `fall_here` 304 at the bottom, beside the exit `jump_d`
+   * 305. The room has no handler cast. Item 257 is "Invisible Splashing Jump
+   * QueueBlock".
+   *
+   * Recorded play (Belle's VMK Tour Part 2, 8:48): click the top, walk to it, one
+   * standing glide down, and the room changes about a second later.
+   */
+  {
+    name: "Injun Joe's Cave waterfall",
+    room: "cave2",
+    line: [97],
+    stage: 304,
+    exit: [305],
+    holdMs: 0,
+    leavesRoom: true,
+  },
 ];
 
 /** What the engine needs from a player's connection. */
@@ -195,6 +220,10 @@ export interface QueueMember {
    * `onDone` runs after the last.
    */
   walk(tiles: number[], onDone?: () => void, face?: number): void;
+  /** One standing glide to `tile`, for a drop. `onDone` runs as it starts. */
+  glide(tile: number, onDone: () => void): void;
+  /** Step onto the exit `tile` and leave the room by it. */
+  leaveBy(tile: number): void;
 }
 
 /** Someone on one of a booth's tiles (`QueueDef.poses`). */
@@ -359,6 +388,12 @@ export function nudgeQueues(roomInstance: string): void {
 function finishTurn(run: Running): void {
   const performer = run.performer;
   if (!performer) return;
+  if (run.def.leavesRoom) {
+    run.performer = null;
+    performer.leaveBy(run.def.exit[run.def.exit.length - 1]);
+    advance(run);
+    return;
+  }
   performer.walk(run.def.exit, () => {
     if (run.performer === performer) run.performer = null;
     advance(run);
@@ -382,6 +417,14 @@ function advance(run: Running): void {
       `[queue] ${def.name}: user ${front.member.userId} takes the ` +
         (def.holdUntilReleased ? "seat" : `stage for ${def.holdMs}ms`),
     );
+    if (def.leavesRoom) {
+      front.member.glide(def.stage, () => {
+        if (run.performer !== front.member) return;
+        run.timer = setTimeout(() => finishTurn(run), def.holdMs);
+      });
+      closeUp(run);
+      return;
+    }
     front.member.walk(path, () => {
       if (run.performer !== front.member || def.holdUntilReleased) return;
       if (def.hosted) {
