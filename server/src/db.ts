@@ -717,15 +717,24 @@ export function setItemLevel(id: number, ownerId: number, level: number): boolea
   );
 }
 
-/** The pins on a player's lanyard, in the order they were put on. */
-export function getWornPins(ownerId: number): Array<{ id: number; typeCode: number; level?: number }> {
+/**
+ * The pins on a player's lanyard, in the order they were put on. Only room
+ * tickets have an `expiresAt` (ms epoch); one past its date is not on the
+ * lanyard any more, whether or not `expireTickets` has deleted its row yet.
+ */
+export function getWornPins(ownerId: number): Array<{ id: number; typeCode: number; level?: number; expiresAt?: number }> {
   return (
-    db.prepare("SELECT id, type_code, level FROM items WHERE owner_id = ? AND worn = 1 ORDER BY id")
-      .all(ownerId) as Array<Record<string, unknown>>
+    db
+      .prepare(
+        `SELECT id, type_code, level, expires_at FROM items
+         WHERE owner_id = ? AND worn = 1 AND (expires_at IS NULL OR expires_at > ?) ORDER BY id`,
+      )
+      .all(ownerId, now()) as Array<Record<string, unknown>>
   ).map((row) => ({
     id: Number(row.id),
     typeCode: Number(row.type_code),
     level: row.level === null || row.level === undefined ? undefined : Number(row.level),
+    expiresAt: row.expires_at === null || row.expires_at === undefined ? undefined : Number(row.expires_at),
   }));
 }
 
@@ -1661,6 +1670,8 @@ export interface RoomTicket {
   spaceId: number;
   /** ms epoch it stops working. */
   expiresAt: number;
+  /** On the lanyard, like any pin (a ticket is worn to be used). */
+  worn: boolean;
 }
 
 /** Mint `count` tickets for a room into a player's pins, each valid `days` days. */
@@ -1677,24 +1688,29 @@ export function createTickets(ownerId: number, spaceId: number, count: number, d
 }
 
 /**
- * A player's tickets, soonest-to-expire first. Expired ones are deleted on
- * the way — a ticket past its date opens nothing and should not sit in the
- * pins page forever.
+ * Delete a player's expired tickets — one past its date opens nothing and
+ * should not sit in the pins page forever. Returns the rows that were on the
+ * lanyard, which the caller must also take off the client's worn grid.
  */
-export function getTickets(ownerId: number): RoomTicket[] {
-  db.prepare("DELETE FROM items WHERE owner_id = ? AND room_id IS NOT NULL AND expires_at <= ?").run(
-    ownerId,
-    now(),
-  );
+export function expireTickets(ownerId: number): number[] {
   const rows = db
-    .prepare("SELECT * FROM items WHERE owner_id = ? AND room_id IS NOT NULL ORDER BY expires_at, id")
-    .all(ownerId) as Array<Record<string, unknown>>;
+    .prepare("DELETE FROM items WHERE owner_id = ? AND room_id IS NOT NULL AND expires_at <= ? RETURNING id, worn")
+    .all(ownerId, now()) as Array<{ id: number; worn: number | null }>;
+  return rows.filter((row) => Number(row.worn ?? 0) === 1).map((row) => Number(row.id));
+}
+
+/** A player's unexpired tickets, soonest-to-expire first. */
+export function getTickets(ownerId: number): RoomTicket[] {
+  const rows = db
+    .prepare("SELECT * FROM items WHERE owner_id = ? AND room_id IS NOT NULL AND expires_at > ? ORDER BY expires_at, id")
+    .all(ownerId, now()) as Array<Record<string, unknown>>;
   return rows.map((row) => ({
     id: Number(row.id),
     ownerId: Number(row.owner_id),
     typeCode: Number(row.type_code),
     spaceId: Number(row.room_id),
     expiresAt: Number(row.expires_at),
+    worn: Number(row.worn ?? 0) === 1,
   }));
 }
 

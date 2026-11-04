@@ -74,6 +74,7 @@ import {
   createTickets,
   getTickets,
   getTicket,
+  expireTickets,
   deleteTicket,
   areFriends,
   ENTRY_STATE,
@@ -4245,7 +4246,8 @@ function createVmkSession(
         { int: pin.typeCode },
         { int: pinLevel(pin) },
         { int: isSingleUsePin(pin.typeCode) ? 1 : 0 },
-        { int: 0 }, // expiry
+        // Seconds remaining, as in `2532`. ⚠ -1 = never: 0 prints "Expires in 0 Day(s)".
+        { int: pin.expiresAt === undefined ? -1 : Math.max(0, Math.floor((pin.expiresAt - Date.now()) / 1000)) },
         { str: `w${pin.id}` },
       );
     }
@@ -4319,9 +4321,12 @@ function createVmkSession(
       pinsByType.set(key, entry);
     }
     const postersByType = group(posters);
+    // A ticket that expired on the lanyard goes from there too: `2536` never deletes.
+    if (inventoryId === 1 && live) for (const pinId of expireTickets(live.userId)) removeWornPin(pinId);
     // Room tickets: ONE entry per ticket, never grouped — each opens its own
     // room and expires on its own date. See the loop below and `2533`.
-    const tickets = inventoryId === 1 && live ? getTickets(live.userId) : [];
+    // A worn one is on the lanyard (inventory 3) instead, like any worn pin.
+    const tickets = inventoryId === 1 && live ? getTickets(live.userId).filter((t) => !t.worn) : [];
 
     const params: OutgoingParam[] = [
       { int: inventoryId },
@@ -9928,6 +9933,8 @@ function createVmkSession(
       const row = peekOwnedItem(ref, live.userId);
       if (!row || row.category !== ITEM_CATEGORY.pins) {
         console.log(`[${label}] refused ${command === CMD.WEAR_PIN ? "wear" : "unwear"} ${ref}: not your pin`);
+        // TAKE OFF on a row that is gone: the client's grid is stale, clear it.
+        if (!row && command === CMD.UNWEAR_PIN) removeWornPin(ref);
         return;
       }
       const wear = command === CMD.WEAR_PIN;
@@ -10305,6 +10312,17 @@ function createVmkSession(
         return;
       }
       if (!deleteTicket(live.userId, ref)) return;
+      // `2538` only removes it from the main grid. Sold off the lanyard (a grid
+      // that had not refreshed yet), it has to come off there too, or it stays
+      // on show with a TAKE OFF that can never work.
+      if (ticket.worn) {
+        removeWornPin(ref);
+        if (me && currentRoomName) {
+          for (const occupant of audienceOf(currentRoomName, me.userId)) {
+            occupant.send(MSG.CREATE_AVATARS, [{ int: 1 }, ...avatarBlock(me)], undefined);
+          }
+        }
+      }
       const credits = (getUserById(live.userId)?.credits ?? 0) + ROOM_TICKET_SELL_PRICE;
       setCredits(live.userId, credits, "Ticket Sale");
       send(
