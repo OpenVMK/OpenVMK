@@ -306,7 +306,7 @@ export function isFurniture(typeCode: number): boolean {
  */
 const PAIRED_TELEPORTERS = new Set([
   3, 7, 17, 53, 71, 311, 361, 362, 375, 452, 482, 1305, 1333,
-  314, 368, 389, 424, 574, 575,
+  314, 368, 389, 424, 574, 575, 1205,
 ]);
 
 export function isPairedTeleporter(typeCode: number): boolean {
