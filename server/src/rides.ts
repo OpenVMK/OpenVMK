@@ -22,13 +22,19 @@ import type { RoomItem } from "./db.js";
 import { coveredTiles } from "./furni-footprint.js";
 import { tileToward } from "./room-geometry.js";
 
-type Kind = "start" | "straight" | "turnLeft" | "turnRight" | "teleporter";
+type Kind = "start" | "straight" | "turnLeft" | "turnRight" | "teleporter" | "door";
 
 interface RidePiece {
   kind: Kind;
   /** Only on starts: the `legs` vehicle the rider sits in (`CAvatarVehicle.update`). */
   vehicle?: number;
 }
+
+/** The Space Mountain Ride Door. */
+const RIDE_DOOR = 507;
+/** `item.507.ani.xml`: state 1 is shut and shows the pattern, state 2 is open. */
+export const DOOR_SHUT = 1;
+export const DOOR_OPEN = 2;
 
 /** `CAvatarVehicle.update`: which vehicle each `legs` value draws. */
 const VEHICLE = {
@@ -44,8 +50,8 @@ const VEHICLE = {
 /**
  * Every ride piece we know, by furni type code (names: `item.<code>` in
  * external_texts). Uphill/downhill ride as straights: they run the length of
- * their two-tile footprint. The Space Mountain switch, door and poles are
- * left out until their behaviour is known, so a ride stops at them.
+ * their two-tile footprint. The Space Mountain switch and poles are left out
+ * until their behaviour is known, so a ride stops at them.
  */
 const PIECES = new Map<number, RidePiece>([
   // River
@@ -68,6 +74,7 @@ const PIECES = new Map<number, RidePiece>([
   [393, { kind: "turnLeft" }],
   [508, { kind: "straight" }], // uphill
   [509, { kind: "straight" }], // downhill
+  [RIDE_DOOR, { kind: "door" }],
   // Waterslide
   [424, { kind: "teleporter" }],
   [425, { kind: "start", vehicle: VEHICLE.donutTyphoonLagoon }],
@@ -109,9 +116,16 @@ export function isRideStart(typeCode: number): boolean {
   return PIECES.get(typeCode)?.kind === "start";
 }
 
+/** Is this furni type a ride door? */
+export function isRideDoor(typeCode: number): boolean {
+  return PIECES.get(typeCode)?.kind === "door";
+}
+
 export interface RidePlan {
-  /** The start piece that launched it. */
+  /** The piece this leg of the ride set off from. */
   start: RoomItem;
+  /** The piece that launched the whole ride; a ride ends on coming back to it. */
+  origin: RoomItem;
   vehicle: number;
   /** Tiles to pulse, in order, AFTER the start tile. Each has the heading it is entered with. */
   steps: Array<{ tile: number; facing: number }>;
@@ -119,6 +133,12 @@ export interface RidePlan {
   end: string;
   /** Which way the last piece points: the rider steps off facing it. */
   endFacing: number;
+  /**
+   * The door this leg stopped in front of (`end` is "door"). Whether it is open
+   * is one player's own state and can change mid-ride, so the rider asks when
+   * they get there; the door's tile is NOT in `steps`.
+   */
+  door?: RoomItem;
 }
 
 /**
@@ -161,6 +181,8 @@ export function followTrack(
   startHeading: number,
   vehicle: number,
   fromTile: number = start.tile,
+  /** Carrying on past a door: the piece the whole ride set off from. */
+  origin: RoomItem = start,
 ): RidePlan {
   // Tile -> the ride item covering it. Multi-tile pieces (hills, the river's
   // L-shaped turns) cover several tiles and all of them are track.
@@ -179,8 +201,8 @@ export function followTrack(
   // (tile, heading) is a cycle with no start in it, which would run forever.
   const visited = new Set<string>();
   const MAX_STEPS = 400;
-  const done = (end: string, heading: number): RidePlan => ({
-    start, vehicle, steps, end, endFacing: heading,
+  const done = (end: string, heading: number, door?: RoomItem): RidePlan => ({
+    start, origin, vehicle, steps, end, endFacing: heading, door,
   });
 
   for (;;) {
@@ -194,10 +216,6 @@ export function followTrack(
     const next = tileToward(geometryRoom, tile, heading);
     const nextItem = next === null ? undefined : track.get(next);
     if (next === null || !nextItem) return done("end of track", heading);
-    if (nextItem.ref === start.ref && current.ref !== start.ref) {
-      steps.push({ tile: next, facing: heading });
-      return done("looped back to start", start.dir);
-    }
     // ⚠ A teleporter has ONE open end: the side it faces, where its track
     // joins. A ride enters only through it, i.e. heading the opposite way;
     // meeting the back or side of one ends the ride before it. Every dark-ride
@@ -205,6 +223,21 @@ export function followTrack(
     if (PIECES.get(nextItem.typeCode)?.kind === "teleporter" && heading !== (nextItem.dir + 4) % 8) {
       return done("teleporter entered from the back", heading);
     }
+    // ⚠ Check the join BEFORE moving onto the next piece. Finding out only once
+    // you are on it carried riders onto track that was merely adjacent, such as
+    // a hill side-on to the start.
+    //
+    // ⚠ Direction only, NOT height. Disney's own scenes join flat track to a
+    // hill's upper end and run over raised scenery (dark-rides.json 106, 107,
+    // 109). The rider's height comes from each tile's HGT and may simply jump.
+    if (nextItem.ref !== current.ref && exitHeading(geometryRoom, track, nextItem, next, heading) === null) {
+      return done("piece does not connect", heading);
+    }
+    if (nextItem.ref === origin.ref && current.ref !== origin.ref) {
+      steps.push({ tile: next, facing: heading });
+      return done("looped back to start", origin.dir);
+    }
+    if (PIECES.get(nextItem.typeCode)?.kind === "door") return done("door", heading, nextItem);
     const key = `${next},${heading}`;
     if (visited.has(key)) return done("cycle without start", heading);
     visited.add(key);
