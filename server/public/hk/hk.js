@@ -1356,8 +1356,43 @@ async function pageItems() {
 
 /* ------------------------------------------------------- shop catalogue */
 
-const PAGE_TITLES = ["Furniture", "Posters", "Pins", "Specials!", "Hats", "Tops", "Bottoms", "Shoes", "Guestrooms"];
 const INVENTORY_TYPES = [[1, "Furniture"], [2, "Clothing"], [3, "Poster"], [4, "Pin"]];
+
+/**
+ * Where the client puts a page, from the shop's name and the page's title. What
+ * the page sells plays no part. Same test as `pageTab` in catalog.ts, which
+ * explains it; the editor needs the answer between checks, as you type.
+ */
+function pageTab(shop, title) {
+  const name = (shop.name ?? "").toLowerCase();
+  if (name.includes("rooms")) return "rooms";
+  if (name.includes("clothing")) return "clothing";
+  const t = title.toLowerCase();
+  if (t.includes("furniture")) return "furniture";
+  if (t.includes("pins")) return "pins";
+  if (t.includes("posters")) return "posters";
+  if (t.includes("specials!")) return "specials";
+  return "row";
+}
+
+/** For each place a page can land: the sentence for staff and the item types (INVENTORY_TYPES) it can draw. */
+const SHOP_TABS = {
+  rooms: { where: "the Rooms tab", sells: "guest rooms", types: [1] },
+  clothing: { where: "the Clothing tab", sells: "clothing", types: [2] },
+  furniture: { where: "the Furnishings tab", sells: "furniture and posters", types: [1, 3] },
+  pins: { where: "the Pins tab", sells: "pins", types: [4] },
+  posters: { where: "the Posters tab", sells: "furniture and posters", types: [1, 3] },
+  specials: { where: "the Specials tab", sells: "any kind of item", types: [1, 2, 3, 4] },
+  row: { where: "the Furnishings tab, as a row under the shop", sells: "furniture and posters", types: [1, 3] },
+};
+
+/** Titles worth offering for a page in this shop. */
+function titlesFor(shop) {
+  const name = (shop.name ?? "").toLowerCase();
+  if (name.includes("rooms")) return ["Guestrooms"];
+  if (name.includes("clothing")) return ["Hats", "Tops", "Bottoms", "Shoes"];
+  return ["Furniture", "Posters", "Pins", "Specials!"];
+}
 
 /** ↑ / ↓ buttons that reorder `list[i]`, then call `after`. */
 function moveButtons(list, i, after) {
@@ -1479,9 +1514,13 @@ async function pageCatalog(params) {
   }
 
   async function addPage(shop) {
+    const clothing = pageTab(shop, "") === "clothing";
+    const unused = titlesFor(shop).find((t) => !shop.pages.some((p) => p.title === t)) ?? "";
     const v = await modal("New page", {
-      text: `In ${shopLabel(shop)}. The furniture view only makes tabs of Furniture, Pins, Posters and Specials!; anything else is a sub-row.`,
-      fields: [{ name: "title", label: "Title", value: "Furniture" }],
+      text: clothing
+        ? `In ${shopLabel(shop)}. Every page here is a row on the Clothing tab, and can only sell clothing.`
+        : `In ${shopLabel(shop)}. Furniture, Pins, Posters and Specials! fill those tabs. Any other title is a row under the shop on the Furnishings tab. Clothing can't be sold from here: it belongs in the Clothing shop.`,
+      fields: [{ name: "title", label: "Title", value: unused }],
       confirm: "Add page",
     });
     if (!v) return;
@@ -1510,6 +1549,7 @@ async function pageCatalog(params) {
             const warns = count((i) => i.page === page.id && i.level === "warning");
             return h("li", {}, h("a", { class: page.id === selId ? "active" : "", onclick: () => { selId = page.id; renderTree(); renderEditor(); } },
               h("span", { class: "grow" }, page.title || "(untitled)"),
+              pageTab(shop, page.title) === "row" ? h("span", { class: "muted small", title: `Shows on ${SHOP_TABS.row.where}` }, "row") : null,
               h("span", { class: "muted small" }, page.products.length),
               page.hidden ? h("span", { class: "label label-default" }, "hidden") : null,
               errs ? h("span", { class: "label label-danger" }, errs) : null,
@@ -1522,6 +1562,12 @@ async function pageCatalog(params) {
 
   /** Issue colours on the product rows, without rebuilding them (keeps input focus). */
   function markEditor() {
+    const where = editor.querySelector(".cat-page-where");
+    const found = where && findPage(selId);
+    if (found) {
+      const tab = SHOP_TABS[pageTab(found.shop, found.page.title)];
+      where.textContent = `Players find this page on ${tab.where}.${tab.sells ? ` It can sell ${tab.sells}.` : ""}`;
+    }
     const list = editor.querySelector(".cat-page-issues");
     if (list) {
       const mine = issues.filter((i) => i.page === selId && !i.code);
@@ -1632,13 +1678,14 @@ async function pageCatalog(params) {
       return;
     }
     const { shop, page } = found;
-    const titleList = h("datalist", { id: "cat-titles" }, PAGE_TITLES.map((t) => h("option", { value: t })));
+    const titleList = h("datalist", { id: "cat-titles" }, titlesFor(shop).map((t) => h("option", { value: t })));
+    // The Rooms tab shows only its guest-room list, so a shelf moved there would vanish.
     const moveTo = h("select", { onchange: (e) => {
       const target = draft.find((s) => s.nameId === Number(e.target.value));
       shop.pages.splice(shop.pages.indexOf(page), 1);
       target.pages.push(page);
       touched(true);
-    } }, draft.map((s) => h("option", { value: s.nameId, selected: s === shop }, shopLabel(s))));
+    } }, draft.filter((s) => s === shop || !isRoomsShop(s)).map((s) => h("option", { value: s.nameId, selected: s === shop }, shopLabel(s))));
     const pageIndex = shop.pages.indexOf(page);
     const rooms = page.layout === 3;
     // The client always shows the Rooms tab and fills it from this page, so it
@@ -1651,12 +1698,13 @@ async function pageCatalog(params) {
           h("strong", {}, `${shopLabel(shop)} › ${page.title || "(untitled)"}`),
           h("span", { class: "muted small" }, `page id ${page.id}`)),
         h("div", { class: "panel-body" },
+          h("p", { class: "cat-page-where muted" }),
           h("div", { class: "form-row" },
-            h("div", {}, h("label", {}, "Title"), h("input", { type: "text", list: "cat-titles", value: page.title, maxlength: 60, oninput: (e) => { page.title = e.target.value; touched(); } }), titleList),
+            h("div", {}, h("label", {}, "Title"), h("input", { type: "text", list: "cat-titles", value: page.title, maxlength: 60, oninput: (e) => { page.title = e.target.value; touched(); markEditor(); } }), titleList),
             fixed ? null : h("div", {}, h("label", {}, "Shop"), moveTo),
             fixed ? null : h("div", {}, h("label", {}, "Layout"), h("select", { onchange: (e) => { page.layout = Number(e.target.value); touched(true); } },
               h("option", { value: 1, selected: page.layout === 1 }, "Shelf"),
-              h("option", { value: 3, selected: page.layout === 3 }, "Guest rooms"))),
+              isRoomsShop(shop) || page.layout === 3 ? h("option", { value: 3, selected: page.layout === 3 }, "Guest rooms") : null)),
             fixed ? null : h("div", {}, h("label", {}, "Shown"), h("label", { style: "font-weight:400" },
               h("input", { type: "checkbox", checked: !page.hidden, onchange: (e) => { page.hidden = !e.target.checked; touched(); } }), " sent to players"))),
           h("div", { class: "form-row" },
@@ -1695,6 +1743,8 @@ async function pageCatalog(params) {
             h("button", { class: "btn btn-success", type: "button", onclick: () => {
               const item = picker.selected();
               if (!item) return toast("Pick an item first.", true);
+              const tab = SHOP_TABS[pageTab(shop, page.title)];
+              if (!tab.types.includes(item.category)) return toast(`This page is on ${tab.where}, which can only sell ${tab.sells}.`, true);
               const price = addPrice.value.trim();
               if (price === "" || !Number.isInteger(Number(price)) || Number(price) < 0) return toast("Set a price in whole credits.", true);
               page.products.push({ code: item.code, name: item.name, price: Number(price), inventoryType: item.category, level: 2, metadata: "", singleUse: false, origin: "staff" });

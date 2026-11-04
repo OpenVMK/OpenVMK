@@ -743,11 +743,50 @@ export interface CatalogIssue {
 }
 
 /**
- * Titles the furniture view treats as tabs; anything else becomes a sub-row
- * under the shop. `CCatalogFurniView.createComponentWindow` tests each with
- * Lingo `contains`, which ignores case.
+ * Where a page lands in the shop window. The client picks this from the shop's
+ * NAME and the page's TITLE; what the page sells plays no part.
+ * `CCatalogFurniView.createComponentWindow` lists every shop whose name contains
+ * neither "clothing" nor "rooms" (those two have views of their own), and makes
+ * a clickable row under the shop, on the Furnishings tab, of any title outside
+ * Furniture/Pins/Posters/Specials!. Its tests are Lingo `contains`, which ignores case.
+ * ⚠ hk.js `pageTab` is the same test, for the editor.
  */
-const FURNI_VIEW_TITLES = ["furniture", "pins", "posters", "specials!"];
+type ShopTab = "rooms" | "clothing" | "furniture" | "pins" | "posters" | "specials" | "row";
+
+function pageTab(shopName: string, title: string): ShopTab {
+  const shop = shopName.toLowerCase();
+  if (shop.includes("rooms")) return "rooms";
+  if (shop.includes("clothing")) return "clothing";
+  const t = title.toLowerCase();
+  if (t.includes("furniture")) return "furniture";
+  if (t.includes("pins")) return "pins";
+  if (t.includes("posters")) return "posters";
+  if (t.includes("specials!")) return "specials";
+  return "row";
+}
+
+/**
+ * Why an item cannot be sold from a tab, or null if it can. Each view has one
+ * thumbnail renderer and it knows one kind of art:
+ *   CCatalogClothesView  avatar sets, so garments only
+ *   CCatalogPinsView     GetPinThumbnail, so pins only
+ *   CCatalogFurniView    GetFurniThumbnail (Furnishings, Posters and the rows):
+ *                        a garment or pin gets an empty grid and no preview
+ *   CCatalogSpecialsView GetMixedThumbnail, the one that takes anything
+ * The rooms tab is not listed: its items are rooms, checked below.
+ */
+function itemMisfit(tab: ShopTab, inventoryType: number): string | null {
+  if (tab === "clothing") return inventoryType === ITEM_CLOTHING ? null : "The Clothing tab can only draw clothing.";
+  if (tab === "pins") return inventoryType === ITEM_PIN ? null : "The Pins tab can only draw pins.";
+  if (tab === "specials" || tab === "rooms") return null;
+  if (inventoryType === ITEM_CLOTHING) {
+    return "Clothing only displays on the Clothing tab, which lists the pages of the Clothing shop. Here the shelf would be empty.";
+  }
+  if (inventoryType === ITEM_PIN) {
+    return 'Pins only display on a page titled "Pins" (or Specials!). Here the shelf would be empty.';
+  }
+  return null;
+}
 
 /**
  * The client's rules for catalogue data, as far as they are known. ERRORS are
@@ -790,25 +829,27 @@ export function validateCatalog(shops: StoredShop[]): CatalogIssue[] {
     }
     const visible = shop.pages.filter((p) => !p.hidden);
     if (visible.length === 0) warn("No visible pages, so the shop is not sent at all.", { shop: shop.nameId });
-    // The furniture view lists every shop whose name contains neither "clothing"
-    // nor "rooms"; those two have views of their own.
-    const lower = (name ?? "").toLowerCase();
-    const furniView = !lower.includes("clothing") && !lower.includes("rooms");
     const titles = new Set<string>();
+    const tabsTaken = new Set<ShopTab>();
     for (const page of visible) {
       const at = { shop: shop.nameId, page: page.id };
       const title = page.title.trim();
+      const tab = pageTab(name ?? "", title);
       if (!title) error("The page has no title.", at);
       // The index arrives as a property list keyed by title; a second page of
       // the same name is shadowed by the first.
       else if (titles.has(title)) error(`Two visible pages in this shop are called "${title}"; the second could never open.`, at);
+      // FindSubPageAndRequest asks for every page whose title contains the tab's
+      // name, so the last reply replaces the shelf and the others can't be reached.
+      else if (tabsTaken.has(tab)) error(`This shop already has a page on the ${tab} tab, and a shop shows only one there.`, at);
       titles.add(title);
-      if (title && furniView && !FURNI_VIEW_TITLES.some((t) => title.toLowerCase().includes(t))) {
-        warn(
-          `"${title}" is not Furniture, Pins, Posters or Specials!, so it shows as a sub-row under the shop, not a tab.`,
-          at,
-        );
+      if (tab === "furniture" || tab === "pins" || tab === "posters" || tab === "specials") tabsTaken.add(tab);
+      if (title && tab === "row") {
+        warn(`"${title}" is not Furniture, Pins, Posters or Specials!, so it shows as a row under the shop on the Furnishings tab.`, at);
       }
+      if (tab === "rooms" && page.layout !== 3) warn("The Rooms tab only shows guest rooms, so nobody can reach this shelf.", at);
+      // Layout 3 replies go to _SaveRoomList, wherever the page was opened from.
+      if (tab !== "rooms" && page.layout === 3) error("A guest-room page only works in the Rooms shop.", at);
       if (page.layout !== 1 && page.layout !== 3) error(`Layout ${page.layout} is unknown: 1 is a shelf, 3 the guest-room list.`, at);
       if (page.products.length === 0) warn("The shelf is empty.", at);
 
@@ -819,6 +860,9 @@ export function validateCatalog(shops: StoredShop[]): CatalogIssue[] {
         codes.add(item.code);
         if (![ITEM_FURNITURE, ITEM_CLOTHING, ITEM_POSTER, ITEM_PIN].includes(item.inventoryType)) {
           error(`Inventory type ${item.inventoryType} is not furniture, clothing, poster or pin.`, spot);
+        } else if (page.layout !== 3) {
+          const misfit = itemMisfit(tab, item.inventoryType);
+          if (misfit) error(misfit, spot);
         }
         if (!Number.isInteger(item.price) || item.price < 0) error("The price must be a whole number of credits.", spot);
         else if (item.price === 0) warn("Free.", spot);
