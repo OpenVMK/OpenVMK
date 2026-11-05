@@ -15,11 +15,15 @@ export function DrawLightning(_me: LingoMe, a_Mem_AvatImage: LingoValue) {
   setMeProp(_me, "m_iMagicFrameCounter", 1);
   }
 
-  var t_iDir = meProp(_me, "m_arFlipList")[lingoBinary("add", meProp(_me, "m_iDir"), 1)];
-  var t_sMemName = lingoBinary("join", lingoBinary("join", lingoBinary("join", "lightning_", t_iDir), "_"), meProp(_me, "m_arLightningFrameList")[meProp(_me, "m_iMagicFrameCounter")]);
+  // HAND-CORRECTED: this cast drew the bolt alone, dropping the avatar. Ported from
+  // a later build's CMagicFactor (vmkmpcasts/mp11248): avatar and bolt in one image,
+  // using the direction 0 bolt for every facing.
+  var t_sMemName = lingoBinary("join", "lightning_0_", meProp(_me, "m_arLightningFrameList")[meProp(_me, "m_iMagicFrameCounter")]);
   if (callNamed("memberExists", t_sMemName)) {
   var t_rMem = callNamed("getMember", t_sMemName);
-  return new LingoList([t_rMem.image, callMethod("extractAlpha", t_rMem.image), undefined]);
+  var t_ImgData = callMethod("createUnionImageFromMemberList", _me, new LingoList([a_Mem_AvatImage, t_rMem]), callNamed("point", 0, 0));
+  setThePropOf(t_ImgData[3], "locV", lingoBinary("add", t_ImgData[3].locV, 10));
+  return t_ImgData;
   }
 
 }
