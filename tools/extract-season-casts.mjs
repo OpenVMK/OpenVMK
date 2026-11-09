@@ -32,6 +32,10 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const ARCHIVE = process.env.VMK_SHOCKWAVE ?? resolve(import.meta.dirname, "..", "shockwave");
+// A patched cast at the same path wins, as it does when the server serves it
+// (assets.ts). The archive's Halloween Haunted Mansion Lobby is the everyday
+// room byte for byte; the decorated one exists only as a patched cast.
+const PATCHES = resolve(process.env.VMK_PATCH_DIR ?? "assets/patches");
 const EXTRACTOR = resolve(
   "tools/shockwave/LibreShockwave/cmake-build-native/cpp/libreshockwave_asset_extractor.exe",
 );
@@ -72,7 +76,8 @@ for (const [season, folders] of Object.entries(SEASON_FOLDERS)) {
       try {
         mkdirSync(join(work, "in"));
         mkdirSync(join(work, "out"));
-        cpSync(join(dir, file), join(work, "in", file));
+        const patched = join(PATCHES, folder, file);
+        cpSync(existsSync(patched) ? patched : join(dir, file), join(work, "in", file));
         execFileSync(EXTRACTOR, [join(work, "in"), join(work, "out")], { stdio: "pipe" });
         const produced = join(work, "out", base);
         const alt = readdirSync(join(work, "out"))[0];
@@ -85,7 +90,7 @@ for (const [season, folders] of Object.entries(SEASON_FOLDERS)) {
         // not leave its members behind.
         rmSync(join(DEST, target), { recursive: true, force: true });
         cpSync(from, join(DEST, target), { recursive: true });
-        console.log(`  ${target}: extracted from ${folder}/${file}`);
+        console.log(`  ${target}: extracted from ${existsSync(patched) ? "patches/" : ""}${folder}/${file}`);
         installed++;
       } catch (cause) {
         failures.push(`${folder}/${file}: ${String(cause.message).split("\n")[0]}`);
