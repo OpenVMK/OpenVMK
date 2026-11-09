@@ -157,6 +157,23 @@ for (const m of ws) {
   }
 }
 
+// Track the capture lacks. It is a later reconstruction, not Disney's own
+// layout, and its Unbirthday scene stops one tile short of the Present Gate
+// (751 at 43..45): the original track ran on over tile 59 and into the gate (44).
+// Each added piece copies the stack level of the piece it continues from.
+const ADDED_TRACK = {
+  105: { after: 75, pieces: [{ type: 578, tile: 59, dir: 1 }, { type: 578, tile: 44, dir: 1 }] },
+};
+for (const [code, add] of Object.entries(ADDED_TRACK)) {
+  const scene = scenes[code];
+  if (!scene) continue;
+  const from = scene.items.find((it) => it.tile === add.after && it.type === 578);
+  for (const p of add.pieces) {
+    if (scene.items.some((it) => it.tile === p.tile && it.type === p.type)) continue;
+    scene.items.push({ ...p, level: from?.level ?? 0 });
+  }
+}
+
 for (const s of Object.values(scenes)) {
   delete s.loaded;
   s.items = s.items
