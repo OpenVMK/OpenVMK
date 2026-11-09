@@ -827,6 +827,13 @@ function resolveArchiveFile(pathname: string): string | null {
   }
   const rel = pathname.replace(/^\//, "");
   const candidates = [rel, rel.replace(/^vmk\//, "")];
+  // `halloween/` and `vmk_halloween/` are one season folder (FOLDERS in
+  // seasons.ts). Its check is against the TS client's extraction, which is the
+  // same for both, so the config can name `vmk_spaces/halloween/X` for a cast
+  // only `vmk_halloween/` holds: the Haunted Mansion Lobby. Try the twin path
+  // before the basename fallback below, so a patch at either path wins.
+  const twin = rel.replace(/(^|\/)(vmk_)?halloween\//, (_m, pre: string, vmk?: string) => `${pre}${vmk ? "" : "vmk_"}halloween/`);
+  if (twin !== rel) candidates.push(twin, twin.replace(/^vmk\//, ""));
   // PATCHED casts win over everything. Keeping them in their own tree means the
   // archive and the overlay stay pristine, so "is this file original?" is always
   // answerable by looking at where it lives.
