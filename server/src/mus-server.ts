@@ -2469,12 +2469,20 @@ const SWIM_EFFECT = 20;
  * space walk. The room's handler only drives the gate's light (below), so
  * nothing in the client enforces this; Disney's texts give the rules — 4588
  * at the gate, 4594 for teleporting out there, 4530/4532 for ending the suit
- * in space.
+ * in space. The suit does not run out on the spacewalk or in the Ray Room;
+ * if its time is up it comes off back on the platform, or on going anywhere
+ * but those two rooms.
  */
 const SPACEWALK_FLOOR = "spacewalk";
 /** The tiles between the gate's posts: already past it, suit only. */
 const SPACE_GATE = "gate";
 const SPACE_SUIT_EFFECT = 18;
+/**
+ * The Inner-Space Ray Room (`room.code.80=ray_room`), off the spacewalk: its
+ * exit lands you back out there, so the suit never runs out or comes off in it.
+ */
+const RAY_ROOM_CODE = 80;
+const SHRINKING_MACHINE_CODE = 81;
 /**
  * The gate's red force field, `2792 [1, state]` (0 shown, 1 hidden): hidden
  * only on the screen of a suited player standing in the gate, and back as they
@@ -4724,6 +4732,17 @@ function createVmkSession(
       dancing = false;
     }
     stopWalking(); // any in-flight walk belongs to the room we just left
+    // A space suit that outlasted its time stays on between the spacewalk and
+    // the Ray Room (whose exit lands us back out there), and comes off on the
+    // way anywhere else: it does not follow us, nor back in.
+    if (
+      activeMagic?.overdue &&
+      roomCode !== currentRoomCode &&
+      roomCode !== RAY_ROOM_CODE &&
+      roomCode !== SHRINKING_MACHINE_CODE
+    ) {
+      stopMagic();
+    }
     // Drop out of the old room's occupancy so the people still there are told
     // to remove this avatar, rather than leaving a ghost standing about.
     if (me) {
@@ -5011,9 +5030,9 @@ function createVmkSession(
     if (onGate && suited() && !spaceGateOpen) showSpaceGate(true);
     else if (!onGate && spaceGateOpen) showSpaceGate(false);
     // A suit that ran out in space comes off back on the platform.
-    if (activeMagic?.overdue && !inSpace(tile)) {
+    if (activeMagic?.overdue && !inSpace(tile) && currentRoomCode !== RAY_ROOM_CODE) {
       setTimeout(() => {
-        if (activeMagic?.overdue && !inSpace()) stopMagic();
+        if (activeMagic?.overdue && !inSpace() && currentRoomCode !== RAY_ROOM_CODE) stopMagic();
       }, 0);
     }
     const swimming = floorNameOf(currentGeometryRoom, tile) === SWIM_FLOOR;
@@ -5458,7 +5477,8 @@ function createVmkSession(
   const inSpace = (tile = currentTile) =>
     tilesOnFloor(currentGeometryRoom, SPACEWALK_FLOOR).has(tile) || tileName(currentGeometryRoom, tile) === SPACE_GATE;
   const suited = () => activeMagic?.effect === SPACE_SUIT_EFFECT;
-  const suitedInSpace = () => suited() && inSpace();
+  /** Suited and somewhere the suit must stay on: out in space, or in the Ray Room. */
+  const suitedInSpace = () => suited() && (inSpace() || currentRoomCode === RAY_ROOM_CODE);
   /** Refuse anything that would end the suit while in space. True if refused. */
   const refuseSuitOff = (code: 4530 | 4532): boolean => {
     if (!suitedInSpace()) return false;
@@ -5794,7 +5814,8 @@ function createVmkSession(
     };
     activeMagic.timer = setTimeout(() => {
       if (activeMagic?.pinId !== pinId) return;
-      // Never out of the suit in space (4530): it lasts until we step off.
+      // Never out of the suit in space or the Ray Room (4530): it lasts until
+      // we step back onto the platform, or go elsewhere (see enterRoom).
       if (suitedInSpace()) activeMagic.overdue = true;
       else stopMagic();
     }, durationMs);
