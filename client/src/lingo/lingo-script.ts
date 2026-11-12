@@ -503,7 +503,17 @@ export function groupModulesByClass(
     const base = path.split(/[\\/]/).pop()?.replace(/\.(ts|js)$/, "") ?? "";
     const parts = base.split("__");
     if (parts.length < 3) continue;
-    const className = parts.slice(1, -1).join("__");
+    /**
+     * ⚠ A HANDLER NAMED `__x` LEAVES AN EMPTY SEGMENT before it:
+     * `<cast>__CRoomHandler____RemoveCollectable` splits to
+     * `[cast, "CRoomHandler", "", "RemoveCollectable"]`. Joining the middle
+     * filed it under a class "CRoomHandler__", so the room handler lacked
+     * `__RemoveCollectable`, `createTimeout` refused it, and every picked-up
+     * collectable shrank but was never removed. (A movie script's
+     * `<cast>____handler` has only three parts and an empty class, as before.)
+     */
+    const end = parts.length >= 4 && parts[parts.length - 2] === "" ? -2 : -1;
+    const className = parts.slice(1, end).join("__");
     const bucket = byClass.get(className);
     if (bucket) bucket.push(module);
     else byClass.set(className, [module]);
