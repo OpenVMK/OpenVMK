@@ -229,6 +229,21 @@ import {
 } from "./room-entry-queue.js";
 import { isSingleUsePin, magicOf, magicTiming, startingLevel, TREASURE_FOUND_EFFECT } from "./magic-pins.js";
 import { itemName } from "./catalog.js";
+import {
+  AUTOPIA_ROOMS,
+  GAS_MS,
+  LICENSE_CANS,
+  LICENSE_PIN,
+  QUEST_TRACK_CODE,
+  TRACK_FLOOR,
+  TROPHY_TYPE,
+  collectableElements,
+  collectablesIn,
+  ensureAutopiaTrack,
+  isCarEffect,
+  takeCollectable,
+  type AutopiaDeps,
+} from "./autopia.js";
 import { NPC_REF_BASE, npcByRef, npcsInRoom, visitNpc, type Npc } from "./npcs.js";
 import {
   MESSENGER_COMMANDS,
@@ -2492,6 +2507,8 @@ const SHRINKING_MACHINE_CODE = 81;
  * and bubbles. Served as room 81's handler from assets/patches.
  */
 const SPACE_GATE_ANIM = 1;
+/** Players already sent the Autopia tip (`<userId>:quest|race`), this server run. */
+const autopiaTipped = new Set<string>();
 
 /** The seat on a tile, if it is one. */
 function seatAt(room: string | undefined, tile: number): SeatTile | null {
@@ -3405,6 +3422,10 @@ function createVmkSession(
     /** Treasure Detector: tiles walked this cast, and the pause being timed. */
     detector?: { steps: number; found?: boolean; pause?: NodeJS.Timeout };
     timer?: NodeJS.Timeout;
+    /** When `timer` fires — gas cans on an Autopia track push it back. */
+    endsAt?: number;
+    /** Autopia: gas cans picked up this drive (3 on the Quest Track = the license). */
+    cans?: number;
   } | null = null;
   /** Timer for the NEXT queued pulse. Undefined means nothing is walking. */
   let walkTimer: NodeJS.Timeout | undefined;
@@ -5004,6 +5025,7 @@ function createVmkSession(
       }
     }
     pressMusicTiles(currentTile, tile);
+    autopiaStep(tile);
     // Stepping into a dark-ride piece's "Animation Area" (the editor's own
     // title) sets it off — riding OR walking; nothing in the client or its
     // texts limits it to carts. Only on ENTERING a tile: the stand pulse that
@@ -5500,8 +5522,121 @@ function createVmkSession(
   };
   const stepRule = (): ((from: number, to: number) => boolean) | undefined => {
     const turnstiles = turnstileStepRule(currentRoomName, currentGeometryRoom);
-    if (tilesOnFloor(currentGeometryRoom, SPACEWALK_FLOOR).size === 0 || suited()) return turnstiles;
-    return (from, to) => !(inSpace(to) && !inSpace(from)) && (turnstiles?.(from, to) ?? true);
+    const rules: Array<(from: number, to: number) => boolean> = [];
+    if (tilesOnFloor(currentGeometryRoom, SPACEWALK_FLOOR).size > 0 && !suited()) {
+      rules.push((from, to) => !(inSpace(to) && !inSpace(from)));
+    }
+    // Autopia: onto the track only in a car (and, on the race tracks, licensed).
+    if (autopia() && !mayDrive()) rules.push((from, to) => !(onTrack(to) && !onTrack(from)));
+    if (rules.length === 0) return turnstiles;
+    if (turnstiles) rules.push(turnstiles);
+    return (from, to) => rules.every((rule) => rule(from, to));
+  };
+
+  /**
+   * AUTOPIA (autopia.ts): the Quest Track (77), Space Race (74) and Off Road on
+   * Mars (75). The `track` floor is for cars; gas cans keep the car going and,
+   * on the Quest Track, three of them earn the Driver's License; on the race
+   * tracks trophies pay a credit each. When the car runs out on the track the
+   * player is put back on the road by the exit gate.
+   */
+  const autopia = () =>
+    currentRoomCode !== undefined && !currentGuestRoom() ? AUTOPIA_ROOMS.get(currentRoomCode) : undefined;
+  const onTrack = (tile = currentTile) => tilesOnFloor(currentGeometryRoom, TRACK_FLOOR).has(tile);
+  const driving = () => isCarEffect(activeMagic?.effect);
+  const ownsLicense = () =>
+    !!live && getOwnedItems(live.userId, ITEM_CATEGORY.pins).some((i) => i.typeCode === LICENSE_PIN);
+  const mayDrive = () => {
+    const rules = autopia();
+    return !!rules && driving() && (!rules.license || ownsLicense());
+  };
+  /** The gate shown open on our own screen (its `2792` anim ref), if any. */
+  let autopiaGateOpen: number | null = null;
+  const autopiaDeps = (bucket: string, geometry: string | undefined): AutopiaDeps => ({
+    spawnTiles: () => [...tilesOnFloor(geometry, TRACK_FLOOR)].filter((t) => !tileName(geometry, t)),
+    occupied: () => occupiedTiles(bucket, -1),
+    broadcast: (msg, params) => {
+      const everyone = occupantsOf(bucket);
+      for (const o of everyone) o.send(msg, params, undefined);
+      return everyone.length > 0;
+    },
+  });
+  /** The road tile nearest the track's exit gate: where a car that runs dry ends up. */
+  const autopiaPitStop = (): number | null => {
+    const exit = tileNamed(currentGeometryRoom, "gate_exit");
+    if (exit === null) return null;
+    let best: number | null = null;
+    let bestDistance = Infinity;
+    for (const tile of tilesOnFloor(currentGeometryRoom, "road")) {
+      const d = tilesApart(currentGeometryRoom, exit, tile);
+      if (d !== null && d < bestDistance) {
+        best = tile;
+        bestDistance = d;
+      }
+    }
+    return best;
+  };
+  /** Players told how the track works, so the tip comes once per server run. */
+  const autopiaTipKey = (rules: { license: boolean }) => `${live?.userId}:${rules.license ? "race" : "quest"}`;
+  /** Opening the gate a licensed driver stands in, on their own screen. */
+  const showAutopiaGate = (anim: number | null): void => {
+    if (anim === autopiaGateOpen) return;
+    if (autopiaGateOpen !== null) {
+      send(MSG.ROOM_ANIMATION_STATE, [{ int: autopiaGateOpen }, { int: 0 }], `AnimationState autopia gate ${autopiaGateOpen} shut`);
+    }
+    autopiaGateOpen = anim;
+    if (anim !== null) send(MSG.ROOM_ANIMATION_STATE, [{ int: anim }, { int: 1 }], `AnimationState autopia gate ${anim} open`);
+  };
+  /** Driving over a tile on the track: pick up what is there. */
+  const autopiaPickUp = (tile: number): void => {
+    const rules = autopia();
+    if (!rules || !live || !currentRoomName || !activeMagic || !driving()) return;
+    const found = takeCollectable(currentRoomName, tile, autopiaDeps(currentRoomName, currentGeometryRoom));
+    if (!found) return;
+    const userId = live.userId;
+    if (found.type === TROPHY_TYPE) {
+      setCredits(userId, (getUserById(userId)?.credits ?? 0) + 1, "Autopia Trophy");
+      sendCredits();
+      console.log(`[${label}] autopia: trophy at ${tile}, +1 credit`);
+      return;
+    }
+    // Gas: more time in the car.
+    const pinId = activeMagic.pinId;
+    const left = Math.max(0, (activeMagic.endsAt ?? Date.now()) - Date.now());
+    armMagicTimer(pinId, left + GAS_MS);
+    activeMagic.cans = (activeMagic.cans ?? 0) + 1;
+    console.log(`[${label}] autopia: gas at ${tile} (${activeMagic.cans} this drive), ${Math.round((left + GAS_MS) / 1000)}s left`);
+    if (currentRoomCode === QUEST_TRACK_CODE && activeMagic.cans >= LICENSE_CANS && !ownsLicense()) {
+      addItems(userId, [LICENSE_PIN], ITEM_CATEGORY.pins);
+      queueItemList(1);
+      sendStaffMessage(
+        userId,
+        `Congratulations ${characterName}, you passed your driving test! Here's your ${itemName(LICENSE_PIN) ?? "Autopia Drivers' License"} - ` +
+          "now you can race on the Autopia Space Race and Off Road on Mars tracks.",
+      );
+      console.log(`[${label}] autopia: earned the Driver's License`);
+    }
+  };
+  /** Every step: the gate, the tip, the pickups. */
+  const autopiaStep = (tile: number): void => {
+    const rules = autopia();
+    if (!rules) {
+      autopiaGateOpen = null;
+      return;
+    }
+    const name = tileName(currentGeometryRoom, tile);
+    const gate = name === "gate" || name === "gate_1" ? 0 : name === "gate_2" ? 1 : null;
+    showAutopiaGate(gate !== null && mayDrive() ? gate : null);
+    if (tile === currentTile || !onTrack(tile) || !driving()) return;
+    if (!onTrack() && live && !autopiaTipped.has(autopiaTipKey(rules))) {
+      autopiaTipped.add(autopiaTipKey(rules));
+      sendStaffMessage(live.userId, rules.tip, false);
+    }
+    // Picked up as the car gets there, not as it sets off.
+    const room = currentRoomName;
+    setTimeout(() => {
+      if (currentRoomName === room && currentTile === tile) autopiaPickUp(tile);
+    }, WALK_STEP_MS / 2);
   };
 
   const setMagic = (fx: number) => {
@@ -5623,8 +5758,18 @@ function createVmkSession(
     if (activeMagic.dance) dancing = false;
     const hadCostume = activeMagic.costume !== undefined;
     const hadSuit = activeMagic.effect === SPACE_SUIT_EFFECT;
+    const hadCar = isCarEffect(activeMagic.effect);
     activeMagic = null;
     if (hadSuit && spaceGateOpen) showSpaceGate(false);
+    // Out of gas on an Autopia track: back on the road by the exit gate.
+    if (hadCar && autopia()) {
+      showAutopiaGate(null);
+      const pit = onTrack() ? autopiaPitStop() : null;
+      if (pit !== null) {
+        console.log(`[${label}] autopia: car ended on the track, back to the road at ${pit}`);
+        placeNear(pit);
+      }
+    }
     // Out of the costume: the real outfit was never overwritten.
     if (hadCostume && me) showFigure(me.figure);
     if (end) {
@@ -5788,6 +5933,20 @@ function createVmkSession(
     return true;
   };
 
+  /** (Re)start the running effect's clock: it ends `ms` from now. */
+  const armMagicTimer = (pinId: number, ms: number): void => {
+    if (!activeMagic || activeMagic.pinId !== pinId) return;
+    clearTimeout(activeMagic.timer);
+    activeMagic.endsAt = Date.now() + ms;
+    activeMagic.timer = setTimeout(() => {
+      if (activeMagic?.pinId !== pinId) return;
+      // Never out of the suit in space or the Ray Room (4530): it lasts until
+      // we step back onto the platform, or go elsewhere (see enterRoom).
+      if (suitedInSpace()) activeMagic.overdue = true;
+      else stopMagic();
+    }, ms);
+  };
+
   const castPin = (pinId: number): boolean => {
     const wornPin = live ? getWornPins(live.userId).find((p) => p.id === pinId) : undefined;
     if (wornPin && magicOf(wornPin.typeCode)?.sword) return drawSword(pinId);
@@ -5812,13 +5971,7 @@ function createVmkSession(
       costume: me ? cast.costume : undefined,
       detector: cast.detector ? { steps: 0 } : undefined,
     };
-    activeMagic.timer = setTimeout(() => {
-      if (activeMagic?.pinId !== pinId) return;
-      // Never out of the suit in space or the Ray Room (4530): it lasts until
-      // we step back onto the platform, or go elsewhere (see enterRoom).
-      if (suitedInSpace()) activeMagic.overdue = true;
-      else stopMagic();
-    }, durationMs);
+    armMagicTimer(pinId, durationMs);
     setMagic(cast.effect);
     // Into the costume for the effect's length (never saved).
     if (cast.costume && me) showFigure(costumeFigure(me.figure, cast.costume));
@@ -7484,6 +7637,15 @@ function createVmkSession(
           `CreateElements ${elements.length} (${seats.length} seat(s), ${placed.length} placed` +
             `${npcs.length ? `, NPC ${npcs.map((n) => n.typeCode).join(",")}` : ""})`,
         );
+      }
+      // Autopia: the gas cans and trophies on the track (autopia.ts).
+      const autopiaRules = autopia();
+      if (autopiaRules && currentRoomName) {
+        ensureAutopiaTrack(currentRoomName, autopiaRules, autopiaDeps(currentRoomName, currentGeometryRoom));
+        const onTheTrack = collectablesIn(currentRoomName);
+        if (onTheTrack.length > 0) {
+          send(MSG.CREATE_ELEMENTS, collectableElements(onTheTrack), `CreateElements ${onTheTrack.length} autopia collectable(s)`);
+        }
       }
       if (roomNpcs.length > 0 && currentRoomName && currentRoomCode !== undefined) {
         // `2791`: each NPC's current animation — resting (state 0) on arrival;
@@ -9465,6 +9627,11 @@ function createVmkSession(
       if (arrival !== target && !suited() && inSpace(target) && !inSpace()) {
         send(MSG.GENERIC_ERROR, [{ int: 4588 }], "GenericError 4588 (spacewalk needs the suit)");
       }
+      // So did the Autopia gate: a car (and on the race tracks, the license).
+      const track = autopia();
+      if (track && arrival !== target && onTrack(target) && !onTrack() && !mayDrive()) {
+        send(MSG.GENERIC_ERROR, [{ int: track.gateError }], `GenericError ${track.gateError} (autopia track)`);
+      }
 
       /**
        * ⚠ ACROSS FLOORS BY BEAM. Floors a beam joins (Tomorrowland Hub's
@@ -9896,6 +10063,13 @@ function createVmkSession(
       if (inSpace(tile) && !inSpace()) {
         console.log(`[${label}] magic teleport ${pinId}: tile ${tile} is on the spacewalk`);
         send(MSG.GENERIC_ERROR, [{ int: 4594 }], "GenericError 4594 (no teleporting onto the spacewalk)");
+        return;
+      }
+      // Nor onto an Autopia track: you drive on through the gate.
+      const track = autopia();
+      if (track && onTrack(tile) && !onTrack()) {
+        console.log(`[${label}] magic teleport ${pinId}: tile ${tile} is on the autopia track`);
+        send(MSG.GENERIC_ERROR, [{ int: track.teleportError }], `GenericError ${track.teleportError} (no teleporting onto the track)`);
         return;
       }
       // The room's own rules: you may land only where you could WALK to. Placed
