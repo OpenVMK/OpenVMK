@@ -231,6 +231,7 @@ import { isSingleUsePin, magicOf, magicTiming, startingLevel, TREASURE_FOUND_EFF
 import { itemName } from "./catalog.js";
 import {
   AUTOPIA_ROOMS,
+  CLAM_TYPE,
   GAS_MS,
   LICENSE_CANS,
   LICENSE_PIN,
@@ -240,6 +241,7 @@ import {
   collectableElements,
   collectablesIn,
   ensureAutopiaTrack,
+  ensureCollectables,
   isCarEffect,
   takeCollectable,
   type AutopiaDeps,
@@ -2507,6 +2509,28 @@ const SHRINKING_MACHINE_CODE = 81;
  * and bubbles. Served as room 81's handler from assets/patches.
  */
 const SPACE_GATE_ANIM = 1;
+/**
+ * DIVING: the Nautilus Grotto (82) and the Shipwreck Graveyard (78). Each has a
+ * `sea` floor past its gates, for divers only: pin magic 17, the Deep Sea
+ * Diving pin. The rooms' handlers enforce nothing; Disney's texts give the
+ * rules, the same as the Inner-Space Suit's — 4590 at the gate, 4595 for
+ * teleporting out there, 4529/4531 for ending the dive in the water. When the
+ * dive runs out in the sea you are put back in the tube by the nearest gateway:
+ * nobody is in the sea without the suit.
+ *
+ * Clams (`item_394` of `vmk_collectibles`, which the client loads in these
+ * rooms) lie about the sea floor: 1 credit each. When the dive ends, a staff
+ * mail says what it paid — in Disney's own words ("Keep on diving, <name>! We
+ * pay credits for each pearl collected. Here's N credits!").
+ */
+const SEA_FLOOR = "sea";
+const DIVE_EFFECT = 17;
+const DIVE_ROOMS: ReadonlyMap<number, number> = new Map([
+  [78, 5], // Shipwreck Graveyard: clams kept out
+  [82, 4], // Nautilus Grotto
+]);
+/** How often a taken clam's spot refills. */
+const CLAM_SPAWN_MS = Number(process.env.VMK_CLAM_SPAWN_MS ?? 15_000);
 /** Players already sent the Autopia tip (`<userId>:quest|race`), this server run. */
 const autopiaTipped = new Set<string>();
 
@@ -3417,8 +3441,13 @@ function createVmkSession(
      * the real outfit goes back at the end.
      */
     costume?: number[];
-    /** The suit's time ran out in space; it comes off once we step off the spacewalk. */
+    /**
+     * The suit's (or the dive's) time ran out in space (in the sea); it comes
+     * off once we step off the spacewalk (out of the sea).
+     */
     overdue?: boolean;
+    /** Credits picked up during this effect: Autopia trophies, or clams on a dive. */
+    reward?: number;
     /** Treasure Detector: tiles walked this cast, and the pause being timed. */
     detector?: { steps: number; found?: boolean; pause?: NodeJS.Timeout };
     timer?: NodeJS.Timeout;
@@ -5026,6 +5055,7 @@ function createVmkSession(
     }
     pressMusicTiles(currentTile, tile);
     autopiaStep(tile);
+    diveStep(tile);
     // Stepping into a dark-ride piece's "Animation Area" (the editor's own
     // title) sets it off — riding OR walking; nothing in the client or its
     // texts limits it to carts. Only on ENTERING a tile: the stand pulse that
@@ -5051,10 +5081,11 @@ function createVmkSession(
     const onGate = tileName(currentGeometryRoom, tile) === SPACE_GATE;
     if (onGate && suited() && !spaceGateOpen) showSpaceGate(true);
     else if (!onGate && spaceGateOpen) showSpaceGate(false);
-    // A suit that ran out in space comes off back on the platform.
-    if (activeMagic?.overdue && !inSpace(tile) && currentRoomCode !== RAY_ROOM_CODE) {
+    // A suit that ran out in space comes off back on the platform; a dive that
+    // ran out in the sea, back in the tubes.
+    if (activeMagic?.overdue && !magicHeldAt(tile)) {
       setTimeout(() => {
-        if (activeMagic?.overdue && !inSpace() && currentRoomCode !== RAY_ROOM_CODE) stopMagic();
+        if (activeMagic?.overdue && !magicHeldAt()) stopMagic();
       }, 0);
     }
     const swimming = floorNameOf(currentGeometryRoom, tile) === SWIM_FLOOR;
@@ -5501,11 +5532,24 @@ function createVmkSession(
   const suited = () => activeMagic?.effect === SPACE_SUIT_EFFECT;
   /** Suited and somewhere the suit must stay on: out in space, or in the Ray Room. */
   const suitedInSpace = () => suited() && (inSpace() || currentRoomCode === RAY_ROOM_CODE);
-  /** Refuse anything that would end the suit while in space. True if refused. */
+  /** In a dive room (DIVE_ROOMS), and on its `sea` floor. */
+  const diveRoom = () =>
+    currentRoomCode !== undefined && !currentGuestRoom() ? DIVE_ROOMS.get(currentRoomCode) : undefined;
+  const inSea = (tile = currentTile) =>
+    diveRoom() !== undefined && tilesOnFloor(currentGeometryRoom, SEA_FLOOR).has(tile);
+  const diving = () => activeMagic?.effect === DIVE_EFFECT;
+  const divingInSea = () => diving() && inSea();
+  /** Where a space suit whose time is up must stay on (`overdue`). */
+  const magicHeldAt = (tile = currentTile): boolean => inSpace(tile) || currentRoomCode === RAY_ROOM_CODE;
+  /**
+   * Refuse anything that would end the suit while in space, or the dive while
+   * in the sea (4529/4531, the diving forms of 4530/4532). True if refused.
+   */
   const refuseSuitOff = (code: 4530 | 4532): boolean => {
-    if (!suitedInSpace()) return false;
-    console.log(`[${label}] refused: suit off in space (tile ${currentTile})`);
-    send(MSG.GENERIC_ERROR, [{ int: code }], `GenericError ${code}`);
+    const sent = suitedInSpace() ? code : divingInSea() ? (code === 4530 ? 4529 : 4531) : null;
+    if (sent === null) return false;
+    console.log(`[${label}] refused: ${sent < 4530 ? "dive off in the sea" : "suit off in space"} (tile ${currentTile})`);
+    send(MSG.GENERIC_ERROR, [{ int: sent }], `GenericError ${sent}`);
     return true;
   };
   /**
@@ -5528,6 +5572,8 @@ function createVmkSession(
     }
     // Autopia: onto the track only in a car (and, on the race tracks, licensed).
     if (autopia() && !mayDrive()) rules.push((from, to) => !(onTrack(to) && !onTrack(from)));
+    // The dive rooms: into the sea only diving.
+    if (diveRoom() !== undefined && !diving()) rules.push((from, to) => !(inSea(to) && !inSea(from)));
     if (rules.length === 0) return turnstiles;
     if (turnstiles) rules.push(turnstiles);
     return (from, to) => rules.every((rule) => rule(from, to));
@@ -5597,7 +5643,8 @@ function createVmkSession(
     if (found.type === TROPHY_TYPE) {
       setCredits(userId, (getUserById(userId)?.credits ?? 0) + 1, "Autopia Trophy");
       sendCredits();
-      console.log(`[${label}] autopia: trophy at ${tile}, +1 credit`);
+      activeMagic.reward = (activeMagic.reward ?? 0) + 1;
+      console.log(`[${label}] autopia: trophy at ${tile}, +1 credit (${activeMagic.reward} this drive)`);
       return;
     }
     // Gas: more time in the car.
@@ -5637,6 +5684,81 @@ function createVmkSession(
     setTimeout(() => {
       if (currentRoomName === room && currentTile === tile) autopiaPickUp(tile);
     }, WALK_STEP_MS / 2);
+  };
+
+  /** Everyone in the dive room, for its clams (the same spawner as Autopia's). */
+  const diveDeps = (bucket: string, geometry: string | undefined): AutopiaDeps => ({
+    ...autopiaDeps(bucket, geometry),
+    spawnTiles: () => [...tilesOnFloor(geometry, SEA_FLOOR)].filter((t) => !tileName(geometry, t)),
+  });
+  /** The dive room's door open on our own screen: its `2792` ref, or null. */
+  let diveDoorOpen: number | null = null;
+  /**
+   * The doors between the tubes and the sea. The rooms' own door handler is
+   * lost; they load `vmk_grotto_handler`, whose `2792 [0, s]` hides (s = 1) or
+   * shows the left door and `[1, s]` the right (tools/shockwave/
+   * build-dive-doors.mjs). Like the Shrinking Machine's red gate a door opens
+   * only on the screen of a diver in its gateway (`gate_1*` is the left door's
+   * in both rooms, `gate_2*` the right's), and shuts behind them.
+   */
+  const showDiveDoor = (ref: number | null): void => {
+    if (ref === diveDoorOpen) return;
+    if (diveDoorOpen !== null) {
+      send(MSG.ROOM_ANIMATION_STATE, [{ int: diveDoorOpen }, { int: 0 }], `AnimationState dive door ${diveDoorOpen} shut`);
+    }
+    diveDoorOpen = ref;
+    if (ref !== null) send(MSG.ROOM_ANIMATION_STATE, [{ int: ref }, { int: 1 }], `AnimationState dive door ${ref} open`);
+  };
+  /** The door whose gateway this tile is in (0 left, 1 right), if any. */
+  const diveDoorAt = (tile: number): number | null => {
+    const m = /^gate_([12])(_exit)?$/.exec(tileName(currentGeometryRoom, tile) ?? "");
+    return m ? Number(m[1]) - 1 : null;
+  };
+  /** The tube tile just inside the nearest gateway: where a dive that runs out in the sea ends. */
+  const diveExit = (): number | null => {
+    let best: number | null = null;
+    let bestDistance = Infinity;
+    for (const { ref } of roomTiles(currentGeometryRoom)) {
+      if (!/^gate_\d+_exit$/.test(tileName(currentGeometryRoom, ref) ?? "")) continue;
+      const d = tilesApart(currentGeometryRoom, currentTile, ref);
+      if (d !== null && d < bestDistance) {
+        best = ref;
+        bestDistance = d;
+      }
+    }
+    return best;
+  };
+  /** Every step in a dive room: the doors, and a diver reaching a clam picks it up, 1 credit. */
+  const diveStep = (tile: number): void => {
+    if (diveRoom() === undefined) {
+      diveDoorOpen = null;
+      return;
+    }
+    showDiveDoor(diving() ? diveDoorAt(tile) : null);
+    if (tile === currentTile || !inSea(tile) || !diving()) return;
+    const room = currentRoomName;
+    setTimeout(() => {
+      if (!room || currentRoomName !== room || currentTile !== tile || !diving() || !live || !activeMagic) return;
+      const found = takeCollectable(room, tile, diveDeps(room, currentGeometryRoom));
+      if (!found || found.type !== CLAM_TYPE) return;
+      setCredits(live.userId, (getUserById(live.userId)?.credits ?? 0) + 1, "Diving Clam");
+      sendCredits();
+      activeMagic.reward = (activeMagic.reward ?? 0) + 1;
+      console.log(`[${label}] dive: clam at ${tile}, +1 credit (${activeMagic.reward} this dive)`);
+    }, WALK_STEP_MS / 2);
+  };
+  /**
+   * The mail when a drive or dive that paid out ends. The diving one is
+   * Disney's own wording, "credits" and all; the Autopia one follows it.
+   */
+  const sendRewardMail = (effect: number, credits: number): void => {
+    if (!live || credits <= 0) return;
+    const text =
+      effect === DIVE_EFFECT
+        ? `Keep on diving, ${characterName}! We pay credits for each pearl collected. Here's ${credits} credits!`
+        : `Keep on driving, ${characterName}! We pay credits for each trophy collected. Here's ${credits} credits!`;
+    sendStaffMessage(live.userId, text);
+    console.log(`[${label}] reward mail: ${credits} credit(s) for effect ${effect}`);
   };
 
   const setMagic = (fx: number) => {
@@ -5759,8 +5881,22 @@ function createVmkSession(
     const hadCostume = activeMagic.costume !== undefined;
     const hadSuit = activeMagic.effect === SPACE_SUIT_EFFECT;
     const hadCar = isCarEffect(activeMagic.effect);
+    const endedEffect = activeMagic.effect;
+    const reward = activeMagic.reward ?? 0;
     activeMagic = null;
+    sendRewardMail(endedEffect, reward);
     if (hadSuit && spaceGateOpen) showSpaceGate(false);
+    if (endedEffect === DIVE_EFFECT && diveRoom() !== undefined) {
+      // Nobody is in the sea without the suit: a dive that runs out there ends
+      // back in the tube, just inside the nearest gateway.
+      const exit = inSea() ? diveExit() : null;
+      if (exit !== null) {
+        console.log(`[${label}] dive: ran out in the sea, back to the tube at ${exit}`);
+        placeNear(exit);
+      }
+      // And a dive that ends in a gateway shuts its door.
+      showDiveDoor(null);
+    }
     // Out of gas on an Autopia track: back on the road by the exit gate.
     if (hadCar && autopia()) {
       showAutopiaGate(null);
@@ -7384,6 +7520,8 @@ function createVmkSession(
       }
       // A fresh room starts its gate shut (`Init` -> `HandleGate(0)`).
       spaceGateOpen = false;
+      // So do the dive rooms' doors (`Init` -> `HandleGate(0)`; the left door starts shown).
+      diveDoorOpen = null;
       // Walking into the Steamboat while someone is on stage: show them. Late,
       // like the monorail sync, so the handler is listening and the performer's
       // avatar exists — `ShowScreen` looks it up by ref and reads its outfit.
@@ -7638,10 +7776,16 @@ function createVmkSession(
             `${npcs.length ? `, NPC ${npcs.map((n) => n.typeCode).join(",")}` : ""})`,
         );
       }
-      // Autopia: the gas cans and trophies on the track (autopia.ts).
+      // Autopia: the gas cans and trophies on the track (autopia.ts); the dive
+      // rooms: the clams in the sea.
       const autopiaRules = autopia();
+      const clams = diveRoom();
       if (autopiaRules && currentRoomName) {
         ensureAutopiaTrack(currentRoomName, autopiaRules, autopiaDeps(currentRoomName, currentGeometryRoom));
+      } else if (clams !== undefined && currentRoomName) {
+        ensureCollectables(currentRoomName, [[CLAM_TYPE, clams]], diveDeps(currentRoomName, currentGeometryRoom), CLAM_SPAWN_MS);
+      }
+      if ((autopiaRules || clams !== undefined) && currentRoomName) {
         const onTheTrack = collectablesIn(currentRoomName);
         if (onTheTrack.length > 0) {
           send(MSG.CREATE_ELEMENTS, collectableElements(onTheTrack), `CreateElements ${onTheTrack.length} autopia collectable(s)`);
@@ -9632,6 +9776,10 @@ function createVmkSession(
       if (track && arrival !== target && onTrack(target) && !onTrack() && !mayDrive()) {
         send(MSG.GENERIC_ERROR, [{ int: track.gateError }], `GenericError ${track.gateError} (autopia track)`);
       }
+      // And the dive rooms' sea: the Deep Sea Diving pin.
+      if (arrival !== target && !diving() && inSea(target) && !inSea()) {
+        send(MSG.GENERIC_ERROR, [{ int: 4590 }], "GenericError 4590 (the sea needs the diving pin)");
+      }
 
       /**
        * ⚠ ACROSS FLOORS BY BEAM. Floors a beam joins (Tomorrowland Hub's
@@ -10070,6 +10218,12 @@ function createVmkSession(
       if (track && onTrack(tile) && !onTrack()) {
         console.log(`[${label}] magic teleport ${pinId}: tile ${tile} is on the autopia track`);
         send(MSG.GENERIC_ERROR, [{ int: track.teleportError }], `GenericError ${track.teleportError} (no teleporting onto the track)`);
+        return;
+      }
+      // Nor into a dive room's sea: you dive in through the gate.
+      if (inSea(tile) && !inSea()) {
+        console.log(`[${label}] magic teleport ${pinId}: tile ${tile} is in the sea`);
+        send(MSG.GENERIC_ERROR, [{ int: 4595 }], "GenericError 4595 (no teleporting into the sea)");
         return;
       }
       // The room's own rules: you may land only where you could WALK to. Placed
@@ -11223,6 +11377,13 @@ function createVmkSession(
       if (performance) {
         clearTimeout(performance.timer);
         performance = null;
+      }
+      // A drive or dive cut short by logging off: its timer goes, and what it
+      // paid is still mailed (filed for the next login).
+      if (activeMagic) {
+        clearTimeout(activeMagic.timer);
+        sendRewardMail(activeMagic.effect, activeMagic.reward ?? 0);
+        activeMagic = null;
       }
       if (me) {
         leaveRoom(currentRoomName, me.userId);
