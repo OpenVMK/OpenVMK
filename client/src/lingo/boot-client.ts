@@ -1962,7 +1962,18 @@ export async function bootClient(options: BootOptions): Promise<BootedClient> {
         // A room's own clips — its sound cast and its handler cast — are
         // buffered as they attach, not on first play. Scoped to those so boot
         // does not fetch every UI sound at once. See `prewarmSound`.
-        if (/^vmk_snd_|_handler$/.test(castKey(fileName))) prewarmSound(member);
+        //
+        // ⚠ PLUS THE SHARED FX CAST (`vmk_sound`, hash 42c66f7b…, ~0.5 MB). Its
+        // pin loops — `SPS-scuba-breath` (Dive), `SM-space-suit-1`,
+        // `MFX-coral-1` — play with `#loopCount: 100`, and
+        // `CSoundChannelObject.PlaySound` books the channel for duration x 100.
+        // Unwarmed, the first wear read duration 0, so the channel looked free
+        // at once while the loop kept running; the next FX sound got that
+        // channel and was queued silently behind the loop, and taking the pin
+        // off then skipped the stop (the channel's `m_sNowPlaying` named the
+        // other sound — see the StopSound hand-correction), leaving the
+        // breathing stuck on. Shockwave knows every duration up front.
+        if (/^vmk_snd_|_handler$|^vmk_sound$|^42c66f7b170484e24189f467fe87b08d$/.test(castKey(fileName))) prewarmSound(member);
       }
       lib.add(member);
       count++;
