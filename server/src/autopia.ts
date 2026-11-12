@@ -24,6 +24,8 @@ import { MSG, type OutgoingParam } from "./vmk-protocol.js";
 
 export const FUEL_TYPE = 382;
 export const TROPHY_TYPE = 388;
+/** `item_394`, the third member of `vmk_collectibles`: a clam, for the dive rooms. */
+export const CLAM_TYPE = 394;
 export const LICENSE_PIN = 2134;
 const FUEL_CATEGORY = 6;
 const TROPHY_CATEGORY = 7;
@@ -114,7 +116,7 @@ export function collectableElements(items: Collectable[]): OutgoingParam[] {
     params.push(
       { int: c.ref },
       { int: c.type },
-      { int: c.type === TROPHY_TYPE ? TROPHY_CATEGORY : FUEL_CATEGORY },
+      { int: c.type === FUEL_TYPE ? FUEL_CATEGORY : TROPHY_CATEGORY },
       { int: c.tile },
       { int: 0 },
       { int: 2 },
@@ -130,10 +132,13 @@ export function collectablesIn(bucket: string | undefined): Collectable[] {
   return bucket ? [...(tracks.get(bucket)?.items.values() ?? [])] : [];
 }
 
-function topUp(bucket: string, rules: AutopiaRoom, deps: AutopiaDeps, state: TrackState): boolean {
+/** How many of each collectable type a room keeps out. */
+export type Stock = ReadonlyArray<readonly [type: number, count: number]>;
+
+function topUp(stock: Stock, deps: AutopiaDeps, state: TrackState): boolean {
   const free = deps.spawnTiles().filter((t) => !state.items.has(t) && !deps.occupied().has(t));
   const spawned: Collectable[] = [];
-  const add = (type: number, want: number) => {
+  for (const [type, want] of stock) {
     const have = [...state.items.values()].filter((c) => c.type === type).length;
     for (let i = have; i < want && free.length > 0; i++) {
       const tile = free.splice(Math.floor(Math.random() * free.length), 1)[0];
@@ -141,34 +146,32 @@ function topUp(bucket: string, rules: AutopiaRoom, deps: AutopiaDeps, state: Tra
       state.items.set(tile, c);
       spawned.push(c);
     }
-  };
-  add(FUEL_TYPE, rules.cans);
-  add(TROPHY_TYPE, rules.trophies);
+  }
   if (spawned.length === 0) return true;
   return deps.broadcast(MSG.CREATE_ELEMENTS, collectableElements(spawned));
 }
 
 /**
- * Keep the track stocked while anyone is in the room. The first visitor fills
- * it at once; afterwards a taken spot refills every `SPAWN_MS`, so the track
- * is never bare for long. Stops (and forgets the items) once the room empties.
+ * Keep a room's collectables stocked while anyone is in it. The first visitor
+ * fills it at once; afterwards a taken spot refills every `spawnMs`, so it is
+ * never bare for long. Stops (and forgets the items) once the room empties.
  */
-export function ensureAutopiaTrack(bucket: string, rules: AutopiaRoom, deps: AutopiaDeps): void {
+export function ensureCollectables(bucket: string, stock: Stock, deps: AutopiaDeps, spawnMs: number): void {
   if (tracks.has(bucket)) return;
   const state: TrackState = { items: new Map(), timer: undefined as unknown as NodeJS.Timeout };
   tracks.set(bucket, state);
   // Filled now, so the room's first `2586` can include them.
-  topUpSilently(rules, deps, state);
+  topUp(stock, { ...deps, broadcast: () => true }, state);
   state.timer = setInterval(() => {
-    if (!topUp(bucket, rules, deps, state)) {
+    if (!topUp(stock, deps, state)) {
       clearInterval(state.timer);
       tracks.delete(bucket);
     }
-  }, SPAWN_MS);
+  }, spawnMs);
 }
 
-function topUpSilently(rules: AutopiaRoom, deps: AutopiaDeps, state: TrackState): void {
-  topUp("", rules, { ...deps, broadcast: () => true }, state);
+export function ensureAutopiaTrack(bucket: string, rules: AutopiaRoom, deps: AutopiaDeps): void {
+  ensureCollectables(bucket, [[FUEL_TYPE, rules.cans], [TROPHY_TYPE, rules.trophies]], deps, SPAWN_MS);
 }
 
 /** Drive over a tile: the collectable there, now gone for everyone. */
