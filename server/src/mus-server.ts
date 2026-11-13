@@ -7155,9 +7155,17 @@ function createVmkSession(
             // friends-only room is closed to them.
             // Only a hint for the GO TO button — `enterGuestRoom` decides for
             // real when it is pressed, per visitor.
+            // A dark-ride scene is reached only by riding (entering one cold
+            // drops you at its entry with no ride running), and the river and
+            // mixers are one-player instances: going there would give the
+            // visitor their OWN copy, not the friend's. None can be joined.
             accessible: guest
               ? guest.entryState !== ENTRY_STATE.OWNER || guest.ownerId === ownerId
-              : !BLOCKED_ROOMS.has(currentRoomCode),
+              : !BLOCKED_ROOMS.has(currentRoomCode) &&
+                !isDarkRideScene(currentRoomCode) &&
+                currentRoomCode !== JC_GAME_ROOM &&
+                currentRoomCode !== STREET_MIXER_ROOM &&
+                currentRoomCode !== MONORAIL_MIXER_ROOM,
             roomCode: currentRoomCode,
             guestRoom: guest,
           };
