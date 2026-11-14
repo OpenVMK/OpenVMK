@@ -22,6 +22,17 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  DEFAULT_MESSAGE,
+  claimStats,
+  defaultPrizeConfig,
+  deletePrizeConfig,
+  describePrizes,
+  getPrizeConfig,
+  listPrizeConfigs,
+  resetClaims,
+  savePrizeConfig,
+} from "./room-prizes.js";
+import {
   ALL_PERMISSIONS,
   ITEM_CATEGORY,
   PERMISSIONS,
@@ -948,7 +959,67 @@ async function api(req: IncomingMessage, me: User, path: string, url: URL): Prom
     log("catalog_reset", null, "catalogue reset to the recovered data");
     return { message: "The catalogue is back to the recovered data.", version };
   }
+  // ---- room prize dispensers (room-prizes.ts)
+  // Stored in the shared database; the game server reads the row on every room
+  // change, so a save needs no bridge call and no restart.
+  if (seg[0] === "prizes") {
+    need(me, "admin");
+    if (!seg[1]) {
+      const dispensers = listPrizeConfigs().map((c) => {
+        const room = getGuestRoom(c.roomId);
+        return {
+          roomId: c.roomId,
+          roomName: room?.name ?? null,
+          ownerId: room?.ownerId ?? null,
+          enabled: c.enabled,
+          trigger: c.trigger,
+          chance: c.chance,
+          prizeCount: c.prizes.length,
+          wins: claimStats(c.roomId).wins,
+        };
+      });
+      return { dispensers, names: namesFor(dispensers.map((d) => d.ownerId ?? 0)) };
+    }
+    const roomId = int(seg[1], "room id");
 
+    // Allowed for a room that has since been sold, so orphaned rows can go.
+    if (method === "POST" && seg[2] === "delete") {
+      const gone = deletePrizeConfig(roomId);
+      log("prize_dispenser_delete", getGuestRoom(roomId)?.ownerId ?? null, `room ${roomId}`);
+      return { message: gone ? "Dispenser removed." : "There was no dispenser to remove." };
+    }
+
+    const room = getGuestRoom(roomId);
+    if (!room) throw new HkError(404, "No such guest room.");
+
+    if (method === "POST" && seg[2] === "reset") {
+      const n = resetClaims(roomId);
+      log("prize_dispenser_reset", room.ownerId, `room ${roomId}: ${n} record(s)`);
+      return { message: `Cleared ${n} player record(s). Cooldowns and once-per-player start fresh.` };
+    }
+
+    if (method === "POST") {
+      let saved;
+      try {
+        saved = savePrizeConfig(roomId, body.config, me.id);
+      } catch (err) {
+        throw new HkError(400, (err as Error).message);
+      }
+      log("prize_dispenser", room.ownerId, `room ${roomId}: ${describePrizes(saved).join("; ")}`);
+      return { message: "Dispenser saved. It applies the next time someone enters or leaves the room." };
+    }
+
+    const stored = getPrizeConfig(roomId);
+    const config = stored ?? defaultPrizeConfig(roomId);
+    return {
+      room: { id: room.id, name: room.name, ownerId: room.ownerId },
+      exists: stored !== undefined,
+      config: { ...config, prizes: config.prizes.map((p) => ({ ...p, name: p.kind === "item" ? itemName(p.code) : "" })) },
+      stats: claimStats(roomId),
+      defaultMessage: DEFAULT_MESSAGE,
+      names: namesFor([room.ownerId]),
+    };
+  }
   // ---- staff audit
   if (path === "audit") {
     need(me, "admin");
