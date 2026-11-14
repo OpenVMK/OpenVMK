@@ -101,7 +101,10 @@
 }
 
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+/* min-height, not height: the body grows with the page, and the sidebar
+   (anchored to it) grows with the body. */
+html { height: 100%; }
+body { min-height: 100%; position: relative; }
 body {
   margin: 0;
   background: var(--bg);
@@ -145,7 +148,9 @@ h3 { font-size: 22px; margin: 16px 0 8px; }
 
 /* ---------- layout ---------- */
 .sidebar {
-  position: fixed; top: 50px; bottom: 0; left: 0; width: 245px; overflow-y: auto;
+  /* Part of the page, not pinned to the window: a menu taller than the window
+     makes the page longer instead of scrolling inside itself. */
+  position: absolute; top: 50px; left: 0; width: 245px; min-height: calc(100% - 50px);
   background: var(--sidebar); border-right: 1px solid var(--sidebar-border); padding: 10px 0 30px;
 }
 .sidebar .head { padding: 10px 12px 0; color: var(--sidebar-head); font-size: 14px; }
@@ -343,7 +348,8 @@ tr.cat-off td { opacity: 0.4; }
 /* ---------- small screens ---------- */
 @media (max-width: 860px) {
   .menu-toggle { display: inline-block; }
-  .sidebar { transform: translateX(-100%); transition: transform 0.2s; z-index: 25; box-shadow: var(--shadow); }
+  /* Phones: a slide-out menu over the page, so it stays pinned to the window. */
+  .sidebar { position: fixed; bottom: 0; min-height: 0; overflow-y: auto; transform: translateX(-100%); transition: transform 0.2s; z-index: 25; box-shadow: var(--shadow); }
   body.menu-open .sidebar { transform: none; }
   .main { margin-left: 0; padding: 50px 16px 60px; }
   .topbar input { width: 150px; }

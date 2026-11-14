@@ -1232,7 +1232,7 @@ async function pageRoom(_params, idText) {
       const v = await modal("Rename room", { fields: [{ name: "name", label: "Name", value: room.name }, { name: "description", label: "Description", type: "textarea", value: room.description }], confirm: "Save" });
       if (v) roomAction({ action: "rename", name: v.name, description: v.description });
     }, { disabled: !can("forcenamechange") }],
-	["Prize dispenser…", () => go(`#/prizes/${id}`), { disabled: !state.me.admin }],
+    ["Prize dispenser…", () => go(`#/prizes/${id}`), { disabled: !state.me.admin }],
     "-",
     ["View room chatlogs", () => go(`#/chatlogs?room=${encodeURIComponent(`guest:${id}`)}&kind=all`)],
     ["View owner", () => go(`#/user/${room.ownerId}`)],
@@ -1785,6 +1785,7 @@ async function pageCatalog(params) {
     issueBox,
     h("div", { class: "cat-layout" }, tree, editor));
 }
+
 /* ------------------------------------------------- room prize dispensers */
 
 async function pagePrizes() {
@@ -1948,6 +1949,7 @@ async function pagePrize(_params, idText) {
       h("div", { class: "panel-body" },
         h("div", { class: "form-row" }, h("div", {}, h("label", {}, "Credits"), creditAmount), h("div", {}, h("label", {}, "Weight"), creditWeight), addCredits))));
 }
+
 /* ---------------------------------------------------------------- staff */
 
 async function pageStaff() {

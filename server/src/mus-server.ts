@@ -2964,6 +2964,7 @@ function releaseUserConnection(entry: LiveConnection): void {
     leaveEntryQueue(entry.userId);
   }
 }
+
 /** Tell a connected player what a room dispenser gave them. */
 function announcePrize(userId: number, given: Dispensed): void {
   const conn = liveByUser.get(userId);
@@ -3684,9 +3685,10 @@ function createVmkSession(
         reply("/goto <roomCode> - /place <typeCode> [dir] - /tile - /sword [win|fail] - /ghost");
         reply("/giveroom <roomCode> [player] - give a guest room (no args: list styles)");
         reply("/feature [spaceId] - toggle a guest room's Mickey spot in Popular (no id: this room)");
-        reply("/state <itemRef> [n] - force an item's state (test interactivity)");        reply("/changename <old name> = <new name> - rename a player everywhere");
+        reply("/state <itemRef> [n] - force an item's state (test interactivity)");
+        reply("/changename <old name> = <new name> - rename a player everywhere");
         reply(`badge codes: ${BADGE_CODES.join(" ")} (max ${MAX_BADGES} worn)`);
-		reply("/dispenser - this guest room's prize dispenser (admin; /dispenser help)");
+        reply("/dispenser - this guest room's prize dispenser (admin; /dispenser help)");
         return true;
 
       case "perms":
@@ -4160,6 +4162,7 @@ function createVmkSession(
         console.log(`[${label}] ${characterName} set credits of "${target.name}" (${target.id}) ${current} -> ${next}`);
         return true;
       }
+
       case "dispenser": {
         // Parsed from `line`, NOT `args`: args keeps only free-text words, and
         // "add", "item", "list" are dictionary words the client sends as indices.
@@ -4312,6 +4315,7 @@ function createVmkSession(
             return true;
         }
       }
+
       case "camera": {
         // `/camera [film]` — a camera plus film (default 3, like the shop's
         // "Camera and 3 film"). Stand-in until the camera is on sale.
@@ -4935,6 +4939,7 @@ function createVmkSession(
       ],
       `AdminMessage alert (blocked: ${blocked})`,
     );
+
   /** A guest room's prize dispenser (room-prizes.ts) for this player entering or leaving it. */
   const dispensePrize = (roomId: number, event: "enter" | "exit"): void => {
     if (!live) return;
@@ -4945,8 +4950,9 @@ function createVmkSession(
     console.log(`[${label}] room ${roomId} dispenser (${event}): ${given.granted.text} -> "${characterName}"`);
     announcePrize(live.userId, given);
   };
+
   const enterRoom = (roomCode: number, guestRoom?: GuestRoom) => {
-        const fromCode = currentRoomCode;
+    const fromCode = currentRoomCode;
     if (live && fromCode !== undefined) logRoomMove("left", live.userId);
     // Leaving a guest room (door, navigator, teleporter...) may roll its dispenser.
     // Re-entering the room you are already in is not leaving it.
@@ -5161,7 +5167,6 @@ function createVmkSession(
           if (currentRoomName === `guest:${roomId}`) dispensePrize(roomId, "enter");
         }, PRIZE_ENTER_DELAY_MS);
       }
-      return;
       return;
     }
     // Name the room the client is now in. Without this its room tag stays -1,
@@ -7353,13 +7358,13 @@ function createVmkSession(
             // friends-only room is closed to them.
             // Only a hint for the GO TO button — `enterGuestRoom` decides for
             // real when it is pressed, per visitor.
-			// A dark-ride scene is reached only by riding (entering one cold
+            // A dark-ride scene is reached only by riding (entering one cold
             // drops you at its entry with no ride running), and the river and
             // mixers are one-player instances: going there would give the
             // visitor their OWN copy, not the friend's. None can be joined.
             accessible: guest
               ? guest.entryState !== ENTRY_STATE.OWNER || guest.ownerId === ownerId
-               : !BLOCKED_ROOMS.has(currentRoomCode) &&
+              : !BLOCKED_ROOMS.has(currentRoomCode) &&
                 !isDarkRideScene(currentRoomCode) &&
                 currentRoomCode !== JC_GAME_ROOM &&
                 currentRoomCode !== STREET_MIXER_ROOM &&

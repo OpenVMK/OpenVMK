@@ -959,6 +959,7 @@ async function api(req: IncomingMessage, me: User, path: string, url: URL): Prom
     log("catalog_reset", null, "catalogue reset to the recovered data");
     return { message: "The catalogue is back to the recovered data.", version };
   }
+
   // ---- room prize dispensers (room-prizes.ts)
   // Stored in the shared database; the game server reads the row on every room
   // change, so a save needs no bridge call and no restart.
@@ -1020,6 +1021,7 @@ async function api(req: IncomingMessage, me: User, path: string, url: URL): Prom
       names: namesFor([room.ownerId]),
     };
   }
+
   // ---- staff audit
   if (path === "audit") {
     need(me, "admin");
