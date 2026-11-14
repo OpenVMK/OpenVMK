@@ -354,6 +354,7 @@ function buildSidebar() {
     h("div", { class: "head" }, "Content"),
     link("#/items", "box", "Item Browser"),
     admin ? link("#/catalog", "cart", "Shop Catalogue") : null,
+    admin ? link("#/prizes", "gift", "Prize Dispensers") : null,
     link("#/public-rooms", "door", "Public Rooms"),
     h("div", { class: "head" }, "Staff"),
     link("#/staff", "shield", "Staff List"),
@@ -393,6 +394,8 @@ const routes = [
   [/^\/bulk\/(ban|give|message)$/, pageBulk],
   [/^\/items$/, pageItems],
   [/^\/catalog$/, pageCatalog],
+  [/^\/prizes$/, pagePrizes],
+  [/^\/prizes\/(\d+)$/, pagePrize],
   [/^\/staff$/, pageStaff],
   [/^\/audit$/, pageAudit],
 ];
@@ -1229,6 +1232,7 @@ async function pageRoom(_params, idText) {
       const v = await modal("Rename room", { fields: [{ name: "name", label: "Name", value: room.name }, { name: "description", label: "Description", type: "textarea", value: room.description }], confirm: "Save" });
       if (v) roomAction({ action: "rename", name: v.name, description: v.description });
     }, { disabled: !can("forcenamechange") }],
+	["Prize dispenser…", () => go(`#/prizes/${id}`), { disabled: !state.me.admin }],
     "-",
     ["View room chatlogs", () => go(`#/chatlogs?room=${encodeURIComponent(`guest:${id}`)}&kind=all`)],
     ["View owner", () => go(`#/user/${room.ownerId}`)],
@@ -1781,7 +1785,169 @@ async function pageCatalog(params) {
     issueBox,
     h("div", { class: "cat-layout" }, tree, editor));
 }
+/* ------------------------------------------------- room prize dispensers */
 
+async function pagePrizes() {
+  if (!state.me?.admin) return h("div", { class: "alert alert-warning mt" }, "Prize dispensers need full admin permissions.");
+  const r = await api("prizes");
+  const input = h("input", { type: "number", min: 100000, placeholder: "Guest room id, e.g. 100004", style: "width:240px" });
+  const form = h(
+    "form",
+    { class: "flex mb", onsubmit: (e) => { e.preventDefault(); const v = input.value.trim(); if (v) go(`#/prizes/${v}`); } },
+    input,
+    h("button", { class: "btn btn-primary", type: "submit" }, icon("gift"), "Set up a room"),
+  );
+  const rows = r.dispensers.map((d) =>
+    h("tr", { class: d.enabled ? "ok" : "" },
+      h("td", {}, d.roomId),
+      h("td", {}, d.roomName ? h("a", { href: `#/prizes/${d.roomId}` }, icon("gift"), " ", d.roomName) : h("span", { class: "muted" }, "(room was sold)")),
+      h("td", {}, d.ownerId ? userLink(d.ownerId, r.names) : "—"),
+      h("td", {}, d.enabled ? h("span", { class: "label label-success" }, "On") : h("span", { class: "label label-default" }, "Off")),
+      h("td", {}, d.trigger),
+      h("td", { class: "right" }, `${d.chance}%`),
+      h("td", { class: "right" }, d.prizeCount),
+      h("td", { class: "right" }, num(d.wins)),
+      h("td", {}, d.roomName ? null : h("button", { class: "btn btn-danger btn-sm", onclick: async (e) => {
+        if (await modal("Remove this dispenser?", { text: `Room ${d.roomId} no longer exists.`, confirm: "Remove", danger: true })) {
+          if (await act(`prizes/${d.roomId}/delete`, {}, e.currentTarget)) route();
+        }
+      } }, "Remove"))),
+  );
+  return h("div", {},
+    pageHeader("Room Prize Dispensers", h("a", { class: "btn btn-default", href: "#/rooms" }, icon("search"), "Find a room")),
+    h("p", { class: "muted" }, "A dispenser gives players a random prize as they enter and/or leave a guest room. In game, /dispenser configures the room you are standing in."),
+    form,
+    table(["Room", "Name", "Owner", "State", "Trigger", "Chance", "Prizes", "Prizes given", ""], rows, "No dispensers set up yet."),
+  );
+}
+
+async function pagePrize(_params, idText) {
+  if (!state.me?.admin) return h("div", { class: "alert alert-warning mt" }, "Prize dispensers need full admin permissions.");
+  const id = Number(idText);
+  const r = await api(`prizes/${id}`);
+  const cfg = structuredClone(r.config);
+  let edited = false;
+  state.leaveGuard = () => edited;
+
+  const saveBtn = h("button", { class: "btn btn-primary", type: "button", disabled: true }, "Save");
+  const touched = () => { edited = true; saveBtn.disabled = false; };
+
+  const oddsCells = [];
+  const weightSum = () => cfg.prizes.reduce((n, p) => n + (Number(p.weight) || 0), 0);
+  const odds = (p) => {
+    const sum = weightSum();
+    return sum > 0 ? `${(((Number(cfg.chance) || 0) * (Number(p.weight) || 0)) / sum).toFixed(1)}%` : "0%";
+  };
+  const updateOdds = () => cfg.prizes.forEach((p, i) => oddsCells[i] && (oddsCells[i].textContent = odds(p)));
+
+  const tbody = h("tbody", {});
+  const renderPrizes = () => {
+    oddsCells.length = 0;
+    const rows = cfg.prizes.map((p, i) => {
+      const isItem = p.kind === "item";
+      const cell = h("td", { class: "right nowrap" }, odds(p));
+      oddsCells.push(cell);
+      return h("tr", {},
+        h("td", { style: "width:52px" }, isItem ? itemImg(p.code, p.category, true) : icon("dollar")),
+        h("td", {}, isItem
+          ? [p.name || `Item ${p.code}`, h("span", { class: "muted small" }, ` (${p.code}, ${CATEGORY[p.category] ?? "?"})`)]
+          : "Credits"),
+        h("td", {}, h("input", {
+          type: "number", min: 1, value: isItem ? p.count : p.amount, style: "width:110px",
+          title: isItem ? "How many (pairs, for a teleporter)" : "Credits",
+          oninput: (e) => { const v = Math.trunc(Number(e.target.value)); if (isItem) p.count = v; else p.amount = v; touched(); },
+        })),
+        h("td", {}, h("input", {
+          type: "number", min: 1, value: p.weight, style: "width:90px", title: "Relative likelihood",
+          oninput: (e) => { p.weight = Math.trunc(Number(e.target.value)); touched(); updateOdds(); },
+        })),
+        cell,
+        h("td", {}, h("button", { class: "btn btn-danger btn-sm", type: "button", title: "Remove", onclick: () => { cfg.prizes.splice(i, 1); touched(); renderPrizes(); } }, "✕")));
+    });
+    tbody.replaceChildren(...rows);
+    if (!rows.length) tbody.append(h("tr", {}, h("td", { colspan: 6, class: "muted" }, "No prizes yet. Add one below.")));
+  };
+
+  const enabled = h("input", { type: "checkbox", checked: cfg.enabled, onchange: (e) => { cfg.enabled = e.target.checked; touched(); } });
+  const trigger = h("select", { onchange: (e) => { cfg.trigger = e.target.value; touched(); } },
+    [["exit", "When they leave"], ["enter", "When they enter"], ["both", "Both"]].map(([v, l]) => h("option", { value: v, selected: cfg.trigger === v }, l)));
+  const chance = h("input", { type: "number", min: 0, max: 100, value: cfg.chance, style: "width:90px", oninput: (e) => { cfg.chance = Math.trunc(Number(e.target.value)); touched(); updateOdds(); } });
+  const cooldown = h("input", { type: "number", min: 0, value: cfg.cooldownMinutes, style: "width:110px", oninput: (e) => { cfg.cooldownMinutes = Math.trunc(Number(e.target.value)); touched(); } });
+  const once = h("input", { type: "checkbox", checked: cfg.oncePerPlayer, onchange: (e) => { cfg.oncePerPlayer = e.target.checked; touched(); } });
+  const message = h("input", { type: "text", value: cfg.message, maxlength: 240, placeholder: r.defaultMessage, style: "width:100%", oninput: (e) => { cfg.message = e.target.value; touched(); } });
+
+  const picker = itemPicker();
+  const itemCount = h("input", { type: "number", min: 1, max: 100, value: "1", style: "width:90px" });
+  const itemWeight = h("input", { type: "number", min: 1, value: "1", style: "width:90px" });
+  const addItem = h("button", { class: "btn btn-success", type: "button", onclick: () => {
+    const sel = picker.selected();
+    if (!sel) return toast("Pick an item first.", true);
+    cfg.prizes.push({ kind: "item", code: sel.code, category: sel.category, count: Math.max(1, Math.trunc(Number(itemCount.value)) || 1), amount: 0, weight: Math.max(1, Math.trunc(Number(itemWeight.value)) || 1), name: sel.name });
+    touched();
+    renderPrizes();
+  } }, icon("gift"), "Add item");
+
+  const creditAmount = h("input", { type: "number", min: 1, value: "100", style: "width:120px" });
+  const creditWeight = h("input", { type: "number", min: 1, value: "1", style: "width:90px" });
+  const addCredits = h("button", { class: "btn btn-success", type: "button", onclick: () => {
+    const amount = Math.trunc(Number(creditAmount.value));
+    if (!(amount >= 1)) return toast("Enter a number of credits.", true);
+    cfg.prizes.push({ kind: "credits", code: 0, category: 0, count: 1, amount, weight: Math.max(1, Math.trunc(Number(creditWeight.value)) || 1) });
+    touched();
+    renderPrizes();
+  } }, icon("dollar"), "Add credits");
+
+  saveBtn.addEventListener("click", async () => {
+    const res = await act(`prizes/${id}`, { config: cfg }, saveBtn);
+    if (res) {
+      edited = false;
+      route();
+    }
+  });
+
+  const menu = actionsMenu([
+    ["Clear cooldowns / once-only…", async () => {
+      if (await modal("Clear player records?", { text: "Everyone can roll again, as if they had never visited.", confirm: "Clear" })) {
+        if (await act(`prizes/${id}/reset`, {})) route();
+      }
+    }],
+    ["Delete this dispenser…", async () => {
+      if (await modal("Delete the dispenser?", { text: "The prizes and every player's record are removed.", confirm: "Delete", danger: true })) {
+        if (await act(`prizes/${id}/delete`, {})) { edited = false; go("#/prizes"); }
+      }
+    }, { disabled: !r.exists }],
+    "-",
+    ["View the room", () => go(`#/room/${id}`)],
+  ]);
+
+  renderPrizes();
+  return h("div", {},
+    pageHeader(`Prize Dispenser: ${r.room.name} (${r.room.id})`, saveBtn, menu),
+    h("p", {}, "Owner: ", userLink(r.room.ownerId, r.names), h("span", { class: "muted small" }, "  (the owner never receives prizes from their own room)")),
+    r.exists ? null : h("div", { class: "alert alert-warning" }, "This room has no dispenser yet. Set it up and save."),
+    h("p", { class: "muted small" }, `${num(r.stats.players)} player(s) have rolled, ${num(r.stats.rolls)} roll(s), ${num(r.stats.wins)} prize(s) given.`),
+    h("div", { class: "panel" },
+      h("div", { class: "panel-heading" }, "Rules"),
+      h("div", { class: "panel-body" },
+        h("div", { class: "form-row" },
+          h("div", {}, h("label", {}, "Dispenser"), h("label", { style: "font-weight:400" }, enabled, " on")),
+          h("div", {}, h("label", {}, "Gives a prize"), trigger),
+          h("div", {}, h("label", {}, "Chance of any prize (%)"), chance),
+          h("div", {}, h("label", {}, "Cooldown (minutes)"), cooldown),
+          h("div", {}, h("label", {}, "Once only"), h("label", { style: "font-weight:400" }, once, " one prize per player"))),
+        h("div", {}, h("label", {}, "Message to the player (%name% and %prize% are filled in)"), message),
+        h("p", { class: "muted small mt" }, "The cooldown counts every roll, including misses, and is shared between entering and leaving."))),
+    h("h3", { class: "section-title" }, "Prizes"),
+    h("div", { class: "table-wrap" }, h("table", {}, h("thead", {}, h("tr", {}, ["", "Prize", "Amount", "Weight", "Chance", ""].map((x) => h("th", {}, x)))), tbody)),
+    h("div", { class: "panel" },
+      h("div", { class: "panel-heading" }, "Add an item"),
+      h("div", { class: "panel-body" }, picker.el,
+        h("div", { class: "form-row mt" }, h("div", {}, h("label", {}, "Count"), itemCount), h("div", {}, h("label", {}, "Weight"), itemWeight), addItem))),
+    h("div", { class: "panel" },
+      h("div", { class: "panel-heading" }, "Add credits"),
+      h("div", { class: "panel-body" },
+        h("div", { class: "form-row" }, h("div", {}, h("label", {}, "Credits"), creditAmount), h("div", {}, h("label", {}, "Weight"), creditWeight), addCredits))));
+}
 /* ---------------------------------------------------------------- staff */
 
 async function pageStaff() {

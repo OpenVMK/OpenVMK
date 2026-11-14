@@ -115,6 +115,7 @@ import {
   setSlogan,
   setCredits,
   BADGE_CODES,
+  ALL_PERMISSIONS,
   MAX_BADGES,
   PERMISSIONS,
   permissionIndex,
@@ -188,6 +189,18 @@ import { deHoliday, seasonCastKey, seasonFromEnv, seasonalCasts } from "./season
 import { ARCHIVE, OVERLAY, castExtracted, downloadFile } from "./paths.js";
 import { clientIp, remoteLabel } from "./client-ip.js";
 import { createPhotoSession, issuePhotoToken } from "./photo-server.js";
+import {
+  defaultPrizeConfig,
+  deletePrizeConfig,
+  describePrizes,
+  getPrizeConfig,
+  resetClaims,
+  savePrizeConfig,
+  testDispense,
+  tryDispense,
+  type Dispensed,
+  type PrizeTrigger,
+} from "./room-prizes.js";
 import { DOOR_OPEN, DOOR_SHUT, followTrack, isRideDoor, isRideStart, isRideTrack, planRide, rideOnFromTeleporter, type RidePlan } from "./rides.js";
 import {
   DARK_RIDE_COURTYARD,
@@ -272,6 +285,7 @@ import {
 } from "./chat-tokens.js";
 import {
   activeSanction,
+  audit,
   bridgeSecret,
   createCall,
   endLogin,
@@ -367,6 +381,8 @@ const SPAWN_FACING = 4;
 const ROOM_MAX_USERS = Number(process.env.VMK_ROOM_MAX_USERS ?? 50);
 /** Credits paid back when a room is sold. Shown in the confirm dialog. */
 const ROOM_REFUND = Number(process.env.VMK_ROOM_REFUND ?? 500);
+/** After entering a guest room, how long until an "on enter" dispenser rolls (the room has loaded by then). */
+const PRIZE_ENTER_DELAY_MS = 3000;
 /** Item categories in `2532`: 1 items, 2 clothes, 3 posters, 4 pins. */
 const CLOTHES_CATEGORY = 2;
 
@@ -2948,6 +2964,15 @@ function releaseUserConnection(entry: LiveConnection): void {
     leaveEntryQueue(entry.userId);
   }
 }
+/** Tell a connected player what a room dispenser gave them. */
+function announcePrize(userId: number, given: Dispensed): void {
+  const conn = liveByUser.get(userId);
+  if (given.granted.credits !== undefined) {
+    conn?.send(MSG.RECEIVE_CREDITS, [{ int: given.granted.credits }], `ReceiveCredits ${given.granted.credits} (room prize)`);
+  }
+  if (given.granted.items) conn?.refreshInventory();
+  sendStaffMessage(userId, given.message);
+}
 
 configureEntryQueue({
   capacity: ROOM_MAX_USERS,
@@ -3661,6 +3686,7 @@ function createVmkSession(
         reply("/feature [spaceId] - toggle a guest room's Mickey spot in Popular (no id: this room)");
         reply("/state <itemRef> [n] - force an item's state (test interactivity)");        reply("/changename <old name> = <new name> - rename a player everywhere");
         reply(`badge codes: ${BADGE_CODES.join(" ")} (max ${MAX_BADGES} worn)`);
+		reply("/dispenser - this guest room's prize dispenser (admin; /dispenser help)");
         return true;
 
       case "perms":
@@ -4134,7 +4160,158 @@ function createVmkSession(
         console.log(`[${label}] ${characterName} set credits of "${target.name}" (${target.id}) ${current} -> ${next}`);
         return true;
       }
+      case "dispenser": {
+        // Parsed from `line`, NOT `args`: args keeps only free-text words, and
+        // "add", "item", "list" are dictionary words the client sends as indices.
+        if (!ALL_PERMISSIONS.every((p) => permissionsFor().includes(p))) {
+          reply("/dispenser needs full admin permissions");
+          return true;
+        }
+        const room = currentGuestRoom();
+        if (!room) {
+          reply("Stand in a guest room first. For any other room use Housekeeping > Prize Dispensers.");
+          return true;
+        }
+        const staffId = live.userId;
+        const words = line.trim().split(/\s+/).filter(Boolean);
+        const sub = (words[0] ?? "list").toLowerCase();
+        const exists = getPrizeConfig(room.id) !== undefined;
+        const cfg = getPrizeConfig(room.id) ?? defaultPrizeConfig(room.id);
+        const whole = (text: string | undefined): number => (text === undefined ? NaN : Number(text));
+        const commit = (note: string): void => {
+          try {
+            savePrizeConfig(room.id, cfg, staffId);
+          } catch (err) {
+            reply(`not saved: ${(err as Error).message}`);
+            return;
+          }
+          audit(staffId, "prize_dispenser", room.ownerId, `room ${room.id}: ${describePrizes(cfg).join("; ")}`, ipOf(remote));
+          reply(note);
+        };
 
+        switch (sub) {
+          case "list":
+          case "show":
+          case "status":
+            reply(`room ${room.id} "${room.name}"${exists ? "" : " (no dispenser yet)"}`);
+            for (const l of describePrizes(cfg)) reply(l);
+            return true;
+
+          case "on":
+          case "off":
+            cfg.enabled = sub === "on";
+            commit(`dispenser ${sub}`);
+            return true;
+
+          case "trigger": {
+            const when = words[1]?.toLowerCase() === "entry" ? "enter" : words[1]?.toLowerCase();
+            if (when !== "enter" && when !== "exit" && when !== "both") {
+              reply("/dispenser trigger enter|exit|both");
+              return true;
+            }
+            cfg.trigger = when as PrizeTrigger;
+            commit(`prizes are now given on ${when}`);
+            return true;
+          }
+
+          case "chance":
+            cfg.chance = whole(words[1]);
+            commit(`chance set to ${cfg.chance}%`);
+            return true;
+
+          case "cooldown":
+            cfg.cooldownMinutes = whole(words[1]);
+            commit(`cooldown set to ${cfg.cooldownMinutes} minute(s)`);
+            return true;
+
+          case "once":
+            cfg.oncePerPlayer = words[1] === undefined ? !cfg.oncePerPlayer : words[1].toLowerCase() === "on";
+            commit(`once per player: ${cfg.oncePerPlayer ? "on" : "off"}`);
+            return true;
+
+          case "add": {
+            const kind = words[1]?.toLowerCase();
+            if (kind === "item") {
+              const code = whole(words[2]);
+              cfg.prizes.push({
+                kind: "item",
+                code,
+                category: 0, // 0 = worked out from the code
+                count: words[3] === undefined ? 1 : whole(words[3]),
+                amount: 0,
+                weight: words[4] === undefined ? 1 : whole(words[4]),
+              });
+              commit(`added item ${code}`);
+            } else if (kind === "credits" || kind === "credit") {
+              const amount = whole(words[2]);
+              cfg.prizes.push({
+                kind: "credits",
+                code: 0,
+                category: 0,
+                count: 1,
+                amount,
+                weight: words[3] === undefined ? 1 : whole(words[3]),
+              });
+              commit(`added ${amount} credits`);
+            } else {
+              reply("/dispenser add item <code> [count] [weight]");
+              reply("/dispenser add credits <amount> [weight]");
+            }
+            return true;
+          }
+
+          case "remove": {
+            const n = whole(words[1]);
+            if (!Number.isInteger(n) || n < 1 || n > cfg.prizes.length) {
+              reply(`/dispenser remove <1-${cfg.prizes.length}>`);
+              return true;
+            }
+            cfg.prizes.splice(n - 1, 1);
+            if (cfg.prizes.length === 0) cfg.enabled = false;
+            commit(`removed prize ${n}`);
+            return true;
+          }
+
+          case "clear":
+            cfg.prizes = [];
+            cfg.enabled = false;
+            commit("all prizes removed; dispenser off");
+            return true;
+
+          case "message":
+            // Typed words come back lower-case and without punctuation (dictionary
+            // chat). For a properly written message use Housekeeping.
+            cfg.message = words.slice(1).join(" ");
+            commit(cfg.message ? "message set (%name% and %prize% are filled in)" : "message reset to the default");
+            return true;
+
+          case "reset":
+            reply(`cleared ${resetClaims(room.id)} player record(s): cooldowns and once-only start fresh`);
+            return true;
+
+          case "test": {
+            const given = testDispense(room.id, staffId, characterName);
+            if (!given) {
+              reply("nothing to give: add a prize first");
+              return true;
+            }
+            announcePrize(staffId, given);
+            reply(`gave you ${given.granted.text} (test: no cooldown or chance, nothing recorded)`);
+            return true;
+          }
+
+          case "delete":
+            reply(deletePrizeConfig(room.id) ? "dispenser deleted" : "this room has no dispenser");
+            audit(staffId, "prize_dispenser_delete", room.ownerId, `room ${room.id}`, ipOf(remote));
+            return true;
+
+          default:
+            reply("/dispenser [list|on|off|trigger enter|exit|both|chance N|cooldown MIN|once on|off]");
+            reply("/dispenser add item CODE [COUNT] [WEIGHT]  |  add credits AMOUNT [WEIGHT]");
+            reply("/dispenser remove N | clear | message TEXT | reset | test | delete");
+            return true;
+        }
+      }
       case "camera": {
         // `/camera [film]` — a camera plus film (default 3, like the shop's
         // "Camera and 3 film"). Stand-in until the camera is on sale.
@@ -4758,10 +4935,24 @@ function createVmkSession(
       ],
       `AdminMessage alert (blocked: ${blocked})`,
     );
-
+  /** A guest room's prize dispenser (room-prizes.ts) for this player entering or leaving it. */
+  const dispensePrize = (roomId: number, event: "enter" | "exit"): void => {
+    if (!live) return;
+    const room = getGuestRoom(roomId);
+    if (!room) return;
+    const given = tryDispense(roomId, live.userId, characterName, event, room.ownerId);
+    if (!given) return;
+    console.log(`[${label}] room ${roomId} dispenser (${event}): ${given.granted.text} -> "${characterName}"`);
+    announcePrize(live.userId, given);
+  };
   const enterRoom = (roomCode: number, guestRoom?: GuestRoom) => {
-    const fromCode = currentRoomCode;
+        const fromCode = currentRoomCode;
     if (live && fromCode !== undefined) logRoomMove("left", live.userId);
+    // Leaving a guest room (door, navigator, teleporter...) may roll its dispenser.
+    // Re-entering the room you are already in is not leaving it.
+    const leavingGuest = currentRoomName?.startsWith("guest:") ? currentRoomName : undefined;
+    const sameGuestRoom = guestRoom !== undefined && leavingGuest === `guest:${guestRoom.id}`;
+    if (leavingGuest && !sameGuestRoom) dispensePrize(Number(leavingGuest.slice("guest:".length)), "exit");
     if (
       currentRoomCode !== undefined &&
       !currentRoomName?.startsWith("guest:") &&
@@ -4964,6 +5155,13 @@ function createVmkSession(
         ],
         `GuestRoomInfo "${guestRoom.name}" owner=${ownerNameFor(guestRoom)} control=${owns ? 1 : 0}`,
       );
+      if (!sameGuestRoom) {
+        const roomId = guestRoom.id;
+        setTimeout(() => {
+          if (currentRoomName === `guest:${roomId}`) dispensePrize(roomId, "enter");
+        }, PRIZE_ENTER_DELAY_MS);
+      }
+      return;
       return;
     }
     // Name the room the client is now in. Without this its room tag stays -1,
@@ -7155,13 +7353,13 @@ function createVmkSession(
             // friends-only room is closed to them.
             // Only a hint for the GO TO button — `enterGuestRoom` decides for
             // real when it is pressed, per visitor.
-            // A dark-ride scene is reached only by riding (entering one cold
+			// A dark-ride scene is reached only by riding (entering one cold
             // drops you at its entry with no ride running), and the river and
             // mixers are one-player instances: going there would give the
             // visitor their OWN copy, not the friend's. None can be joined.
             accessible: guest
               ? guest.entryState !== ENTRY_STATE.OWNER || guest.ownerId === ownerId
-              : !BLOCKED_ROOMS.has(currentRoomCode) &&
+               : !BLOCKED_ROOMS.has(currentRoomCode) &&
                 !isDarkRideScene(currentRoomCode) &&
                 currentRoomCode !== JC_GAME_ROOM &&
                 currentRoomCode !== STREET_MIXER_ROOM &&
