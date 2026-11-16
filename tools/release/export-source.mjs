@@ -26,6 +26,7 @@ import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadWithheldCasts } from "./withheld-casts.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const args = process.argv.slice(2);
@@ -69,8 +70,17 @@ const BACKUP = /\.(bak|save)(-[\w.-]+|\.\d+)?$|~$/;
 /** Casts we extracted wrongly and kept only for comparison. */
 const BAD_EXTRACTION = /\.WRONG-[\w-]+-extraction$/;
 
+/** Casts this checkout keeps but never publishes (withheld-casts.mjs). */
+let WITHHELD;
+try {
+  WITHHELD = loadWithheldCasts(ROOT, { required: true });
+} catch (e) {
+  die(e.message);
+}
+
 function shippable(src, isDir) {
   const name = basename(src);
+  if (WITHHELD.withheld(src)) return false;
   if (isDir) return !SKIP_DIRS.has(name) && !BAD_EXTRACTION.test(name);
   // raw_chunks/ is the extractor's byte dump of every Director chunk, kept for
   // auditing an extraction against the originals. The client reads only the

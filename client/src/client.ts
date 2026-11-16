@@ -48,7 +48,12 @@ const coreModules = import.meta.glob("./generated/*.ts", { eager: true }) as Rec
  * and hang. It is also the faithful shape — VMK loads casts at runtime, so a
  * cast's Lingo should arrive when the cast does.
  */
-const castModules = import.meta.glob("./generated-casts/*.ts") as Record<
+// Casts no room or config loads are left out of the bundle.
+const castModules = import.meta.glob([
+  "./generated-casts/*.ts",
+  "!./generated-casts/vmk_3__*.ts",
+  "!./generated-casts/vmk_mystics__*.ts",
+]) as Record<
   string,
   () => Promise<unknown>
 >;

@@ -23,6 +23,7 @@ import { spawnSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadWithheldCasts } from "./withheld-casts.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const args = process.argv.slice(2);
@@ -102,8 +103,10 @@ function copy(rel, filter = () => true) {
  * hold members genuinely called `room.tent.object.xml.BAK`, extracted as
  * `…xml.BAK_stxt_0.txt`, and those are game content.
  */
+const WITHHELD = loadWithheldCasts(ROOT);
 const releasable = (src, isDir) => {
   const name = basename(src);
+  if (WITHHELD.withheld(src)) return false;
   if (/\.(bak|save)(-[\w.-]+|\.\d+)?$|~$/.test(name)) return false;
   if (!isDir && [".cct", ".cst", ".dcr", ".dir"].includes(extname(name).toLowerCase())) return false;
   return true;
