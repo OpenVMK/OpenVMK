@@ -38,6 +38,36 @@ case "quest.prizes.more":
 
   callNamed("executeMessage", "PlayInterfaceSound", "UI-click")
   break;
+case "quest.prizes.1":
+case "quest.prizes.2":
+  if (theProperty("doubleClick")) {
+  var t_iShift = 0;
+  if (lingoBinary("eq", t_ar_event.event, "quest.prizes.2")) {
+  t_iShift = 1;
+  }
+
+  var t_rActiveLayout = callMethod("GetActive", t_rComponentPage);
+  var t_rNode = new LingoPropList([symbol("itemCode"), -float(1)]);
+  if (callNamed("objectp", t_rActiveLayout)) {
+  t_rNode = callMethod("GetNode", t_rActiveLayout);
+  }
+
+  if (lingoBinary("gt", t_rNode.itemCode, 0)) {
+  t_iRank = lingoBinary("sub", callMethod("getComponentID", t_rComponentPage, t_ar_event.route.component), 1);
+  t_rOwner = callMethod("GetOwner", callMethod("getManager", _me));
+  var t_iItemIndex = lingoBinary("sub", lingoBinary("add", t_rOwner.m_ar_data.remaining_prize_array[lingoBinary("add", t_iRank, 1)].item_index, t_iShift), 1);
+  var t_ar_data = callMethod("GetData", callMethod("GetOwner", callMethod("getManager", _me)));
+  if (callNamed("listp", t_ar_data)) {
+  var t_ID = t_ar_data[symbol("questTemplateId")];
+  callMethod("GetPrizeItemDetails", callMethod("getHandler", callNamed("getThread", symbol("QuestEngine"))), new LingoList([t_ID, lingoBinary("add", t_ar_data[symbol("taken_prize_count")], t_iRank), t_iItemIndex]))
+  }
+
+  }
+
+  }
+
+  break;
+  break;
   }
 
   }
@@ -58,9 +88,9 @@ case "quest.tasklist":
 case "quest.starttoplay.button":
   var t_rManager = callMethod("getManager", _me);
   if (callNamed("objectp", t_rManager)) {
-  var t_ar_data = callMethod("getData", callMethod("GetOwner", t_rManager));
+  t_ar_data = callMethod("GetData", callMethod("GetOwner", t_rManager));
   if (callNamed("listp", t_ar_data)) {
-  var t_ID = t_ar_data[symbol("questTemplateId")];
+  t_ID = t_ar_data[symbol("questTemplateId")];
   callMethod("StartQuest", callMethod("getHandler", callNamed("getThread", symbol("QuestEngine"))), new LingoList([t_ID]))
   callNamed("removeObject", callMethod("getID", callMethod("getComponent", callNamed("getThread", symbol("QuestEngine"))).m_rQuestInstance))
   }
@@ -71,7 +101,7 @@ case "quest.starttoplay.button":
 case "quest.next":
   t_rManager = callMethod("getManager", _me);
   if (callNamed("objectp", t_rManager)) {
-  t_ar_data = callMethod("getData", callMethod("GetOwner", t_rManager));
+  t_ar_data = callMethod("GetData", callMethod("GetOwner", t_rManager));
   if (callNamed("listp", t_ar_data)) {
   t_ID = t_ar_data[symbol("questTemplateId")];
   callMethod("GetOfficialQuest", callMethod("getHandler", callNamed("getThread", symbol("QuestEngine"))), new LingoList([t_ID, 1, t_ar_data[symbol("spaceSpecific")]]))
@@ -84,7 +114,7 @@ case "quest.next":
 case "quest.previous":
   t_rManager = callMethod("getManager", _me);
   if (callNamed("objectp", t_rManager)) {
-  t_ar_data = callMethod("getData", callMethod("GetOwner", t_rManager));
+  t_ar_data = callMethod("GetData", callMethod("GetOwner", t_rManager));
   if (callNamed("listp", t_ar_data)) {
   t_ID = t_ar_data[symbol("questTemplateId")];
   callMethod("GetOfficialQuest", callMethod("getHandler", callNamed("getThread", symbol("QuestEngine"))), new LingoList([t_ID, 0, t_ar_data[symbol("spaceSpecific")]]))

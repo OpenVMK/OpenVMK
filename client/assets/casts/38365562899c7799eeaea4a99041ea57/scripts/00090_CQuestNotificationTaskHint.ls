@@ -69,7 +69,6 @@ on reDraw me
   end if
 end
 on rawData me, t_ar_data
-  put "Fill blanks (CurrentTaskData)"
   m_ar_data = t_ar_data
   m_iCurrentID = t_ar_data[#photoId]
   t_sTask = "Task" && t_ar_data[#taskNumber] + 1 & "/" & t_ar_data[#totalTaskCount]
@@ -81,6 +80,16 @@ on rawData me, t_ar_data
     createTimeout(getUniqueID(), 100, #updateTimer, me.getID(), [#elem: "quest.timelimit", #time: t_ar_data[#remainingTaskDurationInSecs], #amount: -1], 1)
   end if
   createTimeout(getUniqueID(), 100, #updateTimer, me.getID(), [#elem: "quest.timetotal", #time: t_ar_data[#questDurationInSecs], #amount: 1], 1)
+  if t_ar_data[#foundMickeyColor_count] > 0 then
+    put "Found mickey colors: " && t_ar_data[#foundMickeyColor_array].count
+    repeat with i = 1 to min(5, t_ar_data[#foundMickeyColor_count])
+      t_iColor = t_ar_data[#foundMickeyColor_array][i][#mickeyColor]
+      t_iCount = t_ar_data[#foundMickeyColor_array][i][#mickeyCount]
+      put "Found " && t_iCount && " of mickey color " && t_iColor
+    end repeat
+  else
+    put "0 Mickeys found"
+  end if
   me.reDraw()
 end
 on updateTimer me, t_ar_data

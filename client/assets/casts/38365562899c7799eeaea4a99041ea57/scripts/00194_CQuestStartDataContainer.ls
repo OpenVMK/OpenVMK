@@ -17,11 +17,10 @@ end
 on getInterface me
   return m_rInterface
 end
-on getData me
+on GetData me
   return m_ar_dataContainer
 end
 on QuestDialogBroadcastEvent me, t_iManagerID, t_ar_results
-  put "QuestInfo.Start.Container->BroadCastEvent results:" && t_ar_results
 end
 on CurrenTaskData me, t_ar_data
   if listp(t_ar_data) then

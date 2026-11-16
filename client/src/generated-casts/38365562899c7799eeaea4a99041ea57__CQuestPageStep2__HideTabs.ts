@@ -16,5 +16,6 @@ export function HideTabs(_me: LingoMe) {
   }
 
   callMethod("show", callMethod("getElement", meProp(_me, "m_rWindow"), lingoBinary("join", lingoBinary("join", "tab.", meProp(_me, "m_sSelectedTab")), ".active")))
+  callMethod("setProperty", callMethod("getElement", meProp(_me, "m_rWindow"), "vmk.viewgift.button"), symbol("visible"), 0)
 }
 

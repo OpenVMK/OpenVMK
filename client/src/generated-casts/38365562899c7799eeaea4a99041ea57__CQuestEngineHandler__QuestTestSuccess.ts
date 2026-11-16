@@ -12,6 +12,10 @@ import {
 export function QuestTestSuccess(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("questTemplateId")]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->QuestTestSuccess", t_ar_out))
+  }
+
   callMethod("QuestTestSuccess", callMethod("getComponent", _me), t_ar_out)
 }
 

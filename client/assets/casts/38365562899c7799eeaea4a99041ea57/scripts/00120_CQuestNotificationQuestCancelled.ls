@@ -39,7 +39,6 @@ on update me, a_mp_kType_mp_iRef_rItem, a_kAlteredCategory
   end if
 end
 on rawData me, t_ar_data
-  put "Fill blanks (Quest Cancelled)"
   m_ar_data = t_ar_data
   me.setField(m_rWindow, "quest.dialog.hd", getText("quest.dialog.hd.questcancelled"))
   t_iReason = t_ar_data[#terminationReason]

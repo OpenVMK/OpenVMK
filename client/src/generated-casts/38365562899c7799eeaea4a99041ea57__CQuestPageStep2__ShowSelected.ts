@@ -10,7 +10,7 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function ShowSelected(_me: LingoMe) {
-  var t_rItem = callMethod("GetSelected", meProp(_me, "m_rGridRenderer"));
+  var t_rItem = callMethod("GetSelected", _me);
   var t_iCode = t_rItem.code;
   var t_rBack = callMethod("duplicate", callNamed("getMember", "previewbox").image);
   if (lingoBinary("lt", t_iCode, 0)) {

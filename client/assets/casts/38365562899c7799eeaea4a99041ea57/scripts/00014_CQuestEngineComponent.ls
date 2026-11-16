@@ -10,6 +10,7 @@ on construct me
   m_ar_QuestItemSprites = []
   registerMessage(#room_leave, me.getID(), #HideFindableItem)
   registerMessage("ui_questengine", me.getID(), #requestQuestEngineData)
+  registerMessage(#MinigameState, me.getID(), #MinigameState)
   return 1
 end
 on deconstruct me
@@ -19,10 +20,19 @@ on deconstruct me
   if objectp(m_rQuestInstance) then
     removeObject(m_rQuestInstance.getID())
   end if
+  unregisterMessage(#room_leave, me.getID())
+  unregisterMessage("ui_questengine", me.getID())
+  unregisterMessage(#MinigameState, me.getID())
   me.HideFindableItem()
 end
+on MinigameState me, a_iState
+  case a_iState of
+    #running:
+      me.removeHints()
+
+  end case
+end
 on QuestDialogBroadcastEvent me, t_iManagerID, t_ar_results
-  put "QuestEngineComponent.QuestDialogBroadcastEvent: " && t_iManagerID && t_ar_results
   case t_iManagerID of
     "QuestPlaceItem":
       t_ar_cmd = [t_ar_results[#questTemplateId], 2, t_ar_results[#photo], t_ar_results[#hint], t_ar_results[#tileReference], t_ar_results[#findableItemCode]]
@@ -130,7 +140,11 @@ on CurrentTaskData me, t_ar_data
   if t_ar_data[#option_count] > 0 then
     CreateQuestNotification("QuestNotificationMultipleChoice", me, ["multiplechoice"], "floating", t_ar_data)
   else
-    CreateQuestNotification("QuestNotificationTaskHint", me, ["taskhint"], "floating", t_ar_data)
+    if t_ar_data[#foundMickeyColor_count] > 0 then
+      CreateQuestNotification("QuestNotificationMickeyHint", me, ["mickeyhint"], "floating", t_ar_data)
+    else
+      CreateQuestNotification("QuestNotificationTaskHint", me, ["taskhint"], "floating", t_ar_data)
+    end if
   end if
 end
 on TaskNotification me, t_ar_data

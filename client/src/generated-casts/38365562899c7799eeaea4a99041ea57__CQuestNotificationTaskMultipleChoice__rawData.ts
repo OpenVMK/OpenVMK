@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", "Fill blanks (CurrentTaskData) Multiple Choice")
   setMeProp(_me, "m_ar_data", t_ar_data);
   setMeProp(_me, "m_iCurrentID", t_ar_data[symbol("photoId")]);
   if (lingoBinary("lt", t_ar_data[symbol("remainingTaskDurationInSecs")], 0)) {

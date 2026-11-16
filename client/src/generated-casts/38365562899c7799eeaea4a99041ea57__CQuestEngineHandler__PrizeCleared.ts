@@ -12,6 +12,10 @@ import {
 export function PrizeCleared(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("rank")]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->PrizeCleared", t_ar_out))
+  }
+
   callMethod("PrizeCleared", callMethod("getComponent", _me), t_ar_out)
 }
 

@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", "Fill blanks (CurrentTaskData)")
   setMeProp(_me, "m_ar_data", t_ar_data);
   setMeProp(_me, "m_iCurrentID", t_ar_data[symbol("photoId")]);
   var t_sTask = lingoBinary("join", lingoBinary("join", lingoBinary("joinPad", "Task", lingoBinary("add", t_ar_data[symbol("taskNumber")], 1)), "/"), t_ar_data[symbol("totalTaskCount")]);
@@ -23,6 +22,18 @@ export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
   }
 
   callNamed("createTimeout", callNamed("getUniqueID"), 100, symbol("updateTimer"), callMethod("getID", _me), new LingoPropList([symbol("elem"), "quest.timetotal", symbol("time"), t_ar_data[symbol("questDurationInSecs")], symbol("amount"), 1]), 1)
+  if (lingoBinary("gt", t_ar_data[symbol("foundMickeyColor_count")], 0)) {
+  callNamed("put", lingoBinary("joinPad", "Found mickey colors: ", t_ar_data[symbol("foundMickeyColor_array")].count))
+  for (var i = 1; i <= callNamed("min", 5, t_ar_data[symbol("foundMickeyColor_count")]); ++i) {
+  var t_iColor = t_ar_data[symbol("foundMickeyColor_array")][i][symbol("mickeyColor")];
+  var t_iCount = t_ar_data[symbol("foundMickeyColor_array")][i][symbol("mickeyCount")];
+  callNamed("put", lingoBinary("joinPad", lingoBinary("joinPad", lingoBinary("joinPad", "Found ", t_iCount), " of mickey color "), t_iColor))
+  }
+
+  } else {
+  callNamed("put", "0 Mickeys found")
+  }
+
   callMethod("reDraw", _me)
 }
 

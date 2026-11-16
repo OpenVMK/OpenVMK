@@ -35,7 +35,7 @@ case symbol("dialogCancel"):
 case "quest.confirmation.clearprizes":
   switch (t_dialogEvent) {
 case symbol("dialogOK"):
-  var t_ar_questData = callMethod("getData", callMethod("GetOwner", callMethod("getManager", _me)));
+  var t_ar_questData = callMethod("GetData", callMethod("GetOwner", callMethod("getManager", _me)));
   callMethod("ClearQuest", callMethod("getHandler", callNamed("getThread", symbol("QuestEngine"))), new LingoList([t_ar_questData[symbol("questTemplateId")], 0, 1, 0]))
   break;
 case symbol("dialogCancel"):

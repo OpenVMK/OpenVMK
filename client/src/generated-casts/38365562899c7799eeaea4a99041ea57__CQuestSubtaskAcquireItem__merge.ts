@@ -14,6 +14,7 @@ export function merge(_me: LingoMe, a_rWindow: LingoValue) {
   setMeProp(_me, "m_rWindow", a_rWindow);
   var t_bSuccess = callMethod("merge", meProp(_me, "m_rWindow"), "vmk_quest_acquire_item.window");
   var t_rTitleElem = callMethod("getElement", meProp(_me, "m_rWindow"), "quest.dialog.hd");
+  setMeProp(_me, "m_iPageNumber", 1);
   if (lingoBinary("neq", t_rTitleElem, 0)) {
   callMethod("setText", t_rTitleElem, callNamed("getText", "quest.dialog.hd.task16"))
   }

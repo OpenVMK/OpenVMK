@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", "Fill blanks (Quest Cancelled)")
   setMeProp(_me, "m_ar_data", t_ar_data);
   callMethod("setField", _me, meProp(_me, "m_rWindow"), "quest.dialog.hd", callNamed("getText", "quest.dialog.hd.questcancelled"))
   var t_iReason = t_ar_data[symbol("terminationReason")];

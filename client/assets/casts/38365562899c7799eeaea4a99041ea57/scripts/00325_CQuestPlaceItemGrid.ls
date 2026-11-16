@@ -124,11 +124,19 @@ on render this, a_mp_iRef_rItem, a_rImgElem
       end if
       t_rItem = m_mp_iRef_rItem[t_iCurSlot]
       t_rThumbImg = t_mp_iType_rThumb.getaProp(t_rItem.ItemId)
-      t_Img = t_rThumbImg.duplicate()
       t_rIconName = t_rItem[#icon]
       t_rIconMem = member(t_rIconName)
       if t_rIconMem.memberNum > 0 then
         t_rIconImage = t_rIconMem.image
+      end if
+      if objectp(t_rThumbImg) then
+        t_Img = t_rThumbImg.duplicate()
+      else
+        if objectp(t_rIconImage) then
+          t_Img = t_rIconImage.duplicate()
+        else
+          t_Img = image(40, 40, 32)
+        end if
       end if
       if not voidp(t_rIconImage) then
         t_SourceImgH = t_Img.height

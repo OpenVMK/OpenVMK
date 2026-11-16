@@ -22,7 +22,7 @@ case "mes.accept.button":
   var t_rSelected = callMethod("GetSelected", meProp(_me, "m_rGrid"));
   if ((lingoTruthy(callNamed("voidp", t_rSelected)) ? 0 : 1)) {
   var t_ar_results = new LingoPropList([]);
-  t_ar_results[symbol("magicEffectCode")] = callMethod("GetSelected", meProp(_me, "m_rGrid"))[symbol("id")];
+  t_ar_results[symbol("magicEffectCode")] = meProp(_me, "m_ar_magics")[t_rSelected][symbol("id")];
   if (callNamed("objectp", t_rManager)) {
   callMethod("appendSubResult", t_rManager, t_ar_results)
   callMethod("resolveSubtask", t_rManager)

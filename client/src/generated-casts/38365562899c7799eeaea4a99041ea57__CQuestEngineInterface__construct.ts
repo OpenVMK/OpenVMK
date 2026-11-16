@@ -11,6 +11,7 @@ import {
 
 export function construct(_me: LingoMe) {
   setMeProp(_me, "m_mp_photos", new LingoPropList([]));
+  setMeProp(_me, "m_sStep2SelectedTab", "furnishings");
   return 1;
 }
 

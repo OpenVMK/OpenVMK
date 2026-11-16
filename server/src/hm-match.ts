@@ -1416,6 +1416,8 @@ export class HmMatch implements HmGame {
         this.log(`${h.player.name}: win ${total}${bonus ? ` (+${bonus})` : ""}`);
       }
       this.log(`${h.player.name}: ${h.ghosts} ghost(s) -> ${credits} credits`);
+      // Quest GameID 5 is the Haunted Mansion; its score is ghosts caught.
+      h.player.played?.(5, h.ghosts, winner !== 0 && h.team === winner);
       // ⚠ ASCII only: the staff message goes out Latin-1 unconverted, and an
       // em dash arrived as "?" ("your team won ? 65 credits").
       h.player.pay(credits, `Thanks for playing the Haunted Mansion Game! ${parts.join(" ")}. ${credits} credits awarded.`);

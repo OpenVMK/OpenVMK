@@ -85,7 +85,7 @@ on showTaskInfo me, a_iActiveTaskID, a_bForceUpdate
   if a_iActiveTaskID > 0 then
     m_iActiveTaskID = a_iActiveTaskID
     if objectp(t_rOwner) then
-      t_ar_data = t_rOwner.getData()
+      t_ar_data = t_rOwner.GetData()
       t_ar_tasks = t_ar_data[#task_array]
       if listp(t_ar_tasks) then
         if t_ar_tasks.count >= m_iActiveTaskID then
@@ -223,8 +223,8 @@ on startEditingTask me, a_iActiveTaskID
   if a_iActiveTaskID > 0 then
     m_iActiveTaskID = a_iActiveTaskID
     if objectp(t_rOwner) then
-      t_ar_data = t_rOwner.getData()[#task_array][m_iActiveTaskID]
-      t_ar_data[#questTemplateId] = t_rOwner.getData()[#questTemplateId]
+      t_ar_data = t_rOwner.GetData()[#task_array][m_iActiveTaskID]
+      t_ar_data[#questTemplateId] = t_rOwner.GetData()[#questTemplateId]
       t_ar_data[#activeTaskRank] = m_iActiveTaskID - 1
       t_ar_subtasks = []
       t_bDefinitionOK = 1
@@ -319,7 +319,7 @@ on _EventProc me, a_kEvent, a_sElemID, a_vParam
         executeMessage("PlayInterfaceSound", "UI-click")
         m_rComponentsPage.EventProc(a_vParam, t_ar_event)
         if t_ar_event.found then
-          t_ar_questData = me.getManager().GetOwner().getData()
+          t_ar_questData = me.getManager().GetOwner().GetData()
           t_rClientElement = tWndObj.getElement(a_sElemID)
           case t_ar_event.event of
             "quest.renametask":
@@ -346,11 +346,11 @@ on _EventProc me, a_kEvent, a_sElemID, a_vParam
               t.Activate()
             "quest.taskhint":
               m_iActiveTaskID = m_rComponentsPage.getComponentID(t_ar_event.route.component)
-              t_ar_task = t_rOwner.getData()[#task_array][m_iActiveTaskID]
+              t_ar_task = t_rOwner.GetData()[#task_array][m_iActiveTaskID]
               CreateQuestNotification("QuestNotificationStep1TaskHint", me, ["writehint"], "maker", t_ar_task)
             "quest.timelimit":
               m_iActiveTaskID = m_rComponentsPage.getComponentID(t_ar_event.route.component)
-              t_ar_task = t_rOwner.getData()[#task_array][m_iActiveTaskID]
+              t_ar_task = t_rOwner.GetData()[#task_array][m_iActiveTaskID]
               CreateQuestNotification("QuestNotificationStep1TaskTimeLimit", me, ["addtasktime"], "maker", t_ar_task)
             "quest.moveup":
               t_ID = m_rComponentsPage.getComponentID(t_ar_event.route.component) - 1
@@ -368,14 +368,14 @@ on _EventProc me, a_kEvent, a_sElemID, a_vParam
         end if
       "quest.addtimelimit":
         if m_iActiveTaskID > 0 then
-          t_ar_task = t_rOwner.getData()[#task_array][m_iActiveTaskID]
+          t_ar_task = t_rOwner.GetData()[#task_array][m_iActiveTaskID]
           CreateQuestNotification("QuestNotificationStep1TaskTimeLimit", me, ["addtasktime"], "maker", t_ar_task)
         else
           put "Select task first"
         end if
       "quest.edithint":
         if m_iActiveTaskID > 0 then
-          t_ar_task = t_rOwner.getData()[#task_array][m_iActiveTaskID]
+          t_ar_task = t_rOwner.GetData()[#task_array][m_iActiveTaskID]
           CreateQuestNotification("QuestNotificationStep1TaskHint", me, ["writehint"], "maker", t_ar_task)
         else
           put "Select task first"
@@ -459,7 +459,7 @@ on dialogWindowEvent me, t_dialogName, t_dialogEvent
     "quest.confirmation.cleartasks":
       case t_dialogEvent of
         #dialogOK:
-          t_ar_questData = me.getManager().GetOwner().getData()
+          t_ar_questData = me.getManager().GetOwner().GetData()
           getThread(#QuestEngine).getHandler().ClearQuest([t_ar_questData[#questTemplateId], 1, 0, 0])
         #dialogCancel:
 
@@ -474,7 +474,7 @@ on QuestDialogBroadcastEvent me, t_iManagerID, t_ar_results
   if objectp(t_rManager) then
     t_rOwner = t_rManager.GetOwner()
   end if
-  t_ar_questData = t_rOwner.getData()
+  t_ar_questData = t_rOwner.GetData()
   case t_iManagerID of
     "QuestDialogManagerAddTask":
       if t_ar_results[#task] contains "addtask." then

@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", "Fill blanks (Task Completed)")
   var t_sTask = lingoBinary("join", lingoBinary("join", lingoBinary("joinPad", "Task", lingoBinary("add", t_ar_data[symbol("taskNumber")], 1)), "/"), t_ar_data[symbol("totalTaskCount")]);
   callMethod("setField", _me, meProp(_me, "m_rWindow"), "quest.dialog.hd", lingoBinary("join", lingoBinary("join", t_ar_data[symbol("questName")], ", "), t_sTask))
   callMethod("setField", _me, meProp(_me, "m_rWindow"), "quest.taskresults.hd", callNamed("getText", "quest.dialog.hd.taskcompleted"))

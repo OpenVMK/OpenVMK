@@ -103,6 +103,11 @@ export interface PotcPlayer {
   givePin: (code: number) => void;
   /** Reload the lobby the match came from — the way out of a match. */
   toLobby: () => void;
+  /**
+   * A match this player finished: the quest engine's GameID (quests.ts `GAME`),
+   * their score (gold, or ghosts in the Haunted Mansion) and whether they won.
+   */
+  played?: (game: number, score: number, won: boolean) => void;
 }
 
 export interface Participant {

@@ -25,7 +25,7 @@ case "land.frontierland":
 case "land.fantasyland":
 case "land.tomorrowland":
 case "land.mainstreet":
-case "land.ownrooms":
+case "land.neworleanssquare":
   callMethod("toggleShowChildren", t_ar_event.route.component)
   break;
   break;

@@ -10,6 +10,7 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function construct(_me: LingoMe) {
+  setMeProp(_me, "m_bDebug", 0);
   callMethod("regMsgList", _me, 1)
   return 1;
 }

@@ -15,7 +15,7 @@ export function _EventProc(_me: LingoMe, a_kEvent: LingoValue, a_sElemID: LingoV
   if (lingoBinary("eq", a_kEvent, symbol("mouseUp"))) {
   switch (a_sElemID) {
 case "tra.objects":
-  callMethod("MouseSelection", meProp(_me, "m_rGrid"), a_vParam)
+  callMethod("MouseSelection", meProp(_me, "m_rGridRenderer"), a_vParam)
   if (theProperty("doubleClick")) {
   callNamed("put", "select an move on")
   }
@@ -24,8 +24,8 @@ case "tra.objects":
 case "tra.tab.furniture.passive":
   setMeProp(_me, "m_sSelectedTab", "furniture");
   callMethod("HideTabs", _me)
-  var t = new LingoPropList([]);
-  if (callMethod("GetItemsByCategory", callMethod("getComponent", callNamed("getThread", "inventory")), symbol("items"), t)) {
+  var t = callMethod("GetItemListByCategory", callMethod("GetInventory", callNamed("getThread", "inventory").component, 1), symbol("items"));
+  if ((lingoTruthy(callNamed("voidp", t)) ? 0 : 1)) {
   callMethod("update", _me, t, symbol("items"))
   } else {
   callNamed("put", "Could not get items-data from inventory")
@@ -35,8 +35,8 @@ case "tra.tab.furniture.passive":
 case "tra.tab.pins.passive":
   setMeProp(_me, "m_sSelectedTab", "pins");
   callMethod("HideTabs", _me)
-  t = new LingoPropList([]);
-  if (callMethod("GetItemsByCategory", callMethod("getComponent", callNamed("getThread", "inventory")), symbol("pins"), t)) {
+  t = callMethod("GetItemListByCategory", callMethod("GetInventory", callNamed("getThread", "inventory").component, 1), symbol("pins"));
+  if ((lingoTruthy(callNamed("voidp", t)) ? 0 : 1)) {
   callMethod("update", _me, t, symbol("pins"))
   } else {
   callNamed("put", "Could not get pins-data from inventory")
@@ -46,8 +46,8 @@ case "tra.tab.pins.passive":
 case "tra.tab.clothes.passive":
   setMeProp(_me, "m_sSelectedTab", "clothes");
   callMethod("HideTabs", _me)
-  t = new LingoPropList([]);
-  if (callMethod("GetItemsByCategory", callMethod("getComponent", callNamed("getThread", "inventory")), symbol("clothes"), t)) {
+  t = callMethod("GetItemListByCategory", callMethod("GetInventory", callNamed("getThread", "inventory").component, 1), symbol("clothes"));
+  if ((lingoTruthy(callNamed("voidp", t)) ? 0 : 1)) {
   callMethod("update", _me, t, symbol("clothes"))
   } else {
   callNamed("put", "Could not get clothes-data from inventory")
@@ -57,8 +57,8 @@ case "tra.tab.clothes.passive":
 case "tra.tab.posters.passive":
   setMeProp(_me, "m_sSelectedTab", "posters");
   callMethod("HideTabs", _me)
-  t = new LingoPropList([]);
-  if (callMethod("GetItemsByCategory", callMethod("getComponent", callNamed("getThread", "inventory")), symbol("posters"), t)) {
+  t = callMethod("GetItemListByCategory", callMethod("GetInventory", callNamed("getThread", "inventory").component, 1), symbol("posters"));
+  if ((lingoTruthy(callNamed("voidp", t)) ? 0 : 1)) {
   callMethod("update", _me, t, symbol("posters"))
   } else {
   callNamed("put", "Could not get posters-data from inventory")
@@ -69,10 +69,12 @@ case "quest.magics":
   break;
 case "mes.accept.button":
   var t_bDataOK = 0;
-  var t_rSelected = callMethod("GetSelected", meProp(_me, "m_rGrid"));
+  var t_rSelected = callMethod("GetSelected", _me);
   if ((lingoTruthy(callNamed("voidp", t_rSelected)) ? 0 : 1)) {
+  var t_iCode = callMethod("GetSelected", _me)[symbol("code")];
+  if (lingoBinary("gt", t_iCode, 0)) {
   var t_ar_results = new LingoPropList([]);
-  t_ar_results[symbol("itemCode")] = callMethod("GetSelected", meProp(_me, "m_rGrid"))[symbol("code")];
+  t_ar_results[symbol("itemCode")] = t_iCode;
   if (callNamed("objectp", t_rManager)) {
   callMethod("appendSubResult", t_rManager, t_ar_results)
   callMethod("resolveSubtask", t_rManager)
@@ -80,6 +82,8 @@ case "mes.accept.button":
   }
 
   t_bDataOK = 1;
+  }
+
   }
 
   if ((lingoTruthy(t_bDataOK) ? 0 : 1)) {
@@ -105,6 +109,17 @@ case "mes.deny.button":
 case "help":
   callNamed("executeMessage", "PlayInterfaceSound", "UI-click")
   callNamed("executeMessage", symbol("open_help_page"), callNamed("getText", "help.quest.addtask", callNamed("getText", "help.quest", "help.quest")), 1)
+  break;
+case "quest.inventory.nextpage.button":
+  setMeProp(_me, "m_iPageNumber", lingoBinary("add", meProp(_me, "m_iPageNumber"), 1));
+  callMethod("update", _me, meProp(_me, "m_mp_kType_mp_iRef_rItem")[meProp(_me, "m_iCurPageName")], meProp(_me, "m_iCurPageName"))
+  break;
+case "quest.inventory.prevpage.button":
+  if (lingoBinary("gt", meProp(_me, "m_iPageNumber"), 1)) {
+  setMeProp(_me, "m_iPageNumber", lingoBinary("sub", meProp(_me, "m_iPageNumber"), 1));
+  }
+
+  callMethod("update", _me, meProp(_me, "m_mp_kType_mp_iRef_rItem")[meProp(_me, "m_iCurPageName")], meProp(_me, "m_iCurPageName"))
   break;
   default:
   callNamed("put", lingoBinary("joinPad", "Subtask.Magics.event:", a_sElemID))

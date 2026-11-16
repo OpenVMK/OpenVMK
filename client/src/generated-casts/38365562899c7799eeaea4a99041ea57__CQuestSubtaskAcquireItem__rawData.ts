@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", lingoBinary("joinPad", "Update task: Acquire Item", t_ar_data))
   var t_rManager = callMethod("getManager", _me);
   if (callNamed("objectp", t_rManager)) {
   var t_ar_results = new LingoPropList([]);

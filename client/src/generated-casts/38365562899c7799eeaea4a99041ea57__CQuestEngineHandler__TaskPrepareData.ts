@@ -12,6 +12,10 @@ import {
 export function TaskPrepareData(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("taskType"), symbol("int"), symbol("item_count"), symbol("Array"), new LingoPropList([symbol("int"), symbol("id")])]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->TaskPrepareData", t_ar_out))
+  }
+
   callMethod("TaskPrepareData", callMethod("getComponent", _me), t_ar_out)
 }
 

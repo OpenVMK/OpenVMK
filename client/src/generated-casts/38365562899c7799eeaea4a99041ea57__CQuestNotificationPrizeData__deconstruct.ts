@@ -18,6 +18,11 @@ export function deconstruct(_me: LingoMe) {
   callNamed("removeObject", callMethod("getID", t_rComponent))
   }
 
+  if (callNamed("objectp", meProp(_me, "m_rGridLoadAnim"))) {
+  callNamed("removeObject", callMethod("getID", meProp(_me, "m_rGridLoadAnim")))
+  setMeProp(_me, "m_rGridLoadAnim", undefined);
+  }
+
   return 1;
 }
 

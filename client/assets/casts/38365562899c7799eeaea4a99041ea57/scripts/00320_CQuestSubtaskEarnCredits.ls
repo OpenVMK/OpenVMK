@@ -48,7 +48,6 @@ on update me, a_mp_kType_mp_iRef_rItem, a_kAlteredCategory
   end if
 end
 on rawData me, t_ar_data
-  put "Update task: Earn Credits" && t_ar_data
   me.setAmount(t_ar_data[#amount])
   t_rManager = me.getManager()
   if objectp(t_rManager) then

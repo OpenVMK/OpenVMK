@@ -12,6 +12,10 @@ import {
 export function QuestCompleted(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("questTemplateId"), symbol("int"), symbol("avatarQuestId"), symbol("str"), symbol("questName"), symbol("int"), symbol("questDurationInSecs"), symbol("int"), symbol("prizingMode"), symbol("int"), symbol("rank"), symbol("int"), symbol("credits"), symbol("int"), symbol("item_count"), symbol("Array"), new LingoPropList([symbol("int"), symbol("itemCode")]), symbol("int"), symbol("remainingQuestDurationInSecs")]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->QuestCompleted", t_ar_out))
+  }
+
   callMethod("QuestCompleted", callMethod("getComponent", _me), t_ar_out)
 }
 

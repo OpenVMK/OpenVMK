@@ -2,16 +2,19 @@
 property m_rWindow
 property m_ar_components
 property m_rGrid
+property m_ar_magics
 
 on construct me
-  m_rGrid = createObject(getUniqueID(), "CQuestMagicGrid")
+  m_rGrid = createObject(#random, "CGenericThumbnailGrid")
   m_ar_components = [:]
   m_ar_components.sort()
   m_rWindow = VOID
+  m_ar_magics = VOID
   return 1
 end
 on deconstruct me
-  removeObject(m_rGrid)
+  removeObject(m_rGrid.getID())
+  m_rGrid = VOID
   if objectp(m_rWindow) then
     me.Purge(m_rWindow)
   end if
@@ -46,17 +49,40 @@ on update me, a_mp_kType_mp_iRef_rItem, a_kAlteredCategory
   end if
 end
 on cachedData me, t_ar_data
-  t_ar_magics = getAvailableMagics()
-  m_rGrid.render(t_ar_magics, m_rWindow.getElement("quest.magics"))
+  m_ar_magics = getAvailableMagics()
+  t_mp_ThumbsData = [:]
+  if listp(m_ar_magics) then
+    repeat with i = 1 to m_ar_magics.count
+      t_mp_ThumbsData.addProp(m_ar_magics[i].id, VOID)
+    end repeat
+  end if
+  executeMessage("GetPinThumbnail", t_mp_ThumbsData, [#client: me.getID(), #method: #_PinThumbsReadyCbk])
 end
 on rawData me, t_ar_data
-  put "Update task: Magics" && t_ar_data
   me.cachedData([])
   t_rManager = me.getManager()
   if objectp(t_rManager) then
     t_ar_results = [:]
     t_ar_results[#taskType] = t_ar_data[#taskType]
     t_rManager.appendSubResult(t_ar_results)
+  end if
+end
+on _PinThumbsReadyCbk this, a_mp_iType_rThumb
+  if objectp(m_rWindow) then
+    t_ar_rThumbs = []
+    t_iCount = a_mp_iType_rThumb.count
+    repeat with i = 1 to t_iCount
+      t_rThumb = a_mp_iType_rThumb[i]
+      t_rStar = getMember("inv.pin.star.thumb").image
+      t_rRect = t_rStar.rect
+      if voidp(t_rThumb) then
+        t_rThumb = image(1, 1, 32)
+      else
+        t_rThumb = t_rThumb.duplicate()
+      end if
+      t_ar_rThumbs.add([#thumbnail: t_rThumb, #blend: 100])
+    end repeat
+    m_rGrid.render(t_ar_rThumbs, m_rWindow.getElement("quest.magics"))
   end if
 end
 on _EventProc me, a_kEvent, a_sElemID, a_vParam
@@ -71,7 +97,7 @@ on _EventProc me, a_kEvent, a_sElemID, a_vParam
         t_rSelected = m_rGrid.GetSelected()
         if not voidp(t_rSelected) then
           t_ar_results = [:]
-          t_ar_results[#magicEffectCode] = m_rGrid.GetSelected()[#id]
+          t_ar_results[#magicEffectCode] = m_ar_magics[t_rSelected][#id]
           if objectp(t_rManager) then
             t_rManager.appendSubResult(t_ar_results)
             t_rManager.resolveSubtask()

@@ -10,6 +10,7 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function Purge(_me: LingoMe, a_rWindow: LingoValue) {
+  callMethod("UnregisterItemListCallback", callMethod("GetInventory", callNamed("getThread", "inventory").component, 1), _me, symbol("update"))
   if (callNamed("objectp", meProp(_me, "m_rWindow"))) {
   setMeProp(_me, "m_rWindow", undefined);
   return callMethod("unmerge", a_rWindow);

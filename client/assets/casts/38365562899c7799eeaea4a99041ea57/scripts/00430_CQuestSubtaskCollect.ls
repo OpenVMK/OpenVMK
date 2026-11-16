@@ -72,7 +72,6 @@ on update me, a_mp_kType_mp_iRef_rItem, a_kAlteredCategory
   end if
 end
 on rawData me, t_ar_data
-  put "Update Collect Collectable" && t_ar_data
   m_ar_data = t_ar_data
   a_sElemID = "quest.collect1"
   case t_ar_data[#itemCode] of
@@ -103,7 +102,6 @@ on saveData me
   t_rManager = me.getManager()
   t_rOwner = t_rManager.GetOwner()
   t_iChosenAnswer = m_rRadioButton.getValue()
-  put "Collectable choices" && t_iChosenAnswer && m_iCurrentScore
   if m_iCurrentScore = 0 then
     return 0
   end if

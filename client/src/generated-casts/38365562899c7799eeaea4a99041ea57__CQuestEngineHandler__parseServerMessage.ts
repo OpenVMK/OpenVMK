@@ -38,6 +38,10 @@ case symbol("Array"):
 
   break;
 case symbol("tasksettings"):
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", "Task settings....")
+  }
+
   var t_iTaskPos = callMethod("getPos", t_ar_msgDesc, symbol("taskType"));
   if (lingoBinary("gt", t_iTaskPos, 0)) {
   var t_iTaskType = t_ar_out[t_iTaskPos];
@@ -108,8 +112,47 @@ case 19:
   t_ar_items = new LingoList([]);
   t_ar_out[symbol("item_array")] = t_ar_items;
   break;
+case 20:
+  break;
   default:
   callNamed("put", lingoBinary("joinPad", "Unknown server task-type (can discard) ", t_iTaskType))
+  }
+
+  }
+
+  break;
+case symbol("itemCategoryData"):
+  var t_iItemPos = callMethod("getPos", t_ar_msgDesc, symbol("itemCategory"));
+  if (lingoBinary("gt", t_iItemPos, 0)) {
+  var t_iItemType = t_ar_out[t_iItemPos];
+  switch (t_iItemType) {
+case 1:
+  var t_iCount = callMethod("GetIntFrom", tMsgStruct.connection);
+  if (lingoBinary("gt", t_iCount, 0)) {
+  t_ar_out[symbol("itemSubCategory")] = callMethod("GetIntFrom", tMsgStruct.connection);
+  var t_ar_ItemData = new LingoList([]);
+  for (var i = 1; i <= lingoBinary("sub", t_iCount, 1); ++i) {
+  callMethod("append", t_ar_ItemData, callMethod("GetIntFrom", tMsgStruct.connection))
+  }
+
+  t_ar_out[symbol("itemData")] = t_ar_ItemData;
+  if (lingoBinary("eq", t_ar_out[symbol("itemSubCategory")], 1)) {
+  t_ar_out[symbol("teleportID")] = t_ar_ItemData[1];
+  t_ar_out[symbol("teleportpair")] = t_ar_ItemData[2];
+  }
+
+  }
+
+  break;
+case 2:
+  break;
+case 3:
+  break;
+case 4:
+  t_ar_out[symbol("pinlevel")] = callMethod("GetIntFrom", tMsgStruct.connection);
+  t_ar_out[symbol("pinSingleUse")] = callMethod("GetIntFrom", tMsgStruct.connection);
+  t_ar_out[symbol("pinTimeExpire")] = callMethod("GetIntFrom", tMsgStruct.connection);
+  break;
   }
 
   }

@@ -38,7 +38,6 @@ case 2:
   }
 
   var t_sWindowName = lingoBinary("join", lingoBinary("join", lingoBinary("join", "info.", t_sOwnerType), "."), t_sQuestType);
-  callNamed("put", lingoBinary("joinPad", "INFO type", t_sWindowName))
   callMethod("populate", meProp(_me, "m_rInterface"), new LingoList([t_sWindowName]))
   callMethod("Activate", meProp(_me, "m_rInterface"))
   var t_rCurrentPage = callMethod("getPage", callMethod("GetBase", callMethod("getInterface", meProp(_me, "m_rInterface"))));

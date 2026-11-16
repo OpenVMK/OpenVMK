@@ -10,7 +10,8 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function deconstruct(_me: LingoMe) {
-  callNamed("removeObject", meProp(_me, "m_rGrid"))
+  callNamed("removeObject", callMethod("getID", meProp(_me, "m_rGrid")))
+  setMeProp(_me, "m_rGrid", undefined);
   if (callNamed("objectp", meProp(_me, "m_rWindow"))) {
   callMethod("Purge", _me, meProp(_me, "m_rWindow"))
   }

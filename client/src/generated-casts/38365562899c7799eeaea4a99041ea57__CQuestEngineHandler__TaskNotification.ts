@@ -12,6 +12,10 @@ import {
 export function TaskNotification(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("questTemplateId"), symbol("str"), symbol("questName"), symbol("int"), symbol("taskNumber"), symbol("int"), symbol("totalTaskCount"), symbol("int"), symbol("questDurationInSecs"), symbol("int"), symbol("failed"), symbol("int"), symbol("taskType"), symbol("int"), symbol("timedOut"), symbol("int"), symbol("solvedImmediately"), symbol("tasksettings"), symbol("undefined")]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->TaskNotification", t_ar_out))
+  }
+
   callMethod("TaskNotification", callMethod("getComponent", _me), t_ar_out)
 }
 

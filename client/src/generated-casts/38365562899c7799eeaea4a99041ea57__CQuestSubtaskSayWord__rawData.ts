@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", lingoBinary("joinPad", "Update task: Say Word", t_ar_data))
   callMethod("setField", _me, meProp(_me, "m_rWindow"), "quest.sayword.input", t_ar_data[symbol("phrase")])
   var t_rManager = callMethod("getManager", _me);
   if (callNamed("objectp", t_rManager)) {

@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", lingoBinary("joinPad", "Update task: Magics", t_ar_data))
   callMethod("cachedData", _me, new LingoList([]))
   var t_rManager = callMethod("getManager", _me);
   if (callNamed("objectp", t_rManager)) {

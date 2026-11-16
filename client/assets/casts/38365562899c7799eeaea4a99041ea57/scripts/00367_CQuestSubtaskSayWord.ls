@@ -48,7 +48,6 @@ on setFocus me
   end if
 end
 on rawData me, t_ar_data
-  put "Update task: Say Word" && t_ar_data
   me.setField(m_rWindow, "quest.sayword.input", t_ar_data[#phrase])
   t_rManager = me.getManager()
   if objectp(t_rManager) then

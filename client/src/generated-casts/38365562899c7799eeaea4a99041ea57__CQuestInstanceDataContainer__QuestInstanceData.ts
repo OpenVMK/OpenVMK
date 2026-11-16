@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function QuestInstanceData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", lingoBinary("joinPad", "QuestInstanceData ", t_ar_data))
   if (callNamed("listp", t_ar_data)) {
   setMeProp(_me, "m_ar_data", t_ar_data);
   switch (t_ar_data[symbol("official")]) {

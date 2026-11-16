@@ -14,6 +14,11 @@ export function deconstruct(_me: LingoMe) {
   callMethod("Purge", _me, meProp(_me, "m_rWindow"))
   }
 
+  if (callNamed("objectp", meProp(_me, "m_rGridLoadAnim"))) {
+  callNamed("removeObject", callMethod("getID", meProp(_me, "m_rGridLoadAnim")))
+  setMeProp(_me, "m_rGridLoadAnim", undefined);
+  }
+
   for (var t_rComponent of meProp(_me, "m_ar_components").toArray()) {
   callNamed("removeObject", callMethod("getID", t_rComponent))
   }

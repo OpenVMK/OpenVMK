@@ -39,6 +39,11 @@ const logMigration = (message: string): void => {
 
 export const db = new DatabaseSync(DB_PATH);
 
+/** `(userId, delta, reason, staffId)` for every credit change (see logCredits). */
+export const creditListeners = new Set<(userId: number, delta: number, reason: string, staffId: number | null) => void>();
+/** `(ownerId, typeCodes)` whenever items are added to someone (see addItems). */
+export const itemListeners = new Set<(ownerId: number, typeCodes: number[]) => void>();
+
 // ⚠ MUST come before `journal_mode`. The asset server and the MUS server are
 // separate processes opening the SAME file, and `npm start` launches them
 // together — so they race here. Switching journal mode needs a brief exclusive
@@ -902,6 +907,16 @@ export function logCredits(
   itemCode: number | null = null,
   staffId: number | null = null,
 ): void {
+  // Every balance change passes through here, which is what lets a quest's
+  // "spend / earn N credits" task see all of them (quests.ts). A listener must
+  // never break the ledger.
+  for (const listener of creditListeners) {
+    try {
+      listener(userId, Math.trunc(delta), reason, staffId);
+    } catch (err) {
+      console.warn("[db] credit listener threw:", (err as Error).message);
+    }
+  }
   try {
     db.prepare(
       `INSERT INTO credit_log (user_id, delta, balance, reason, item_code, staff_id, created_at)
@@ -1180,10 +1195,19 @@ export function addItems(ownerId: number, typeCodes: number[], category: number)
   );
   let added = 0;
   const at = now();
+  const codes: number[] = [];
   for (const code of typeCodes) {
     if (!Number.isInteger(code) || code <= 0) continue;
     insert.run(ownerId, code, category, at);
+    codes.push(code);
     added++;
+  }
+  for (const listener of itemListeners) {
+    try {
+      listener(ownerId, codes);
+    } catch (err) {
+      console.warn("[db] item listener threw:", (err as Error).message);
+    }
   }
   return added;
 }

@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function ChangePageEvent(_me: LingoMe, t_iManagerID: LingoValue, t_sPageName: LingoValue) {
-  callNamed("put", lingoBinary("joinPad", lingoBinary("joinPad", "Quest Instance Change Page Event Received", t_iManagerID), t_sPageName))
   var t_rCurrentPage = callMethod("getPage", callMethod("GetBase", callMethod("getInterface", meProp(_me, "m_rInterface"))));
   switch (t_sPageName) {
 case "info.staff.order":

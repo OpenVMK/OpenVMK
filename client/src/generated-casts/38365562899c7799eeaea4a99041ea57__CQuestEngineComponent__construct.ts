@@ -14,6 +14,7 @@ export function construct(_me: LingoMe) {
   setMeProp(_me, "m_ar_QuestItemSprites", new LingoList([]));
   callNamed("registerMessage", symbol("room_leave"), callMethod("getID", _me), symbol("HideFindableItem"))
   callNamed("registerMessage", "ui_questengine", callMethod("getID", _me), symbol("requestQuestEngineData"))
+  callNamed("registerMessage", symbol("MinigameState"), callMethod("getID", _me), symbol("MinigameState"))
   return 1;
 }
 

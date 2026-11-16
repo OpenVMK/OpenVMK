@@ -11,7 +11,6 @@ import {
 
 export function QuestInstanceData(_me: LingoMe, t_ar_data: LingoValue) {
   setMeProp(_me, "m_ar_data", t_ar_data);
-  callNamed("put", "Fill blanks (Info Player Timerace)")
   var t_sIndex = "";
   if (lingoBinary("eq", t_ar_data[symbol("officialQuestCount")], 0)) {
   callMethod("showHideElem", _me, meProp(_me, "m_rWindow"), "quest.next", 0)

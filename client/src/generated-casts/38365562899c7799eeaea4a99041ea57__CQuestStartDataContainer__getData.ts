@@ -1,4 +1,4 @@
-// 38365562899c7799eeaea4a99041ea57.cct / CQuestStartDataContainer / getData
+// 38365562899c7799eeaea4a99041ea57.cct / CQuestStartDataContainer / GetData
 
 import {
   callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
@@ -9,7 +9,7 @@ import {
   type LingoMe, type LingoValue,
 } from "../lingo/lingo-runtime.js";
 
-export function getData(_me: LingoMe) {
+export function GetData(_me: LingoMe) {
   return meProp(_me, "m_ar_dataContainer");
 }
 

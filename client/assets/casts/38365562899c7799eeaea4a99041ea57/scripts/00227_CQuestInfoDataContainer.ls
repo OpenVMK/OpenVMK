@@ -17,14 +17,12 @@ end
 on getInterface me
   return m_rInterface
 end
-on getData me
+on GetData me
   return m_ar_dataContainer
 end
 on ChangePageEvent me, t_iManagerID, t_sPageName
-  put "Quest Instance Change Page Event Received" && t_iManagerID && t_sPageName
 end
 on QuestDialogBroadcastEvent me, t_iManagerID, t_ar_results
-  put "QuestInfo.DataContainer->BroadCastEvent results:" && t_ar_results
 end
 on QuestInstanceData me, t_ar_data
   if listp(t_ar_data) then
@@ -50,7 +48,6 @@ on QuestInstanceData me, t_ar_data
 
     end case
     t_sWindowName = "info." & t_sOwnerType & "." & t_sQuestType
-    put "INFO type" && t_sWindowName
     m_rInterface.populate([t_sWindowName])
     m_rInterface.Activate()
     t_rCurrentPage = m_rInterface.getInterface().GetBase().getPage()

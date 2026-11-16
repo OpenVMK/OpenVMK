@@ -14,8 +14,8 @@ export function startEditingTask(_me: LingoMe, a_iActiveTaskID: LingoValue) {
   if (lingoBinary("gt", a_iActiveTaskID, 0)) {
   setMeProp(_me, "m_iActiveTaskID", a_iActiveTaskID);
   if (callNamed("objectp", t_rOwner)) {
-  var t_ar_data = callMethod("getData", t_rOwner)[symbol("task_array")][meProp(_me, "m_iActiveTaskID")];
-  t_ar_data[symbol("questTemplateId")] = callMethod("getData", t_rOwner)[symbol("questTemplateId")];
+  var t_ar_data = callMethod("GetData", t_rOwner)[symbol("task_array")][meProp(_me, "m_iActiveTaskID")];
+  t_ar_data[symbol("questTemplateId")] = callMethod("GetData", t_rOwner)[symbol("questTemplateId")];
   t_ar_data[symbol("activeTaskRank")] = lingoBinary("sub", meProp(_me, "m_iActiveTaskID"), 1);
   var t_ar_subtasks = new LingoList([]);
   var t_bDefinitionOK = 1;

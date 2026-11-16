@@ -258,7 +258,6 @@ on appendResults me
   t_ar_results[#questTemplateId] = m_ar_data[#questTemplateId]
   t_ar_results[#itemsData] = m_ar_items
   t_ar_results[#required] = m_iCurrentScore
-  put "Append.results: Current score" && m_iCurrentScore
   if objectp(t_rManager) then
     t_rManager.appendSubResult(t_ar_results)
   end if

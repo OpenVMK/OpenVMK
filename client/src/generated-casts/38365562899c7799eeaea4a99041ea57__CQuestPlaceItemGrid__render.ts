@@ -54,11 +54,21 @@ export function render(_me: LingoMe, _this: LingoValue, a_mp_iRef_rItem: LingoVa
 
   t_rItem = meProp(_me, "m_mp_iRef_rItem")[t_iCurSlot];
   var t_rThumbImg = callMethod("getaProp", t_mp_iType_rThumb, t_rItem.ItemId);
-  var t_Img = callMethod("duplicate", t_rThumbImg);
   var t_rIconName = t_rItem[symbol("icon")];
   var t_rIconMem = callNamed("member", t_rIconName);
   if (lingoBinary("gt", t_rIconMem.memberNum, 0)) {
   var t_rIconImage = t_rIconMem.image;
+  }
+
+  if (callNamed("objectp", t_rThumbImg)) {
+  var t_Img = callMethod("duplicate", t_rThumbImg);
+  } else {
+  if (callNamed("objectp", t_rIconImage)) {
+  t_Img = callMethod("duplicate", t_rIconImage);
+  } else {
+  t_Img = callNamed("image", 40, 40, 32);
+  }
+
   }
 
   if ((lingoTruthy(callNamed("voidp", t_rIconImage)) ? 0 : 1)) {

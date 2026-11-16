@@ -9,7 +9,8 @@ import {
   type LingoMe, type LingoValue,
 } from "../lingo/lingo-runtime.js";
 
-export function updatePrizeRank(_me: LingoMe, t_ar_data: LingoValue, t_iRank: LingoValue) {
+export function updatePrizeRank(_me: LingoMe, t_ar_data: LingoValue, t_iRank: LingoValue, a_bDontUpate: LingoValue) {
+  var t = theProperty("milliSeconds");
   var t_iMaxItemsPerRow = 3;
   var t_sElemName = "quest.prizes";
   var t_rComponentPage = meProp(_me, "m_ar_components")[t_sElemName];
@@ -27,47 +28,15 @@ export function updatePrizeRank(_me: LingoMe, t_ar_data: LingoValue, t_iRank: Li
   callMethod("setaProp", t_mp_iType_rThumb, t_rItem[symbol("itemCode")], undefined)
   }
 
-  callNamed("executeMessage", "GetItemThumbnail", t_mp_iType_rThumb)
-  if (callNamed("voidp", t_ar_data[symbol("item_index")])) {
-  t_ar_data[symbol("item_index")] = 1;
-  }
-
-  var t_index = t_ar_data[symbol("item_index")];
-  t_index = callNamed("min", t_index, t_ar_data[symbol("item_array")].count);
-  t_ar_data[symbol("item_index")] = t_index;
-  var t_ar_items = callNamed("array_slice", t_ar_data[symbol("item_array")], t_index, t_iMaxItemsPerRow);
-  while (lingoBinary("lt", t_ar_items.count, 3)) {
-  callMethod("append", t_ar_items, new LingoPropList([symbol("itemReference"), -float(1), symbol("itemCode"), -float(1)]))
-  }
-
-  var t_rThumbBg = callNamed("image", 40, 40, 32);
-  setThePropOf(t_rThumbBg, "useAlpha", 1);
-  var t_rLightBlue = callNamed("rgb", 39, 86, 146);
-  var t_rDarkBLue = callNamed("rgb", "#001F56");
-  callMethod("fill", t_rThumbBg, t_rThumbBg.rect, new LingoPropList([symbol("shapeType"), symbol("rect"), symbol("color"), t_rLightBlue]))
-  for (var i = 1; i <= t_ar_items.count; ++i) {
-  var t_ar_Item = t_ar_items[i];
-  var t_iCode = t_ar_Item[symbol("itemCode")];
-  var t_rLayout = callMethod("GetLayout", t_rComponent, lingoBinary("add", 3, i));
-  if (callNamed("objectp", t_rLayout)) {
-  var t_rIconImg = callMethod("duplicate", t_rThumbBg);
-  if (lingoBinary("gt", t_iCode, -float(1))) {
-  var t_rTempImg = callMethod("getaProp", t_mp_iType_rThumb, t_iCode);
-  if (callNamed("objectp", t_rTempImg)) {
-  callMethod("copyPixels", t_rIconImg, t_rTempImg, t_rTempImg.rect, t_rTempImg.rect, new LingoPropList([symbol("maskImage"), callMethod("extractAlpha", t_rTempImg), symbol("ink"), 36, symbol("useFastQuads"), 1]))
+  if (lingoBinary("gt", t_mp_iType_rThumb.count, 0)) {
+  setMeProp(_me, "m_iPrizeRankLoadCalls", lingoBinary("add", meProp(_me, "m_iPrizeRankLoadCalls"), 1));
+  if (lingoBinary("eq", meProp(_me, "m_iPrizeRankLoadCalls"), 1)) {
+  callMethod("SetBufferElement", meProp(_me, "m_rGridLoadAnim2"), callMethod("getElement", meProp(_me, "m_rWindow"), "quest.prizes"))
+  callNamed("receiveUpdate", callMethod("getID", meProp(_me, "m_rGridLoadAnim2")))
   }
 
   }
 
-  callMethod("draw", t_rIconImg, t_rIconImg.rect, new LingoPropList([symbol("color"), meProp(_me, "m_rBorderCol"), symbol("shapeType"), symbol("rect"), symbol("lineSize"), 2]))
-  callMethod("setIconImage", t_rLayout, t_rIconImg)
-  callMethod("setNode", t_rLayout, t_ar_Item)
-  }
-
-  }
-
-  var t_rImg = callMethod("render", t_rComponentPage);
-  callMethod("feedImage", t_rClientElement, t_rImg)
-  callMethod("updateCurrentCategory", _me)
+  callNamed("executeMessage", "GetMixedThumbnail", t_mp_iType_rThumb, new LingoPropList([symbol("client"), callMethod("getID", _me), symbol("method"), symbol("_PrizePreviewReadyCbk"), symbol("rank"), t_iRank, symbol("data"), t_ar_data]))
 }
 

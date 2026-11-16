@@ -17,7 +17,7 @@ export function showTaskInfo(_me: LingoMe, a_iActiveTaskID: LingoValue, a_bForce
   if (lingoBinary("gt", a_iActiveTaskID, 0)) {
   setMeProp(_me, "m_iActiveTaskID", a_iActiveTaskID);
   if (callNamed("objectp", t_rOwner)) {
-  var t_ar_data = callMethod("getData", t_rOwner);
+  var t_ar_data = callMethod("GetData", t_rOwner);
   var t_ar_tasks = t_ar_data[symbol("task_array")];
   if (callNamed("listp", t_ar_tasks)) {
   if (lingoBinary("gte", t_ar_tasks.count, meProp(_me, "m_iActiveTaskID"))) {

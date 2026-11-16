@@ -48,6 +48,7 @@ case 49:
   var tElem = callMethod("getElement", meProp(_me, "m_rWindow"), meProp(_me, "m_sElem"));
   var tSelection = tElem.pMember.selection;
   var tCharcount = tElem.pMember.text.char.count;
+  callNamed("put", lingoBinary("joinPad", tSelection, tCharcount))
   if (lingoBinary("gt", tCharcount, 0)) {
   if (lingoBinary("eq", tElem.pMember.text.char[tSelection[2]], " ")) {
   return 1;

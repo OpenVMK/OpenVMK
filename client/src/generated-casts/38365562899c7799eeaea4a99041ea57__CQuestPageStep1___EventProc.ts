@@ -23,7 +23,7 @@ case "quest.tasklist":
   callNamed("executeMessage", "PlayInterfaceSound", "UI-click")
   callMethod("EventProc", meProp(_me, "m_rComponentsPage"), a_vParam, t_ar_event)
   if (t_ar_event.found) {
-  var t_ar_questData = callMethod("getData", callMethod("GetOwner", callMethod("getManager", _me)));
+  var t_ar_questData = callMethod("GetData", callMethod("GetOwner", callMethod("getManager", _me)));
   var t_rClientElement = callMethod("getElement", tWndObj, a_sElemID);
   switch (t_ar_event.event) {
 case "quest.renametask":
@@ -57,12 +57,12 @@ case "quest.newtask":
   break;
 case "quest.taskhint":
   setMeProp(_me, "m_iActiveTaskID", callMethod("getComponentID", meProp(_me, "m_rComponentsPage"), t_ar_event.route.component));
-  var t_ar_task = callMethod("getData", t_rOwner)[symbol("task_array")][meProp(_me, "m_iActiveTaskID")];
+  var t_ar_task = callMethod("GetData", t_rOwner)[symbol("task_array")][meProp(_me, "m_iActiveTaskID")];
   callNamed("CreateQuestNotification", "QuestNotificationStep1TaskHint", _me, new LingoList(["writehint"]), "maker", t_ar_task)
   break;
 case "quest.timelimit":
   setMeProp(_me, "m_iActiveTaskID", callMethod("getComponentID", meProp(_me, "m_rComponentsPage"), t_ar_event.route.component));
-  t_ar_task = callMethod("getData", t_rOwner)[symbol("task_array")][meProp(_me, "m_iActiveTaskID")];
+  t_ar_task = callMethod("GetData", t_rOwner)[symbol("task_array")][meProp(_me, "m_iActiveTaskID")];
   callNamed("CreateQuestNotification", "QuestNotificationStep1TaskTimeLimit", _me, new LingoList(["addtasktime"]), "maker", t_ar_task)
   break;
 case "quest.moveup":
@@ -85,7 +85,7 @@ case "quest.movedown":
   break;
 case "quest.addtimelimit":
   if (lingoBinary("gt", meProp(_me, "m_iActiveTaskID"), 0)) {
-  t_ar_task = callMethod("getData", t_rOwner)[symbol("task_array")][meProp(_me, "m_iActiveTaskID")];
+  t_ar_task = callMethod("GetData", t_rOwner)[symbol("task_array")][meProp(_me, "m_iActiveTaskID")];
   callNamed("CreateQuestNotification", "QuestNotificationStep1TaskTimeLimit", _me, new LingoList(["addtasktime"]), "maker", t_ar_task)
   } else {
   callNamed("put", "Select task first")
@@ -94,7 +94,7 @@ case "quest.addtimelimit":
   break;
 case "quest.edithint":
   if (lingoBinary("gt", meProp(_me, "m_iActiveTaskID"), 0)) {
-  t_ar_task = callMethod("getData", t_rOwner)[symbol("task_array")][meProp(_me, "m_iActiveTaskID")];
+  t_ar_task = callMethod("GetData", t_rOwner)[symbol("task_array")][meProp(_me, "m_iActiveTaskID")];
   callNamed("CreateQuestNotification", "QuestNotificationStep1TaskHint", _me, new LingoList(["writehint"]), "maker", t_ar_task)
   } else {
   callNamed("put", "Select task first")

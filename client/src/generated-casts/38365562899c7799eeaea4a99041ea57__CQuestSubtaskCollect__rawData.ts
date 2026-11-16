@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", lingoBinary("joinPad", "Update Collect Collectable", t_ar_data))
   setMeProp(_me, "m_ar_data", t_ar_data);
   var a_sElemID = "quest.collect1";
   switch (t_ar_data[symbol("itemCode")]) {

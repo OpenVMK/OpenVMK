@@ -13,7 +13,6 @@ export function saveData(_me: LingoMe) {
   var t_rManager = callMethod("getManager", _me);
   var t_rOwner = callMethod("GetOwner", t_rManager);
   var t_iChosenAnswer = callMethod("getValue", meProp(_me, "m_rRadioButton"));
-  callNamed("put", lingoBinary("joinPad", lingoBinary("joinPad", "Collectable choices", t_iChosenAnswer), meProp(_me, "m_iCurrentScore")))
   if (lingoBinary("eq", meProp(_me, "m_iCurrentScore"), 0)) {
   return 0;
   }

@@ -18,6 +18,9 @@ export function deconstruct(_me: LingoMe) {
   callNamed("removeObject", callMethod("getID", meProp(_me, "m_rQuestInstance")))
   }
 
+  callNamed("unregisterMessage", symbol("room_leave"), callMethod("getID", _me))
+  callNamed("unregisterMessage", "ui_questengine", callMethod("getID", _me))
+  callNamed("unregisterMessage", symbol("MinigameState"), callMethod("getID", _me))
   callMethod("HideFindableItem", _me)
 }
 

@@ -13,5 +13,9 @@ export function AddPrizeItem(_me: LingoMe, t_arg: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("questTemplateId"), symbol("int"), symbol("rank"), symbol("int"), symbol("itemReference")]);
   var t_ar_Msg = callMethod("createClientCommand", _me, t_arg, t_ar_msgDesc);
   callMethod("send", callNamed("getConnection", callNamed("getVariable", "main.connection.id", "VMK")), 848, t_ar_Msg)
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine<-AddPrizeItem", t_ar_Msg))
+  }
+
 }
 

@@ -81,7 +81,6 @@ on createRadioButton me, answer_count
   end if
 end
 on rawData me, t_ar_data
-  put "Fill blanks (CurrentTaskData) Multiple Choice"
   m_ar_data = t_ar_data
   m_iCurrentID = t_ar_data[#photoId]
   if t_ar_data[#remainingTaskDurationInSecs] < 0 then

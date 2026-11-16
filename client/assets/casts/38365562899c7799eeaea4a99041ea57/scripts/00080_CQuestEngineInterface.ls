@@ -1,9 +1,11 @@
 -- Script
 property m_mp_photos
+property m_sStep2SelectedTab
 property m_ar_cache
 
 on construct me
   m_mp_photos = [:]
+  m_sStep2SelectedTab = "furnishings"
   return 1
 end
 on deconstruct me
@@ -41,4 +43,10 @@ on getPhoto me, a_iID
 end
 on GetPhotos me
   return m_mp_photos
+end
+on GetStep2SelectedTab me
+  return m_sStep2SelectedTab
+end
+on SetStep2SelectedTab me, a_sTab
+  m_sStep2SelectedTab = a_sTab
 end

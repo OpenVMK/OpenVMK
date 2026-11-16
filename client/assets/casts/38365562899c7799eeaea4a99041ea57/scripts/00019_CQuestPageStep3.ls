@@ -1,4 +1,4 @@
--- Script
+-- Behavior
 property m_rWindow
 property m_rComponentsPage
 property m_rRadioButton
@@ -164,7 +164,9 @@ on saveCurrentDataToOwner me
 end
 on checkCannedFields me
   t_iContentOK = 0
-  repeat with t_rCannedField in m_ar_CannedFields
+  repeat with i = 1 to m_ar_CannedFields.count
+    t_rCannedField = m_ar_CannedFields[i]
+    t_sFieldName = m_ar_CannedFields.getPropAt(i)
     t_iContentOK = t_iContentOK + t_rCannedField.CheckContent()
   end repeat
   return t_iContentOK = the count of m_ar_CannedFields
@@ -176,8 +178,10 @@ on _EventProc me, a_kEvent, a_sElemID, a_vParam
   if a_kEvent = #keyUp or a_kEvent = #keyDown then
     me.setTestingStatus(me.checkCannedFields())
     case a_sElemID of
-      "quest.questname.input1", "quest.description.input2":
+      "quest.questname.input", "quest.description.input":
         return m_ar_CannedFields[a_sElemID]._EventProc(a_kEvent, a_sElemID, a_vParam)
+      otherwise:
+        put "Possible unknown canned field" && a_sElemID
 
     end case
   end if

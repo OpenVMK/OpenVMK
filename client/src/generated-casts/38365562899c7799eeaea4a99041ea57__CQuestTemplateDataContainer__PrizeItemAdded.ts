@@ -22,13 +22,15 @@ export function PrizeItemAdded(_me: LingoMe, t_ar_data: LingoValue) {
   }
 
   var t_ar_newItem = new LingoPropList([]);
-  t_ar_newItem[symbol("itemReference")] = t_ar_data[symbol("itemReference")];
-  t_ar_newItem[symbol("itemCode")] = t_ar_data[symbol("itemCode")];
+  for (var t = 1; t <= t_ar_data.count; ++t) {
+  callMethod("setaProp", t_ar_newItem, callMethod("getPropAt", t_ar_data, t), t_ar_data[t])
+  }
+
+  callMethod("deleteProp", t_ar_newItem, symbol("rank"))
   callMethod("append", meProp(_me, "m_ar_data")[symbol("prize_array")][t_iPrizeRank][symbol("item_array")], t_ar_newItem)
   var t_iPrizeCount = meProp(_me, "m_ar_data")[symbol("prize_array")][t_iPrizeRank][symbol("item_array")].count;
   var t_rCurrentPage = callMethod("getPage", callMethod("GetBase", callMethod("getInterface", meProp(_me, "m_rInterface"))));
   callMethod("updatePrizeRank", t_rCurrentPage, meProp(_me, "m_ar_data")[symbol("prize_array")][t_iPrizeRank], t_iPrizeRank)
-  callNamed("put", "Stop and show what's going on...")
   callMethod("checkTestingStatus", _me)
 }
 

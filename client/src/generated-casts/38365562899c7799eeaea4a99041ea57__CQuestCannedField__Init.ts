@@ -14,7 +14,6 @@ export function Init(_me: LingoMe, a_rWindow: LingoValue, a_sFieldName: LingoVal
   setMeProp(_me, "m_sElem", a_sFieldName);
   var t_rElem = callMethod("getElement", a_rWindow, a_sFieldName);
   if (callNamed("objectp", t_rElem)) {
-  callNamed("put", lingoBinary("joinPad", "Canned type", t_bMultiple))
   if ((lingoTruthy(t_bMultiple) ? 0 : 1)) {
   }
 

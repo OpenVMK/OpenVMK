@@ -16,7 +16,7 @@ export function addCreditsToSelectedPrize(_me: LingoMe) {
   if (callNamed("objectp", t_rActiveComponent)) {
   var t_rLayout = callMethod("GetLayout", t_rActiveComponent, 2);
   if (callNamed("objectp", t_rLayout)) {
-  var t_ar_questData = callMethod("getData", callMethod("GetOwner", callMethod("getManager", _me)));
+  var t_ar_questData = callMethod("GetData", callMethod("GetOwner", callMethod("getManager", _me)));
   var t_iRank = lingoBinary("sub", callMethod("getComponentID", t_rComponentPage, t_rActiveComponent), 1);
   if (lingoBinary("gt", meProp(_me, "m_iCurrentPrize"), 0)) {
   callMethod("AddPrizeCredits", callMethod("getHandler", callNamed("getThread", symbol("QuestEngine"))), new LingoList([t_ar_questData[symbol("questTemplateId")], t_iRank, meProp(_me, "m_iCurrentPrize")]))

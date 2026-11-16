@@ -15,7 +15,6 @@ export function appendResults(_me: LingoMe) {
   t_ar_results[symbol("questTemplateId")] = meProp(_me, "m_ar_data")[symbol("questTemplateId")];
   t_ar_results[symbol("itemsData")] = meProp(_me, "m_ar_items");
   t_ar_results[symbol("required")] = meProp(_me, "m_iCurrentScore");
-  callNamed("put", lingoBinary("joinPad", "Append.results: Current score", meProp(_me, "m_iCurrentScore")))
   if (callNamed("objectp", t_rManager)) {
   callMethod("appendSubResult", t_rManager, t_ar_results)
   }

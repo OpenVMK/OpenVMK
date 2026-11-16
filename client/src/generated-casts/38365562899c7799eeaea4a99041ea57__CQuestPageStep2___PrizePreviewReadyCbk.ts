@@ -1,0 +1,77 @@
+// 38365562899c7799eeaea4a99041ea57.cct / CQuestPageStep2 / _PrizePreviewReadyCbk
+
+import {
+  callMethod, callNamed, chunkCount, chunkOf, deleteStringChunk, float,
+  globalVar, lastChunk,
+  lingoBinary, lingoTruthy,
+  meProp, setGlobal, setMeProp, setTheProperty, setThePropOf, symbol, theProperty,
+  thePropOf, LingoList, LingoPropList, _player, _key, _sound,
+  type LingoMe, type LingoValue,
+} from "../lingo/lingo-runtime.js";
+
+export function _PrizePreviewReadyCbk(_me: LingoMe, a_mp_iType_rImage: LingoValue, a_mp_Data: LingoValue) {
+  setMeProp(_me, "m_iPrizeRankLoadCalls", lingoBinary("sub", meProp(_me, "m_iPrizeRankLoadCalls"), 1));
+  if (lingoBinary("lt", meProp(_me, "m_iPrizeRankLoadCalls"), 1)) {
+  callMethod("SetBufferElement", meProp(_me, "m_rGridLoadAnim2"), undefined)
+  callNamed("removeUpdate", callMethod("getID", meProp(_me, "m_rGridLoadAnim2")))
+  }
+
+  var t_iRank = a_mp_Data.rank;
+  var t_ar_data = a_mp_Data.data;
+  var t_iMaxItemsPerRow = 3;
+  var t_sElemName = "quest.prizes";
+  var t_rComponentPage = meProp(_me, "m_ar_components")[t_sElemName];
+  var t_rClientElement = callMethod("getElement", meProp(_me, "m_rWindow"), "quest.prizes");
+  var t_rComponent = callMethod("getComponentAt", t_rComponentPage, t_iRank, 1);
+  if ((lingoTruthy(callNamed("objectp", t_rComponent)) ? 0 : 1)) {
+  t_rComponent = callMethod("addComponent", t_rComponentPage, "component.questengine.step2.prizeDesc.xml", 1, 1);
+  }
+
+  var i = t_iRank;
+  callMethod("setText", callMethod("GetLayout", t_rComponent, 1), lingoBinary("join", lingoBinary("join", callNamed("rank2text", i), "\r"), callNamed("getText", "quest.prize")))
+  callMethod("setText", callMethod("GetLayout", t_rComponent, 2), callNamed("string", t_ar_data[symbol("credits")]))
+  if (callNamed("voidp", t_ar_data[symbol("item_index")])) {
+  t_ar_data[symbol("item_index")] = 1;
+  }
+
+  var t_index = t_ar_data[symbol("item_index")];
+  t_index = callNamed("min", t_index, t_ar_data[symbol("item_array")].count);
+  t_ar_data[symbol("item_index")] = t_index;
+  var t_ar_items = callNamed("array_slice", t_ar_data[symbol("item_array")], t_index, t_iMaxItemsPerRow);
+  while (lingoBinary("lt", t_ar_items.count, 3)) {
+  callMethod("append", t_ar_items, new LingoPropList([symbol("itemReference"), -float(1), symbol("itemCode"), -float(1)]))
+  }
+
+  var t_rThumbBg = callNamed("image", 40, 40, 32);
+  setThePropOf(t_rThumbBg, "useAlpha", 1);
+  var t_rLightBlue = callNamed("rgb", 39, 86, 146);
+  var t_rDarkBLue = callNamed("rgb", "#001F56");
+  callMethod("fill", t_rThumbBg, t_rThumbBg.rect, new LingoPropList([symbol("shapeType"), symbol("rect"), symbol("color"), t_rLightBlue]))
+  for (var i = 1; i <= t_ar_items.count; ++i) {
+  var t_ar_Item = t_ar_items[i];
+  var t_iCode = t_ar_Item[symbol("itemCode")];
+  var t_rLayout = callMethod("GetLayout", t_rComponent, lingoBinary("add", 3, i));
+  if (callNamed("objectp", t_rLayout)) {
+  var t_rIconImg = callMethod("duplicate", t_rThumbBg);
+  if (lingoBinary("gt", t_iCode, -float(1))) {
+  var t_rTempImg = callMethod("getaProp", a_mp_iType_rImage, t_iCode);
+  if (callNamed("objectp", t_rTempImg)) {
+  callMethod("copyPixels", t_rIconImg, t_rTempImg, t_rTempImg.rect, t_rTempImg.rect, new LingoPropList([symbol("maskImage"), callMethod("extractAlpha", t_rTempImg), symbol("ink"), 36, symbol("useFastQuads"), 1]))
+  }
+
+  }
+
+  callMethod("draw", t_rIconImg, t_rIconImg.rect, new LingoPropList([symbol("color"), meProp(_me, "m_rBorderCol"), symbol("shapeType"), symbol("rect"), symbol("lineSize"), 2]))
+  callMethod("setIconImage", t_rLayout, t_rIconImg)
+  callMethod("setNode", t_rLayout, t_ar_Item)
+  }
+
+  }
+
+  if (lingoBinary("lt", meProp(_me, "m_iPrizeRankLoadCalls"), 1)) {
+  var t_rImg = callMethod("render", t_rComponentPage);
+  callMethod("feedImage", t_rClientElement, t_rImg)
+  }
+
+}
+

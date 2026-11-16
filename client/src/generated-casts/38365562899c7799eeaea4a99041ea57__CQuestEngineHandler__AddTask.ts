@@ -13,6 +13,9 @@ export function AddTask(_me: LingoMe, t_arg: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("questTemplateId"), symbol("int"), symbol("taskType"), symbol("int"), symbol("photoId"), symbol("canned"), symbol("description"), symbol("tasksettings"), symbol("undefined")]);
   var t_ar_Msg = callMethod("createClientCommand", _me, t_arg, t_ar_msgDesc);
   callMethod("send", callNamed("getConnection", callNamed("getVariable", "main.connection.id", "VMK")), 842, t_ar_Msg)
+  if (meProp(_me, "m_bDebug")) {
   callNamed("put", lingoBinary("joinPad", "QuestEngine<-AddTask", t_ar_Msg))
+  }
+
 }
 

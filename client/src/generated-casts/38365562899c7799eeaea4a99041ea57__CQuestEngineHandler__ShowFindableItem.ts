@@ -12,6 +12,10 @@ import {
 export function ShowFindableItem(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("item_count"), symbol("Array"), new LingoPropList([symbol("int"), symbol("tileReference"), symbol("int"), symbol("findableItemCode")])]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->ShowFindableItem", t_ar_out))
+  }
+
   callMethod("ShowFindableItem", callMethod("getComponent", _me), t_ar_out)
 }
 

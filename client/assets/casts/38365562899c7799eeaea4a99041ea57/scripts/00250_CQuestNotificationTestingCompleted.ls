@@ -43,7 +43,6 @@ on update me, a_mp_kType_mp_iRef_rItem, a_kAlteredCategory
   end if
 end
 on rawData me, t_ar_data
-  put "Fill blanks (Testing Completed)"
   me.showHideElem(m_rWindow, "quest.timetotal", 0)
   me.showHideElem(m_rWindow, "quest.questtimeinfo.hd", 0)
   me.showHideElem(m_rWindow, "field.credits", 0)

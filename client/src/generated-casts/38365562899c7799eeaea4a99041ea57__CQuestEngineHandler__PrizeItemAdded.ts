@@ -10,8 +10,12 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function PrizeItemAdded(_me: LingoMe, tMsgStruct: LingoValue) {
-  var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("rank"), symbol("int"), symbol("itemReference"), symbol("int"), symbol("itemCode")]);
+  var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("rank"), symbol("int"), symbol("itemReference"), symbol("int"), symbol("itemCode"), symbol("int"), symbol("itemCategory"), symbol("itemCategoryData"), symbol("undefined")]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->PrizeItemAdded", t_ar_out))
+  }
+
   callMethod("PrizeItemAdded", callMethod("getComponent", _me), t_ar_out)
 }
 

@@ -55,7 +55,6 @@ on appendResults me
   end if
 end
 on rawData me, t_ar_data
-  put "Update task: Emoticon" && t_ar_data
   t_rManager = me.getManager()
   if objectp(t_rManager) then
     t_ar_results = [:]

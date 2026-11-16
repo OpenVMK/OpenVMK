@@ -11,7 +11,6 @@ import {
 
 export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
   setMeProp(_me, "m_ar_data", t_ar_data);
-  callNamed("put", lingoBinary("joinPad", "Fill blanks (Start Quest)", t_ar_data))
   callMethod("setField", _me, meProp(_me, "m_rWindow"), "quest.main.hd", t_ar_data[symbol("questName")])
   callMethod("setField", _me, meProp(_me, "m_rWindow"), "quest.info", t_ar_data[symbol("description")])
   for (var i = 1; i <= t_ar_data[symbol("prize_array")].count; ++i) {

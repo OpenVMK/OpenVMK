@@ -13,7 +13,12 @@ export function CurrentTaskData(_me: LingoMe, t_ar_data: LingoValue) {
   if (lingoBinary("gt", t_ar_data[symbol("option_count")], 0)) {
   callNamed("CreateQuestNotification", "QuestNotificationMultipleChoice", _me, new LingoList(["multiplechoice"]), "floating", t_ar_data)
   } else {
+  if (lingoBinary("gt", t_ar_data[symbol("foundMickeyColor_count")], 0)) {
+  callNamed("CreateQuestNotification", "QuestNotificationMickeyHint", _me, new LingoList(["mickeyhint"]), "floating", t_ar_data)
+  } else {
   callNamed("CreateQuestNotification", "QuestNotificationTaskHint", _me, new LingoList(["taskhint"]), "floating", t_ar_data)
+  }
+
   }
 
 }

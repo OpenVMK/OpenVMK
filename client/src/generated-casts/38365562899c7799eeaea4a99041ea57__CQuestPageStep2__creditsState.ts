@@ -18,12 +18,12 @@ export function creditsState(_me: LingoMe, a_bEnable: LingoValue) {
   if (a_bEnable) {
   callMethod("setCredits", _me, meProp(_me, "m_iAvailableCredits"))
   callMethod("setPrize", _me, meProp(_me, "m_iCurrentPrize"))
-  callMethod("hide", callMethod("getElement", meProp(_me, "m_rWindow"), "quest.inventory"))
-  callMethod("hide", callMethod("getElement", meProp(_me, "m_rWindow"), "quest.scrollbar"))
-  } else {
-  callMethod("show", callMethod("getElement", meProp(_me, "m_rWindow"), "quest.inventory"))
-  callMethod("show", callMethod("getElement", meProp(_me, "m_rWindow"), "quest.scrollbar"))
   }
 
+  callMethod("showHideElem", _me, meProp(_me, "m_rWindow"), "quest.inventory", (lingoTruthy(a_bEnable) ? 0 : 1))
+  callMethod("showHideElem", _me, meProp(_me, "m_rWindow"), "quest.scrollbar", (lingoTruthy(a_bEnable) ? 0 : 1))
+  callMethod("showHideElem", _me, meProp(_me, "m_rWindow"), "quest.inventory.nextpage.button", (lingoTruthy(a_bEnable) ? 0 : 1))
+  callMethod("showHideElem", _me, meProp(_me, "m_rWindow"), "quest.inventory.prevpage.button", (lingoTruthy(a_bEnable) ? 0 : 1))
+  callMethod("showHideElem", _me, meProp(_me, "m_rWindow"), "quest.inventory.page", (lingoTruthy(a_bEnable) ? 0 : 1))
 }
 

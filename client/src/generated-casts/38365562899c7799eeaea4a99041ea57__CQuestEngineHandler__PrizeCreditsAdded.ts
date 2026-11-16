@@ -12,6 +12,10 @@ import {
 export function PrizeCreditsAdded(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("rank"), symbol("int"), symbol("credits")]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->PrizeCreditsAdded", t_ar_out))
+  }
+
   callMethod("PrizeCreditsAdded", callMethod("getComponent", _me), t_ar_out)
 }
 

@@ -27,8 +27,8 @@ case "clothes":
   t_iCategory = symbol("items");
   }
 
-  var t = new LingoPropList([]);
-  if (callMethod("GetItemsByCategory", callMethod("getComponent", callNamed("getThread", "inventory")), t_iCategory, t)) {
+  var t = callMethod("GetItemListByCategory", callMethod("GetInventory", callNamed("getThread", "inventory").component, 1), t_iCategory);
+  if ((lingoTruthy(callNamed("voidp", t)) ? 0 : 1)) {
   callMethod("update", _me, t, t_iCategory)
   } else {
   callNamed("put", lingoBinary("joinPad", "Could not get clothes-data from inventory", t_iCategory))

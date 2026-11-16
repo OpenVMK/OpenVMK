@@ -16,7 +16,7 @@ export function removeSelectedItemFromPrize(_me: LingoMe) {
   if (callNamed("objectp", t_rActiveLayout)) {
   var t_sEvent = callMethod("getEvent", t_rActiveLayout);
   var t_iRank = lingoBinary("sub", callMethod("getComponentID", t_rComponentPage, callMethod("GetActiveComponent", t_rComponentPage)), 1);
-  var t_ar_questData = callMethod("getData", callMethod("GetOwner", callMethod("getManager", _me)));
+  var t_ar_questData = callMethod("GetData", callMethod("GetOwner", callMethod("getManager", _me)));
   switch (t_sEvent) {
 case "quest.step2.credits":
   callMethod("RemovePrizeCredits", callMethod("getHandler", callNamed("getThread", symbol("QuestEngine"))), new LingoList([t_ar_questData[symbol("questTemplateId")], t_iRank]))

@@ -12,6 +12,10 @@ import {
 export function CannedTextParsingFailed(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoList([]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->CannedTextParsingFailed", t_ar_out))
+  }
+
   callMethod("CannedTextParsingFailed", callMethod("getComponent", _me), t_ar_out)
 }
 

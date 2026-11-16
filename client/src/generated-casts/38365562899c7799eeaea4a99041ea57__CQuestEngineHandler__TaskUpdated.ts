@@ -12,6 +12,10 @@ import {
 export function TaskUpdated(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("taskNumber"), symbol("int"), symbol("taskType"), symbol("tasksettings"), symbol("undefined")]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->TaskUpdated", t_ar_out))
+  }
+
   callMethod("TaskUpdated", callMethod("getComponent", _me), t_ar_out)
 }
 

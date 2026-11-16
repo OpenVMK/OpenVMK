@@ -10,8 +10,12 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function QuestPrizeData(_me: LingoMe, tMsgStruct: LingoValue) {
-  var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("taken_prize_count"), symbol("int"), symbol("remaining_prize_count"), symbol("Array"), new LingoPropList([symbol("int"), symbol("credits"), symbol("int"), symbol("categoryTime"), symbol("int"), symbol("item_count"), symbol("Array"), new LingoPropList([symbol("int"), symbol("itemCode")])])]);
+  var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("questTemplateId"), symbol("int"), symbol("taken_prize_count"), symbol("int"), symbol("remaining_prize_count"), symbol("Array"), new LingoPropList([symbol("int"), symbol("credits"), symbol("int"), symbol("categoryTime"), symbol("int"), symbol("item_count"), symbol("Array"), new LingoPropList([symbol("int"), symbol("itemCode")])])]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->QuestPrizeData", t_ar_out))
+  }
+
   callMethod("QuestPrizeData", callMethod("getComponent", _me), t_ar_out)
 }
 

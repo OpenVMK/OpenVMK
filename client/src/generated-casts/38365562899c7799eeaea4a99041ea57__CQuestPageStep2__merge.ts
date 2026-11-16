@@ -19,6 +19,8 @@ export function merge(_me: LingoMe, a_rWindow: LingoValue) {
   callMethod("setField", _me, meProp(_me, "m_rWindow"), "quest.main.hd", callNamed("getText", "quest.step2.title"))
   callMethod("hidePageTabs", _me)
   callMethod("creditsState", _me, 0)
+  setMeProp(_me, "m_iCurPageName", symbol("items"));
+  callMethod("RegisterItemListCallback", callMethod("GetInventory", callNamed("getThread", "inventory").component, 1), _me, symbol("update"))
   return t_bSuccess;
 }
 

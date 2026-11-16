@@ -77,7 +77,6 @@ on setItemList me, t_ar_items
   m_ar_items = t_ar_items[#item_array]
 end
 on rawData me, t_ar_data
-  put "Update Task Place Item" && t_ar_data
   m_ar_data = t_ar_data
   t_rManager = me.getManager()
   if objectp(t_rManager) then

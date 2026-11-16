@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function PrizeCleared(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", "TODO PrizeCleared!!! Should all prizes be updated....?? Or just delete one and update others....?")
   callMethod("deleteAt", meProp(_me, "m_ar_data")[symbol("prize_array")], lingoBinary("add", t_ar_data[symbol("rank")], 1))
   var t_rCurrentPage = callMethod("getPage", callMethod("GetBase", callMethod("getInterface", meProp(_me, "m_rInterface"))));
   callMethod("PrizeCleared", t_rCurrentPage, t_ar_data)

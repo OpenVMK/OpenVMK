@@ -12,6 +12,10 @@ import {
 export function QuestSaved(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoList([]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->QuestSaved", t_ar_out))
+  }
+
   callMethod("QuestSaved", callMethod("getComponent", _me), t_ar_out)
 }
 

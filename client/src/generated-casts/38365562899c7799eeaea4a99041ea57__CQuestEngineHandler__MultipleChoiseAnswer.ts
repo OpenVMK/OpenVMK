@@ -13,5 +13,9 @@ export function MultipleChoiseAnswer(_me: LingoMe, t_arg: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("selectedOption")]);
   var t_ar_Msg = callMethod("createClientCommand", _me, t_arg, t_ar_msgDesc);
   callMethod("send", callNamed("getConnection", callNamed("getVariable", "main.connection.id", "VMK")), 865, t_ar_Msg)
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine<-MultipleChoiseAnswer", t_ar_Msg))
+  }
+
 }
 

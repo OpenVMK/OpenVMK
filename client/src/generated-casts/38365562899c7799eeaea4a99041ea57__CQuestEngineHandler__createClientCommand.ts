@@ -25,8 +25,8 @@ case symbol("canned"):
   var tCannedBlock = callNamed("TransformCannedToMsg", t_ar_Params[t], 0);
   for (var i = 1; i <= tCannedBlock.count; ++i) {
   var tKey = callMethod("getPropAt", tCannedBlock, i);
-  var tValue = tCannedBlock[i];
-  callMethod("addProp", t_ar_out, tKey, tValue)
+  var tvalue = tCannedBlock[i];
+  callMethod("addProp", t_ar_out, tKey, tvalue)
   }
 
   break;
@@ -60,8 +60,8 @@ case 7:
   tCannedBlock = callNamed("TransformCannedToMsg", t_ar_Params[t], 0);
   for (var i = 1; i <= tCannedBlock.count; ++i) {
   tKey = callMethod("getPropAt", tCannedBlock, i);
-  tValue = tCannedBlock[i];
-  callMethod("addProp", t_ar_out, tKey, tValue)
+  tvalue = tCannedBlock[i];
+  callMethod("addProp", t_ar_out, tKey, tvalue)
   }
 
   break;
@@ -94,8 +94,8 @@ case 17:
   tCannedBlock = callNamed("TransformCannedToMsg", t_ar_CannedContent, 0);
   for (var i = 1; i <= tCannedBlock.count; ++i) {
   tKey = callMethod("getPropAt", tCannedBlock, i);
-  tValue = tCannedBlock[i];
-  callMethod("addProp", t_ar_out, tKey, tValue)
+  tvalue = tCannedBlock[i];
+  callMethod("addProp", t_ar_out, tKey, tvalue)
   }
 
   }
@@ -113,6 +113,8 @@ case 19:
   callMethod("addProp", t_ar_out, symbol("int"), t_ar_pair[2])
   }
 
+  break;
+case 20:
   break;
   default:
   callNamed("put", lingoBinary("joinPad", "Unknown clien task-type", t_iTaskType))

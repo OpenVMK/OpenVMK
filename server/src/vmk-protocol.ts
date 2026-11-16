@@ -672,6 +672,22 @@ export const MSG = {
   /** `CHiddenMickeyHandler`: `[int reqId, int newMickeyFound]` — answers 770. */
   HIDDEN_MICKEY_IN_PICTURE: 2770,
 
+  // ---- quest engine (CQuestEngineHandler; quests.ts, docs/QUEST-ENGINE.md)
+  /** The task hint, or the multiple-choice window when it carries options. */
+  QUEST_CURRENT_TASK_DATA: 2853,
+  /** The join / info page for one quest (official quests: join, with next/prev). */
+  QUEST_INSTANCE_DATA: 2852,
+  /** Task completed / failed window; its button sends 845. */
+  QUEST_TASK_NOTIFICATION: 2854,
+  /** Quest completed + prize + rating; OK sends 854. */
+  QUEST_COMPLETED: 2855,
+  /** `[int templateId, int reason (quest.cancelled.info.N), int official]`. */
+  QUEST_TERMINATED: 2856,
+  /** `[int n, n × (int tileRef, int findableItemCode)]` — items to find in this room. */
+  QUEST_SHOW_FINDABLE: 2869,
+  /** `[int tileRef]` (-1 = all) — the item on that tile was found. No click: the server sees the walk. */
+  QUEST_HIDE_FINDABLE: 2870,
+
   // ---- music mixers (CMusicMixerHandler / CMusicPlayerHandler; music-mixer.ts)
   /** No body. `ui_MusicMixer`: the ONLY thing that opens the mixer window. */
   OPEN_MIXER: 2750,
@@ -1008,15 +1024,6 @@ export const CMD = {
    * profile. Ignoring this message means every preference resets at login,
    * because the reply is what the client trusts.
    */
-  /**
-   * The quest button on the chat bar (and the Q hotkey).
-   * `CMessageBar` fires `ui_questengine` -> `CQuestEngineComponent
-   * .requestQuestEngineData` -> `GetCurrentTaskData`, which sends this and then
-   * waits for `2853 CurrentTaskData`.
-   *
-   * ⚠ Unanswered, the quest UI simply hangs — there is no timeout and no error
-   * path, so the button looks dead rather than unimplemented.
-   */
   /** Open the shop. No parameters; answered with `CATALOG_INDEX` (2701). */
   CAT_INDEX_REQUEST: 15,
   /**
@@ -1048,7 +1055,37 @@ export const CMD = {
    */
   BUY: 17,
   BUY_ROOM: 700,
+  /**
+   * The quest button on the chat bar (and the Q hotkey). No body.
+   * `CMessageBar` fires `ui_questengine` -> `CQuestEngineComponent
+   * .requestQuestEngineData` -> `GetCurrentTaskData`, which sends this. It is
+   * the client's ONLY way into the quest UI: what we answer picks the window
+   * (2853 on a quest, 2852 otherwise — quests.ts).
+   *
+   * ⚠ Unanswered, the quest UI simply hangs — there is no timeout and no error
+   * path, so the button looks dead rather than unimplemented.
+   */
   QUEST_CURRENT_TASK: 852,
+  /** No body: the Continue / Try again button on 2854. */
+  QUEST_PROCEED: 845,
+  /** `[int questTemplateId]` — PLAY THIS QUEST on the join page. */
+  QUEST_START: 851,
+  /** No body — quit the quest. */
+  QUEST_QUIT: 853,
+  /** `[int templateId, int avatarQuestId, int rating 1-5]`. */
+  QUEST_RATE: 854,
+  /** `[int currentTemplateId, int next (1/0), int spaceSpecific]` — the join page's next/previous. */
+  QUEST_GET_OFFICIAL: 855,
+  /** `[int questTemplateId]` — the hint window's QUEST INFO button. */
+  QUEST_GET_INSTANCE: 857,
+  /** `[int selectedOption]` (1-based) — the multiple-choice window's answer. */
+  QUEST_ANSWER: 865,
+  /**
+   * `[int templateId, int rank, int prizeIndex]` — double-click on a prize
+   * thumbnail (later quest build only; sent with a raw id, never registered).
+   * Answered with `ITEM_DETAILS` (2522).
+   */
+  QUEST_PRIZE_DETAILS: 868,
   SET_SOUND_SETTINGS: 780,
   REQUEST_ITEM_DETAILS: 535,
   /** The state button on an item: `[int ref]`. Server decides the new state. */

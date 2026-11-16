@@ -10,10 +10,11 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function construct(_me: LingoMe) {
-  setMeProp(_me, "m_rGrid", callNamed("createObject", callNamed("getUniqueID"), "CQuestMagicGrid"));
+  setMeProp(_me, "m_rGrid", callNamed("createObject", symbol("random"), "CGenericThumbnailGrid"));
   setMeProp(_me, "m_ar_components", new LingoPropList([]));
   callMethod("sort", meProp(_me, "m_ar_components"))
   setMeProp(_me, "m_rWindow", undefined);
+  setMeProp(_me, "m_ar_magics", undefined);
   return 1;
 }
 

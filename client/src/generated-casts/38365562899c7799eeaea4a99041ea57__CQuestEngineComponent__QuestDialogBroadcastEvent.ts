@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function QuestDialogBroadcastEvent(_me: LingoMe, t_iManagerID: LingoValue, t_ar_results: LingoValue) {
-  callNamed("put", lingoBinary("joinPad", lingoBinary("joinPad", "QuestEngineComponent.QuestDialogBroadcastEvent: ", t_iManagerID), t_ar_results))
   switch (t_iManagerID) {
 case "QuestPlaceItem":
   var t_ar_cmd = new LingoList([t_ar_results[symbol("questTemplateId")], 2, t_ar_results[symbol("photo")], t_ar_results[symbol("hint")], t_ar_results[symbol("tileReference")], t_ar_results[symbol("findableItemCode")]]);

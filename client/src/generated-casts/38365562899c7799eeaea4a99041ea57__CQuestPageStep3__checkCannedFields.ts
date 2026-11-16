@@ -11,7 +11,9 @@ import {
 
 export function checkCannedFields(_me: LingoMe) {
   var t_iContentOK = 0;
-  for (var t_rCannedField of meProp(_me, "m_ar_CannedFields").toArray()) {
+  for (var i = 1; i <= meProp(_me, "m_ar_CannedFields").count; ++i) {
+  var t_rCannedField = meProp(_me, "m_ar_CannedFields")[i];
+  var t_sFieldName = callMethod("getPropAt", meProp(_me, "m_ar_CannedFields"), i);
   t_iContentOK = lingoBinary("add", t_iContentOK, callMethod("CheckContent", t_rCannedField));
   }
 

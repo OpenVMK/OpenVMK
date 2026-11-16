@@ -12,6 +12,10 @@ import {
 export function TaskMoved(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("taskNumber"), symbol("int"), symbol("up")]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->TaskMoved", t_ar_out))
+  }
+
   callMethod("TaskMoved", callMethod("getComponent", _me), t_ar_out)
 }
 

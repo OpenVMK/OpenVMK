@@ -12,6 +12,7 @@ import {
 export function construct(_me: LingoMe) {
   setMeProp(_me, "m_rHiliterCol", callNamed("rgb", 255, 204, 0));
   setMeProp(_me, "m_rBorderCol", callNamed("rgb", 80, 160, 216));
+  setMeProp(_me, "m_rGridLoadAnim", callNamed("createObject", callNamed("getUniqueID"), "CMainThumbGridAnimator"));
   setMeProp(_me, "m_ar_components", new LingoPropList([]));
   callMethod("sort", meProp(_me, "m_ar_components"))
   setMeProp(_me, "m_ar_data", new LingoPropList([]));

@@ -18,6 +18,7 @@ export function createComponentWindow(_me: LingoMe) {
   var t_rComponentsPage = callNamed("createObject", callNamed("getUniqueID"), "CUIComponentPage");
   callMethod("setSize", t_rComponentsPage, t_rClientElement.pOwnW, t_rClientElement.pOwnH)
   callMethod("setColor", t_rComponentsPage, callNamed("rgb", "#001F56"))
+  callMethod("setClientElement", t_rComponentsPage, t_rClientElement)
   for (var t_sComponentName of t_ar_components.toArray()) {
   callMethod("addComponent", t_rComponentsPage, t_sComponentName)
   }

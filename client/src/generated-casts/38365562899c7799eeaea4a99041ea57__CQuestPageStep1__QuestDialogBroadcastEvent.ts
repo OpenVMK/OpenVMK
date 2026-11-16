@@ -15,7 +15,7 @@ export function QuestDialogBroadcastEvent(_me: LingoMe, t_iManagerID: LingoValue
   var t_rOwner = callMethod("GetOwner", t_rManager);
   }
 
-  var t_ar_questData = callMethod("getData", t_rOwner);
+  var t_ar_questData = callMethod("GetData", t_rOwner);
   switch (t_iManagerID) {
 case "QuestDialogManagerAddTask":
   if (lingoBinary("contains", t_ar_results[symbol("task")], "addtask.")) {

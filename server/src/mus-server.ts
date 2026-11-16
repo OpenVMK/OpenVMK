@@ -260,6 +260,7 @@ import {
   type AutopiaDeps,
 } from "./autopia.js";
 import { NPC_REF_BASE, npcByRef, npcsInRoom, visitNpc, type Npc } from "./npcs.js";
+import { GAME, QuestSession } from "./quests.js";
 import {
   MESSENGER_COMMANDS,
   handleMessengerCommand,
@@ -3494,6 +3495,8 @@ function createVmkSession(
   let messengerPeer: MessengerPeer | null = null;
   /** This connection's `login_log` row, closed on disconnect (Housekeeping → Sessions). */
   let loginLogId = 0;
+  /** The quest engine for this player, from login (quests.ts). Fed by the event hooks below. */
+  let quests: QuestSession | null = null;
 
   /**
    * The last few messages sent, for correlating a client-side crash.
@@ -5259,6 +5262,9 @@ function createVmkSession(
     pressMusicTiles(currentTile, tile);
     autopiaStep(tile);
     diveStep(tile);
+    // A quest's findable item is "found" by stepping on its tile — the client
+    // never reports it (quests.ts).
+    if (tile !== currentTile) quests?.tileEntered(tile);
     // Stepping into a dark-ride piece's "Animation Area" (the editor's own
     // title) sets it off — riding OR walking; nothing in the client or its
     // texts limits it to carts. Only on ENTERING a tile: the stand pulse that
@@ -5355,6 +5361,7 @@ function createVmkSession(
     if (magic === 10 && legs < 5) legs = LEGS_SIT;
     if (seat && legs === LEGS_STAND && !dancing) {
       legs = LEGS_SIT;
+      quests?.sat();
       // A bench faces one way; sitting with your back to it looks broken. Where
       // Disney recorded no direction (`sit10` rather than `sit_10_dir_5`) the
       // seat works from any approach, so we keep the direction of travel.
@@ -6315,6 +6322,7 @@ function createVmkSession(
     // Into the costume for the effect's length (never saved).
     if (cast.costume && me) showFigure(costumeFigure(me.figure, cast.costume));
     console.log(`[${label}] cast pin ${pinId} (type ${pin.typeCode}, ${pin.level}*) -> effect ${cast.effect} for ${durationMs}ms`);
+    quests?.magicCast(pin.typeCode);
     return true;
   };
 
@@ -7021,6 +7029,7 @@ function createVmkSession(
       pay: (reward) => {
         const balance = (getUserById(userId)?.credits ?? 0) + reward.credits;
         setCredits(userId, balance, "Quest Reward");
+        if (live?.userId === userId) quests?.minigame(GAME.FIREWORKS, reward.score, reward.won);
         if (reward.pins.length) addItems(userId, reward.pins, ITEM_CATEGORY.pins);
         if (live?.userId !== userId) return;
         sendCredits();
@@ -7062,6 +7071,7 @@ function createVmkSession(
         sendStaffMessage(userId, message, false);
       },
       toLobby: () => enterRoom(lobbyRoom),
+      played: (game, score, won) => quests?.minigame(game, score, won),
       credits: () => (live ? (getUserById(live.userId)?.credits ?? 0) : 0),
       charge: (credits) => {
         const userId = live?.userId;
@@ -7120,6 +7130,7 @@ function createVmkSession(
         return;
       }
       recordScore(userId, JC_GAME_CODE, end.score);
+      if (live?.userId === userId) quests?.minigame(GAME.JUNGLE_CRUISE, end.score, end.finished);
       const reward = claimJcReward(userId);
       sendCredits();
       if (reward.posters.length) queueItemList(1);
@@ -7340,6 +7351,36 @@ function createVmkSession(
       };
       claimUserConnection(live);
       loginLogId = logLogin(account.id, "game", ipOf(remote), fields[2] ?? "");
+
+      quests?.dispose();
+      quests = new QuestSession({
+        userId: account.id,
+        label,
+        send,
+        // Public rooms only: a guest room built on a public style is not that room.
+        roomCode: () => (currentGuestRoom() ? undefined : currentRoomCode),
+        ownsPin: (code) => getOwnedItems(account.id, ITEM_CATEGORY.pins).some((i) => i.typeCode === code),
+        ownsItem: (code) => getOwnedItems(account.id).some((i) => i.typeCode === code),
+        grant: (quest) => {
+          if (quest.reward.credits > 0) {
+            setCredits(account.id, (getUserById(account.id)?.credits ?? 0) + quest.reward.credits, "Quest Reward");
+            if (live?.userId === account.id) sendCredits();
+          }
+          if (quest.reward.pins.length) {
+            addItems(account.id, quest.reward.pins, ITEM_CATEGORY.pins);
+            if (live?.userId === account.id) queueItemList(1);
+          }
+        },
+        // Owner "VMK"; kind 7 (magic pin: level, word) or 6 (any other pin),
+        // as the lanyard and trade panels send it.
+        showItemDetails: (typeCode) => {
+          const magic = magicOf(typeCode);
+          const params: OutgoingParam[] = [{ int: typeCode }, { str: "VMK" }];
+          if (magic) params.push({ int: 7 }, { int: 1 }, { str: magic.word ?? "" });
+          else params.push({ int: 6 });
+          send(MSG.ITEM_DETAILS, params, `ItemDetails (quest prize) type=${typeCode}`);
+        },
+      });
 
       // Online in the messenger from now; the client's `MESSENGER_INIT` (sent
       // on `init_messenger`, right after login) is what fetches the list.
@@ -8002,6 +8043,9 @@ function createVmkSession(
           send(MSG.CREATE_ELEMENTS, collectableElements(onTheTrack), `CreateElements ${onTheTrack.length} autopia collectable(s)`);
         }
       }
+      // Quests: a room-visit task, and the findable items lying in this room
+      // (the client dropped the last room's on room_leave).
+      quests?.roomReady();
       if (roomNpcs.length > 0 && currentRoomName && currentRoomCode !== undefined) {
         // `2791`: each NPC's current animation — resting (state 0) on arrival;
         // a ghost mid-visit joins its loop `age` ms in.
@@ -8295,21 +8339,10 @@ function createVmkSession(
       return;
     }
 
-    if (command === CMD.QUEST_CURRENT_TASK) {
-      // The quest engine is not implemented. Say so, rather than leaving the
-      // button dead — the client waits on `2853` forever with no error path, so
-      // silence is indistinguishable from a broken UI.
-      //
-      // Target 3 titles the dialog "VMK Staff Alert to VMK"; 0 would give
-      // "Personal Message from VMK Staff", which clips in the header.
-      console.log(`[${label}] quest engine requested (852) — replying "not available"`);
-      send(
-        MSG.ADMIN_MESSAGE,
-        [{ str: wireText("Quests aren't available right now.") }, { int: 3 }],
-        "AdminMessage alert (quests unavailable)",
-      );
-      return;
-    }
+    // The quest engine (quests.ts): the Q button (852) and everything its
+    // windows send. The editor commands (840-850, 856-864, 866-867) are not
+    // handled — only official quests exist.
+    if (quests && quests.handle(command, body)) return;
 
     if (command === CMD.SET_SOUND_SETTINGS) {
       // Six ints, same order as the reply. The client has already applied them
@@ -8487,6 +8520,7 @@ function createVmkSession(
             : `${visit.line}\r\rCome back in ${hours} hour${hours === 1 ? "" : "s"} for more credits!`;
         // `2710 [int itemCode, str message]` — the "<Name> Found!" dialog.
         send(MSG.NPC_CLICKED, [{ int: npc.code }, { str: wireText(dialog) }], `NpcClicked ${npc.code}`);
+        quests?.npcVisited(npc.code);
         if (visit.credits > 0) {
           sendCredits();
           sendStaffMessage(
@@ -9875,6 +9909,7 @@ function createVmkSession(
       else for (const occupant of audience) occupant.send(MSG.AVATAR_CHAT, params, undefined);
       // After the bubble, so the room sees the word said and then the magic.
       castByMagicWord(tokensToText(tokens));
+      quests?.said(tokensToText(tokens));
       // The Blue Bayou's Gator Waiter serves a seated guest who says the word.
       if (currentRoomName) waiters.get(currentRoomName)?.heard(characterName, currentTile, tokensToText(tokens));
       return;
@@ -10721,6 +10756,7 @@ function createVmkSession(
         JSON.stringify({ sex, figure, guestRoomStyle: outfit?.guestRoomStyle ?? null }),
       );
       console.log(`[${label}] figure changed to [${figure.join(", ")}]`);
+      quests?.clothesChanged();
 
       const padded = [...figure.slice(0, 12)];
       while (padded.length < 12) padded.push(-1);
@@ -11070,6 +11106,7 @@ function createVmkSession(
       if (emoticonTimer) clearTimeout(emoticonTimer);
       emoticon = id;
       console.log(`[${label}] emoticon ${id}`);
+      quests?.emoticon(id);
       sendPulse(currentTile, LEGS_STAND); // same tile: a pose change, not a move
       emoticonTimer = setTimeout(() => {
         emoticonTimer = undefined;
@@ -11097,9 +11134,11 @@ function createVmkSession(
 
       if (action === EMOTE_DANCE) {
         dancing = !dancing;
+        if (dancing) quests?.danced();
       } else if (action === EMOTE_WAVE) {
         if (waveTimer) clearTimeout(waveTimer);
         waving = starting;
+        if (starting) quests?.waved();
         if (starting) {
           waveTimer = setTimeout(() => {
             waveTimer = undefined;
@@ -11609,6 +11648,8 @@ function createVmkSession(
         hmLobbyLeave(live.userId);
         if (messengerPeer) messengerOffline(live.userId, messengerPeer);
         messengerPeer = null;
+        quests?.dispose();
+        quests = null;
         releaseUserConnection(live);
         live = null;
       }

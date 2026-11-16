@@ -10,6 +10,5 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function QuestDialogBroadcastEvent(_me: LingoMe, t_iManagerID: LingoValue, t_ar_results: LingoValue) {
-  callNamed("put", lingoBinary("joinPad", "QuestInstance.DataContainer->BroadCastEvent results:", t_ar_results))
 }
 

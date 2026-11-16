@@ -43,7 +43,6 @@ on update me, a_mp_kType_mp_iRef_rItem, a_kAlteredCategory
   end if
 end
 on rawData me, t_ar_data
-  put "Update task: Room Visit" && t_ar_data
   t_rManager = me.getManager()
   if objectp(t_rManager) then
     t_ar_results = [:]
@@ -62,7 +61,7 @@ on _EventProc me, a_kEvent, a_sElemID, a_vParam
         t_rComponent.EventProc(a_vParam, t_ar_event)
         if t_ar_event.found then
           case t_ar_event.event of
-            "land.adventureland", "land.frontierland", "land.fantasyland", "land.tomorrowland", "land.mainstreet", "land.ownrooms":
+            "land.adventureland", "land.frontierland", "land.fantasyland", "land.tomorrowland", "land.mainstreet", "land.neworleanssquare":
               t_ar_event.route.component.toggleShowChildren()
 
           end case

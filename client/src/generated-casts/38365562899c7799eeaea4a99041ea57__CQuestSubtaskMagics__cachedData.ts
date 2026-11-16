@@ -10,7 +10,15 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function cachedData(_me: LingoMe, t_ar_data: LingoValue) {
-  var t_ar_magics = callNamed("getAvailableMagics");
-  callMethod("render", meProp(_me, "m_rGrid"), t_ar_magics, callMethod("getElement", meProp(_me, "m_rWindow"), "quest.magics"))
+  setMeProp(_me, "m_ar_magics", callNamed("getAvailableMagics"));
+  var t_mp_ThumbsData = new LingoPropList([]);
+  if (callNamed("listp", meProp(_me, "m_ar_magics"))) {
+  for (var i = 1; i <= meProp(_me, "m_ar_magics").count; ++i) {
+  callMethod("addProp", t_mp_ThumbsData, meProp(_me, "m_ar_magics")[i].id, undefined)
+  }
+
+  }
+
+  callNamed("executeMessage", "GetPinThumbnail", t_mp_ThumbsData, new LingoPropList([symbol("client"), callMethod("getID", _me), symbol("method"), symbol("_PinThumbsReadyCbk")]))
 }
 

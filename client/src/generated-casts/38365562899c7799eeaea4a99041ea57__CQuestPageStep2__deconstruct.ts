@@ -10,8 +10,19 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function deconstruct(_me: LingoMe) {
+  callMethod("SetStep2SelectedTab", callMethod("getInterface", callNamed("getThread", "QuestEngine")), meProp(_me, "m_sSelectedTab"))
   if (callNamed("objectp", meProp(_me, "m_rWindow"))) {
   callMethod("Purge", _me, meProp(_me, "m_rWindow"))
+  }
+
+  if (callNamed("objectp", meProp(_me, "m_rGridLoadAnim"))) {
+  callNamed("removeObject", callMethod("getID", meProp(_me, "m_rGridLoadAnim")))
+  setMeProp(_me, "m_rGridLoadAnim", undefined);
+  }
+
+  if (callNamed("objectp", meProp(_me, "m_rGridLoadAnim2"))) {
+  callNamed("removeObject", callMethod("getID", meProp(_me, "m_rGridLoadAnim2")))
+  setMeProp(_me, "m_rGridLoadAnim2", undefined);
   }
 
   for (var t_rComponent of meProp(_me, "m_ar_components").toArray()) {

@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", lingoBinary("joinPad", "Update task: Minigame", t_ar_data))
   var t_rComponents = meProp(_me, "m_ar_components")["quest.gamelist"];
   callMethod("setActive", t_rComponents, t_ar_data[symbol("GameID")])
   var t_rClientElement = callMethod("getElement", meProp(_me, "m_rWindow"), "quest.gamelist");

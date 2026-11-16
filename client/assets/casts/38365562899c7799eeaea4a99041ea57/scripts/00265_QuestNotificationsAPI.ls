@@ -1,4 +1,8 @@
 -- Behavior
+on ReloadQuestEngine
+  removeThread(#QuestEngine)
+  createThread(VOID, castLib("vmk_questengine/vmk_quest_engine").number)
+end
 on array_slice t_ar_array, t_iOffset, t_iLength
   t_ar_out = t_ar_array.duplicate()
   repeat with i = t_iOffset - 1 down to 1
@@ -20,8 +24,7 @@ on getAvailableMagics
       t_ar_magics.append(t_ar_new)
     end repeat
   end if
-  t = [:]
-  getThread("inventory").getComponent().GetItemsByCategory(#pins, t)
+  t = getThread("inventory").component.GetInventory(1).GetItemListByCategory(#pins)
   repeat with t_ar_magic in t
     if t_ar_magic[#param] > 0 then
       t_ar_new = [:]

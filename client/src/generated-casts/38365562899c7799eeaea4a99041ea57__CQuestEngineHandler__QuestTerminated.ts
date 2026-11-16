@@ -12,6 +12,10 @@ import {
 export function QuestTerminated(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("questTemplateId"), symbol("int"), symbol("terminationReason"), symbol("int"), symbol("official")]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->QuestTerminated", t_ar_out))
+  }
+
   callMethod("QuestTerminated", callMethod("getComponent", _me), t_ar_out)
 }
 

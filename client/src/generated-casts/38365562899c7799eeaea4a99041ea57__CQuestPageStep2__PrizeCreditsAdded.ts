@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function PrizeCreditsAdded(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", lingoBinary("joinPad", lingoBinary("joinPad", "DONE?", symbol("PrizeCreditsAdded")), t_ar_data))
   var t_sElemName = "quest.prizes";
   var t_rComponentPage = meProp(_me, "m_ar_components")[t_sElemName];
   var t_rClientElement = callMethod("getElement", meProp(_me, "m_rWindow"), t_sElemName);

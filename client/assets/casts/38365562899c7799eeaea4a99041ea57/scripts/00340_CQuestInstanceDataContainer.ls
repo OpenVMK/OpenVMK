@@ -17,11 +17,10 @@ end
 on getInterface me
   return m_rInterface
 end
-on getData me
+on GetData me
   return m_ar_data
 end
 on ChangePageEvent me, t_iManagerID, t_sPageName
-  put "Quest Instance Change Page Event Received" && t_iManagerID && t_sPageName
   t_rCurrentPage = m_rInterface.getInterface().GetBase().getPage()
   case t_sPageName of
     "info.staff.order", "info.staff.timerace", "info.player.order", "info.player.timerace", "join.staff.order", "join.staff.timerace", "join.player.order", "join.player.timerace":
@@ -38,10 +37,8 @@ on ChangePageEvent me, t_iManagerID, t_sPageName
   end case
 end
 on QuestDialogBroadcastEvent me, t_iManagerID, t_ar_results
-  put "QuestInstance.DataContainer->BroadCastEvent results:" && t_ar_results
 end
 on QuestInstanceData me, t_ar_data
-  put "QuestInstanceData " && t_ar_data
   if listp(t_ar_data) then
     m_ar_data = t_ar_data
     case t_ar_data[#official] of

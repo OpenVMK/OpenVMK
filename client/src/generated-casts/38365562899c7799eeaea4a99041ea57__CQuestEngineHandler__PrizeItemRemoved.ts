@@ -12,6 +12,10 @@ import {
 export function PrizeItemRemoved(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("rank"), symbol("int"), symbol("itemReference")]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->PrizeItemRemoved", t_ar_out))
+  }
+
   callMethod("PrizeItemRemoved", callMethod("getComponent", _me), t_ar_out)
 }
 

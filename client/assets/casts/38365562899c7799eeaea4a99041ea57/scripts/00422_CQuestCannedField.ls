@@ -27,7 +27,6 @@ on Init me, a_rWindow, a_sFieldName, t_bMultiple
   m_sElem = a_sFieldName
   t_rElem = a_rWindow.getElement(a_sFieldName)
   if objectp(t_rElem) then
-    put "Canned type" && t_bMultiple
     if not t_bMultiple then
     end if
     m_rField = CreateCannedField(m_rWindow.getID(), a_sFieldName)
@@ -63,6 +62,7 @@ on _EventProc me, a_kEvent, a_sElemID, a_vParam
           tElem = m_rWindow.getElement(m_sElem)
           tSelection = tElem.pMember.selection
           tCharcount = tElem.pMember.text.char.count
+          put tSelection && tCharcount
           if tCharcount > 0 then
             if tElem.pMember.text.char[tSelection[2]] = " " then
               return 1

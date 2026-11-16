@@ -12,6 +12,10 @@ import {
 export function QuestAuthorHallOfFame(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("author_count"), symbol("Array"), new LingoPropList([symbol("str"), symbol("avatarName"), symbol("int"), symbol("rating")])]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->PrizeCleared", t_ar_out))
+  }
+
   callMethod("QuestAuthorHallOfFame", callMethod("getComponent", _me), t_ar_out)
 }
 

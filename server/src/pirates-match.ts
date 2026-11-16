@@ -1364,6 +1364,8 @@ export class PotcMatch {
       let credits = gold + (won ? WIN_BONUS : 0);
       if (withAI) credits = Math.round(credits / 4);
       recordScore(h.player.userId, this.mode === MODE_CTF ? POTC_CTF_GAME_CODE : POTC_LMS_GAME_CODE, gold);
+      // Quest GameIDs: 6 Capture the Flag, 7 Ship Battle (`quest.gamename.N`).
+      h.player.played?.(this.mode === MODE_CTF ? 6 : 7, gold, won);
       const extras: string[] = [];
       if (won) {
         const progress = addPotcWin(h.player.userId, this.level, this.mode);

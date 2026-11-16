@@ -12,6 +12,10 @@ import {
 export function TaskTimeLimitSet(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("taskNumber"), symbol("int"), symbol("timeLimitInSecs")]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->TaskTimeLimitSet", t_ar_out))
+  }
+
   callMethod("TaskTimeLimitSet", callMethod("getComponent", _me), t_ar_out)
 }
 

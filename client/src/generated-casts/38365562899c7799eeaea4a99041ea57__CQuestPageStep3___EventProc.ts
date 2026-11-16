@@ -16,9 +16,11 @@ export function _EventProc(_me: LingoMe, a_kEvent: LingoValue, a_sElemID: LingoV
   if (lingoBinary("or", lingoBinary("eq", a_kEvent, symbol("keyUp")), lingoBinary("eq", a_kEvent, symbol("keyDown")))) {
   callMethod("setTestingStatus", _me, callMethod("checkCannedFields", _me))
   switch (a_sElemID) {
-case "quest.questname.input1":
-case "quest.description.input2":
+case "quest.questname.input":
+case "quest.description.input":
   return callMethod("_EventProc", meProp(_me, "m_ar_CannedFields")[a_sElemID], a_kEvent, a_sElemID, a_vParam);
+  default:
+  callNamed("put", lingoBinary("joinPad", "Possible unknown canned field", a_sElemID))
   break;
   }
 

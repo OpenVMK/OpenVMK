@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function ChangePageEvent(_me: LingoMe, t_iManagerID: LingoValue, t_sPageName: LingoValue) {
-  callNamed("put", lingoBinary("joinPad", lingoBinary("joinPad", "Quest Template Change Page Event Received", t_iManagerID), t_sPageName))
   setMeProp(_me, "m_sCurrentPage", t_sPageName);
   var t_rCurrentPage = callMethod("getPage", callMethod("GetBase", callMethod("getInterface", meProp(_me, "m_rInterface"))));
   switch (t_sPageName) {
@@ -33,11 +32,13 @@ case "step2":
   if (callNamed("objectp", t_rCurrentPage)) {
   callMethod("setCredits", t_rCurrentPage, callMethod("get", callNamed("getObject", symbol("session")), "user_credits"))
   callMethod("setPrize", t_rCurrentPage, 0)
+  var t = theProperty("milliSeconds");
   for (var i = 1; i <= meProp(_me, "m_ar_data")[symbol("prize_array")].count; ++i) {
   var t_ar_prizeData = meProp(_me, "m_ar_data")[symbol("prize_array")][i];
-  callMethod("updatePrizeRank", t_rCurrentPage, t_ar_prizeData, i)
+  callMethod("updatePrizeRank", t_rCurrentPage, t_ar_prizeData, i, 1)
   }
 
+  callMethod("renderPrizes", t_rCurrentPage)
   callMethod("checkTestingStatus", _me)
   }
 

@@ -12,6 +12,10 @@ import {
 export function QuestCleared(_me: LingoMe, tMsgStruct: LingoValue) {
   var t_ar_msgDesc = new LingoPropList([symbol("int"), symbol("tasksCleared"), symbol("int"), symbol("prizesCleared"), symbol("int"), symbol("propertiesCleared")]);
   var t_ar_out = callMethod("parseServerMessage", _me, tMsgStruct, t_ar_msgDesc);
+  if (meProp(_me, "m_bDebug")) {
+  callNamed("put", lingoBinary("joinPad", "QuestEngine->QuestCleared", t_ar_out))
+  }
+
   callMethod("QuestCleared", callMethod("getComponent", _me), t_ar_out)
 }
 

@@ -71,7 +71,6 @@ on updateDefaults me
   me.setAmount(m_ar_defaults[#default])
 end
 on rawData me, t_ar_data
-  put "Update task: Minigame" && t_ar_data
   t_rComponents = m_ar_components["quest.gamelist"]
   t_rComponents.setActive(t_ar_data[#GameID])
   t_rClientElement = m_rWindow.getElement("quest.gamelist")

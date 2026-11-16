@@ -40,7 +40,6 @@ on update me, a_mp_kType_mp_iRef_rItem, a_kAlteredCategory
   end if
 end
 on rawData me, t_ar_data
-  put "Fill blanks (Task Completed)"
   t_sTask = "Task" && t_ar_data[#taskNumber] + 1 & "/" & t_ar_data[#totalTaskCount]
   me.setField(m_rWindow, "quest.dialog.hd", t_ar_data[#questName] & ", " & t_sTask)
   me.setField(m_rWindow, "quest.taskresults.hd", getText("quest.dialog.hd.taskcompleted"))

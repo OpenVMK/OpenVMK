@@ -11,7 +11,7 @@ import {
 
 export function addSelectedItem(_me: LingoMe) {
   var t_ar_selected = callMethod("GetSelected", _me);
-  var t_ar_questData = callMethod("getData", callMethod("GetOwner", callMethod("getManager", _me)));
+  var t_ar_questData = callMethod("GetData", callMethod("GetOwner", callMethod("getManager", _me)));
   var t_rComponentPage = meProp(_me, "m_ar_components")["quest.prizes"];
   if (callNamed("objectp", t_rComponentPage)) {
   var t_rActiveComponent = callMethod("GetActiveComponent", t_rComponentPage);

@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function QuestInstanceData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", "Fill blanks (Info Staff Timerace)")
   var t_sIndex = "";
   if (lingoBinary("eq", t_ar_data[symbol("officialQuestCount")], 0)) {
   callMethod("showHideElem", _me, meProp(_me, "m_rWindow"), "quest.next", 0)

@@ -30,7 +30,7 @@ on GetTestingRequired me
   end if
   return m_ar_data[#testingRequired]
 end
-on getData me
+on GetData me
   return m_ar_data
 end
 on hide me
@@ -40,7 +40,6 @@ on show me
   m_rInterface.show()
 end
 on ChangePageEvent me, t_iManagerID, t_sPageName
-  put "Quest Template Change Page Event Received" && t_iManagerID && t_sPageName
   m_sCurrentPage = t_sPageName
   t_rCurrentPage = m_rInterface.getInterface().GetBase().getPage()
   case t_sPageName of
@@ -59,10 +58,12 @@ on ChangePageEvent me, t_iManagerID, t_sPageName
       if objectp(t_rCurrentPage) then
         t_rCurrentPage.setCredits(getObject(#session).get("user_credits"))
         t_rCurrentPage.setPrize(0)
+        t = the milliSeconds
         repeat with i = 1 to m_ar_data[#prize_array].count
           t_ar_prizeData = m_ar_data[#prize_array][i]
-          t_rCurrentPage.updatePrizeRank(t_ar_prizeData, i)
+          t_rCurrentPage.updatePrizeRank(t_ar_prizeData, i, 1)
         end repeat
+        t_rCurrentPage.renderPrizes()
         me.checkTestingStatus()
       end if
       if m_ar_data[#prize_array].count = 0 then
@@ -114,7 +115,6 @@ on checkTestingStatus me
   end if
 end
 on QuestDialogBroadcastEvent me, t_iManagerID, t_ar_results
-  put "QuestTemplate.DataContainer->BroadCastEvent results:" && t_iManagerID && t_ar_results
   if t_ar_results[#releaseQuest] then
     t_ar_cmd = []
     t_ar_cmd.append(m_ar_data[#questTemplateId])
@@ -286,17 +286,17 @@ on PrizeItemAdded me, t_ar_data
     m_ar_data[#prize_array].append(t_ar_prizeArray)
   end if
   t_ar_newItem = [:]
-  t_ar_newItem[#itemReference] = t_ar_data[#itemReference]
-  t_ar_newItem[#itemCode] = t_ar_data[#itemCode]
+  repeat with t = 1 to t_ar_data.count
+    t_ar_newItem.setaProp(t_ar_data.getPropAt(t), t_ar_data[t])
+  end repeat
+  t_ar_newItem.deleteProp(#rank)
   m_ar_data[#prize_array][t_iPrizeRank][#item_array].append(t_ar_newItem)
   t_iPrizeCount = m_ar_data[#prize_array][t_iPrizeRank][#item_array].count
   t_rCurrentPage = m_rInterface.getInterface().GetBase().getPage()
   t_rCurrentPage.updatePrizeRank(m_ar_data[#prize_array][t_iPrizeRank], t_iPrizeRank)
-  put "Stop and show what's going on..."
   me.checkTestingStatus()
 end
 on PrizeItemRemoved me, t_ar_data
-  put "Manager.PrizeItemRemoved TODO" && t_ar_data
   t_iPrizeRank = t_ar_data[#rank] + 1
   t_ar_items = m_ar_data[#prize_array][t_iPrizeRank][#item_array]
   repeat with i = 1 to t_ar_items.count
@@ -334,7 +334,6 @@ on PrizeCreditsRemoved me, t_ar_data
   me.checkTestingStatus()
 end
 on updateCredits me
-  put "OK, so update the prizes then??" && m_sCurrentPage && getObject(#session).get("user_credits")
   if m_sCurrentPage = "step2" then
     t_rCurrentPage = m_rInterface.getInterface().GetBase().getPage()
     t_rCurrentPage.setCredits(getObject(#session).get("user_credits"))
@@ -365,7 +364,6 @@ on QuestCleared me, t_ar_data
   me.checkTestingStatus()
 end
 on PrizeCleared me, t_ar_data
-  put "TODO PrizeCleared!!! Should all prizes be updated....?? Or just delete one and update others....?"
   m_ar_data[#prize_array].deleteAt(t_ar_data[#rank] + 1)
   t_rCurrentPage = m_rInterface.getInterface().GetBase().getPage()
   t_rCurrentPage.PrizeCleared(t_ar_data)

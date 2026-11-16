@@ -22,8 +22,7 @@ export function getAvailableMagics(_me: LingoMe) {
 
   }
 
-  var t = new LingoPropList([]);
-  callMethod("GetItemsByCategory", callMethod("getComponent", callNamed("getThread", "inventory")), symbol("pins"), t)
+  var t = callMethod("GetItemListByCategory", callMethod("GetInventory", callNamed("getThread", "inventory").component, 1), symbol("pins"));
   for (var t_ar_magic of t.toArray()) {
   if (lingoBinary("gt", t_ar_magic[symbol("param")], 0)) {
   t_ar_new = new LingoPropList([]);

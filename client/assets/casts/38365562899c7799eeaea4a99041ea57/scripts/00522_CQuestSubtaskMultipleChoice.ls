@@ -153,7 +153,6 @@ on saveData me, a_bDiscardErrors
   return 0
 end
 on rawData me, t_ar_data
-  put "Update task: Multiple Choice" && t_ar_data
   if listp(t_ar_data[#answers]) then
     repeat with i = 1 to t_ar_data[#answers].count
       t_rAnswer = t_ar_data[#answers][i]

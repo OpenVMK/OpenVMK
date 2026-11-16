@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", lingoBinary("joinPad", "Update task: Multiple Choice", t_ar_data))
   if (callNamed("listp", t_ar_data[symbol("answers")])) {
   for (var i = 1; i <= t_ar_data[symbol("answers")].count; ++i) {
   var t_rAnswer = t_ar_data[symbol("answers")][i];

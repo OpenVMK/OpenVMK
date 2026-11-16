@@ -31,6 +31,34 @@ case "quest.prizes.more":
   callMethod("MoveItemIndex", _me, t_iRank, 1, 2)
   callNamed("executeMessage", "PlayInterfaceSound", "UI-click")
   break;
+case "quest.prizes.1":
+case "quest.prizes.2":
+  if (theProperty("doubleClick")) {
+  var t_iShift = 0;
+  if (lingoBinary("eq", t_ar_event.event, "quest.prizes.2")) {
+  t_iShift = 1;
+  }
+
+  var t_rActiveLayout = callMethod("GetActive", t_rComponentPage);
+  var t_rNode = new LingoPropList([symbol("itemCode"), -float(1)]);
+  if (callNamed("objectp", t_rActiveLayout)) {
+  t_rNode = callMethod("GetNode", t_rActiveLayout);
+  }
+
+  if (lingoBinary("gt", t_rNode.itemCode, 0)) {
+  t_iRank = lingoBinary("sub", callMethod("getComponentID", t_rComponentPage, t_ar_event.route.component), 1);
+  var t_iItemIndex = lingoBinary("sub", lingoBinary("add", meProp(_me, "m_ar_data").remaining_prize_array[lingoBinary("add", t_iRank, 1)].item_index, t_iShift), 1);
+  if (callNamed("listp", meProp(_me, "m_ar_data"))) {
+  var t_ID = meProp(_me, "m_ar_data")[symbol("questTemplateId")];
+  callMethod("GetPrizeItemDetails", callMethod("getHandler", callNamed("getThread", symbol("QuestEngine"))), new LingoList([t_ID, lingoBinary("add", meProp(_me, "m_ar_data")[symbol("taken_prize_count")], t_iRank), t_iItemIndex]))
+  }
+
+  }
+
+  }
+
+  break;
+  break;
   }
 
   }

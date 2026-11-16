@@ -10,7 +10,6 @@ import {
 } from "../lingo/lingo-runtime.js";
 
 export function rawData(_me: LingoMe, t_ar_data: LingoValue) {
-  callNamed("put", "Fill blanks (Testing Completed)")
   callMethod("showHideElem", _me, meProp(_me, "m_rWindow"), "quest.timetotal", 0)
   callMethod("showHideElem", _me, meProp(_me, "m_rWindow"), "quest.questtimeinfo.hd", 0)
   callMethod("showHideElem", _me, meProp(_me, "m_rWindow"), "field.credits", 0)
