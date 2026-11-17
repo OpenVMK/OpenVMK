@@ -128,11 +128,13 @@ export interface MickeyReward {
  * The prize tiers (the wiki's, for Part 2; the 2008 set's are unknown, so it uses
  * the same): credits plus
  * Disney's Part II prize items — Bronze Mickey Part II 2086, Goofy Hat 41001,
- * Silver Mortimer Part II 2087, Photo Album 31, Gold Oswald Part II 2088. The
- * first tier's Brown Mickey T-Shirt has no known type code, so it pays credits only.
+ * Silver Mortimer Part II 2087, Photo Album 31, Gold Oswald Part II 2088, and
+ * the first tier's Brown Mickey T-Shirt: "Mickey T-Shirt" comes in ten colours
+ * (44080-44089, figure-set colours); 44086 is the brown one (#4C3422; 44085's
+ * #735D39 is tan).
  */
 export const REWARDS: MickeyReward[] = [
-  { at: 1, credits: 375, items: [] },
+  { at: 1, credits: 375, items: [44086] },
   { at: 10, credits: 0, items: [2086] },
   { at: 20, credits: 375, items: [41001] },
   { at: 30, credits: 375, items: [2087] },

@@ -103,9 +103,29 @@ const textFiles = (cast) => (existsSync(join(CASTS, cast, "text")) ? readdirSync
 const readText = (cast, file) => readFileSync(join(CASTS, cast, "text", file), "latin1");
 const attrs = (s) => Object.fromEntries([...s.matchAll(/(\w+)="([^"]*)"/g)].map(([, k, v]) => [k, v]));
 
+/**
+ * Part 2 Mickeys whose room object is in NO surviving cast, put back where the
+ * wiki's screenshots show them. Each was located by aligning the wiki's crop
+ * with our render of the room and fitting the `t` silhouette to the difference
+ * (`drawn` = the fitted centre, `blend` = the fitted strength). Node X/Y/Z give
+ * that loc through the room engine's placement, the same in every room:
+ * locH = X - Y + 400, locV = (X + Y) / 2 - Z + 300.
+ *  - 029 Street Party Music Game (Disney: "near the moon"; wiki: "inside the
+ *    moon circle"): the moon lamp right of the West End sign, room 42.
+ *  - 023 Shipwreck Graveyard (wiki: "on the right side of the wreck"). Disney's
+ *    texts name 023 "Discovery Island", a room with no Mickey in any build; the
+ *    Shipwreck is the one the wiki's 50 have instead, so it takes the free ID.
+ */
+const RESTORED = [
+  { layout: "musicmix", path: "vmk_spaces/vmk_musicmix", id: 29, member: "t5", node: [-163, -351, 0], blend: 5, drawn: [588, 43] },
+  { layout: "shipwreck", path: "vmk_spaces/vmk_shipwreck", id: 23, member: "t5", node: [-146, -380, 0], blend: 20, drawn: [634, 37] },
+];
+for (const r of RESTORED) POSITIONS[`${r.layout}:${r.id}`] = r.drawn;
+
 // ── gather both quests per layout ───────────────────────────────────────────
 const part2 = {}; // layout -> [{ id, type, x, y, w, h, blend }]
 const jan2008 = {}; // layout -> { path, file, member, text, mickeys }
+function gather() {
 for (const [layout, paths] of pathsOf) {
   for (const path of paths) {
     const cast = base(path);
@@ -151,9 +171,15 @@ for (const [layout, paths] of pathsOf) {
         unmeasured.push(`${layout}:${Number(id)}`);
         continue;
       }
-      (part2[layout] ??= []).push({ id: Number(id), type, x: at[0], y: at[1], w: 34, h: type === "floor" ? 24 : 32, blend: Number(a.BLEND) });
+      const h = type === "floor" ? 24 : 32;
+      // ⚠ The camera's viewfinder stops at stage y = 2 (window boundary), and the
+      // check sprite must lie WHOLLY inside it: Central Plaza's 026 is drawn at
+      // y = 17, so its 32-px check sprite (top 1) could never be photographed.
+      // Nudge the invisible sprite down just enough; the visible art stays put.
+      (part2[layout] ??= []).push({ id: Number(id), type, x: at[0], y: Math.max(at[1], 2 + h / 2), w: 34, h, blend: Number(a.BLEND) });
     }
   }
+}
 }
 const mickeyLine = (m) =>
   `\t<MICKEY TYPE="${m.type}" X="${m.x}" Y="${m.y}" Z="-4990000" W="${m.w}" H="${m.h}" ID="${m.id}" BLEND="0" FLIPH="0" INK="8" FLIPV="0" SKEW="0" COLOR="#000000" BGCOLOR="#FFFFFF" />`;
@@ -258,8 +284,56 @@ function save(c, replacements, additions, keyRows, newSlots, outFile) {
   return out.length;
 }
 
-// ── 1. rooms that carry the 2008 set's xml: add Part 2's lines to it ────────────
+// ── 0. the restored Mickeys: object node + visual sprite in their room cast ──
 const tsTextEdits = []; // { cast, member, file, text }
+for (const [path, list] of Map.groupBy(RESTORED, (r) => r.path)) {
+  const layout = list[0].layout;
+  const c = open(sourceOf(path));
+  const replacements = new Map();
+  for (const [memberName, edit] of [
+    [`room.${layout}.object.xml`, (text) => {
+      // Rerunnable: drop this tool's nodes first.
+      let t = text.replace(/\t\t<NODE CLASS="default" HGT="0" NAME="(mickey\d+)" SPRITE="\1"[^>]*\/>\r/g, "");
+      const nodes = list.map((r) => {
+        const n = `mickey${String(r.id).padStart(3, "0")}`;
+        return `\t\t<NODE CLASS="default" HGT="0" NAME="${n}" SPRITE="${n}" X="${r.node[0]}" XD="0" Y="${r.node[1]}" YD="0" Z="${r.node[2]}" ZD="0" />\r`;
+      });
+      const at = t.lastIndexOf("\t</ELEMS>");
+      if (at < 0) throw new Error(`${path}: no </ELEMS>`);
+      return t.slice(0, at) + nodes.join("") + t.slice(at);
+    }],
+    [`${layout}.visual.xml`, (text) => {
+      let t = text.replace(/\t<SPRITE ID="(mickey\d+)" MEMBER="t[1-8]"[^>]*\/>\r/g, "");
+      let z = Math.max(...[...t.matchAll(/<SPRITE [^>]*\bZ="(\d+)"/g)].map(([, v]) => Number(v)));
+      const [w, h] = { t5: [24, 28], t6: [24, 28], t7: [32, 38], t8: [32, 38], t1: [28, 16], t2: [28, 16], t3: [38, 22], t4: [38, 22] }[list[0].member];
+      const sprites = list.map((r) => `\t<SPRITE ID="mickey${String(r.id).padStart(3, "0")}" MEMBER="${r.member}" X="400" Y="300" Z="${++z}" W="${w}" H="${h}" BLEND="${r.blend}" />\r`);
+      const at = t.lastIndexOf("</SCORE>");
+      if (at < 0) throw new Error(`${path}: no </SCORE>`);
+      return t.slice(0, at) + sprites.join("") + t.slice(at);
+    }],
+  ]) {
+    const castId = c.castIdByName.get(memberName);
+    const stxtId = castId && c.childOf(castId, "STXT");
+    if (!stxtId) throw new Error(`${path}: no ${memberName} STXT`);
+    const buf = c.data(stxtId);
+    const text = edit(stxtText(buf));
+    replacements.set(stxtId, stxtBytes(text, stxtRuns(buf)));
+    const cast = base(path);
+    const file = textFiles(cast).find((f) => f.endsWith(`_${memberName}_stxt_0.txt`));
+    if (!file) throw new Error(`TS ${cast}: no ${memberName}`);
+    // The same edit on the extraction's OWN text: the extractor stores non-ASCII
+    // (the object.xml creator's "ä") differently from the cast's raw bytes.
+    const tsText = edit(readText(cast, file));
+    // Written now, so gather() below reads the restored objects.
+    writeFileSync(join(CASTS, cast, "text", file), tsText, "latin1");
+    tsTextEdits.push({ cast, member: Number(file.split("_")[0]), file, text: tsText });
+  }
+  const size = save(c, replacements, [], [], [], patchPath(path));
+  console.log(`${path}: restored ${list.map((r) => `mickey${String(r.id).padStart(3, "0")}`).join(", ")} (${size} bytes)`);
+}
+gather();
+
+// ── 1. rooms that carry the 2008 set's xml: add Part 2's lines to it ────────────
 for (const layout of Object.keys(part2).sort()) {
   const q = jan2008[layout];
   if (!q) continue;
