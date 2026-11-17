@@ -69,6 +69,10 @@ export interface QuestTask {
   npc?: number;
   /** TASK.ROOM: the public room code. */
   room?: number;
+  /** TASK.ROOM in the Monorail Station (14): which land's platform (see FindableSpot.stop). */
+  stop?: number;
+  /** TASK.SONG: which Music Mixer's stage ("monorail" | "street"); unset = either. */
+  mixer?: string;
   /** TASK.MINIGAME: a GAME id and the score to reach. */
   game?: number;
   score?: number;
@@ -99,6 +103,8 @@ export interface OfficialQuest {
   description: string;
   /** Pins the player must own to start (the quest chain). */
   requiresPins?: number[];
+  /** At least ONE of these pins must be owned too (any route's prize, say). */
+  requiresAnyPin?: number[];
   reward: { credits: number; pins: number[] };
   tasks: QuestTask[];
 }
@@ -106,6 +112,12 @@ export interface OfficialQuest {
 // ---------------------------------------------------------------- codes used
 
 const ROOM = {
+  MONORAIL_STATION: 14,
+  SCI_FI_DINE_IN: 72,
+  SPACE_MOUNTAIN_QUEST_DECK: 73,
+  AUTOPIA_SPACE_RACE: 74,
+  AUTOPIA_QUEST_TRACK: 77,
+  NAUTILUS_GROTTO: 82,
   VMK_CENTRAL: 41,
   TOMORROWLAND_HUB: 47,
   ESPLANADE: 48,
@@ -225,7 +237,16 @@ const TRAILS: Record<string, [number, number[], number?]> = {
   "hard.banquet": [34, [130, 94]],
   "hard.gallery": [31, [127, 219]],
   "hard.fwlobby": [1100, [134, 108]],
+  // Adventure through Inner-Space II. No route here ("pick a spot", "one
+  // upstairs and one downstairs"): spread over the room, probed the same way.
+  "space.scifi": [72, [28, 100, 180, 272, 392]],
+  // 34 is on the hub's upper floor, 239 on the rocket-boarding floor below
+  // (reached by the hub's own teleporter, teleport_upper <-> teleport_sub).
+  "space.tlhub": [47, [34, 239]],
 };
+
+/** The Shipwreck Graveyard's 5 gems, on the sea floor (so: dive for them). Probed on screen. */
+const SHIPWRECK_GEMS: FindableSpot[] = [16, 64, 120, 200, 256].map((tile) => ({ room: 78, tile, code: FINDABLE.DIAMOND }));
 
 /** A "find the atoms" task over one trail. */
 function atoms(key: string, hint: string): QuestTask {
@@ -246,7 +267,11 @@ const PIN = {
   AUTOPIA_RACING_GREEN: 2129,
   AUTOPIA_OFFROAD_YELLOW: 2133,
   TURN_INTO_BAT: 2084,
+  AUTOPIA_DRIVERS_LICENSE: 2134,
+  INNER_SPACE_SUIT_BLUE: 2136,
 } as const;
+/** Room collectables (autopia.ts): diving clams, Autopia gas cans. */
+const COLLECTABLE = { GAS_CAN: 382, CLAM: 394 } as const;
 
 /** The Road Trip starts once the Diving pin is earned (Ships & Shipwrecks II). */
 const ROAD_TRIP_NEEDS = [PIN_DEEP_SEA_DIVING_BLUE];
@@ -468,6 +493,80 @@ export const OFFICIAL_QUESTS: OfficialQuest[] = [
       atoms("hard.gallery", "Collect the 2 atoms in the Gallery."),
       atoms("hard.fwlobby", "Collect the 2 atoms in the Castle Fireworks Remixed Lobby."),
       game(GAME.FIREWORKS, 7500, "Finish the road trip: score 7,500 points in Castle Fireworks Remixed."),
+    ],
+  },
+  {
+    id: 6,
+    name: "Adventure through Inner-Space II",
+    description:
+      "Suit up for an adventure under the sea, across Tomorrowland and out into space! You need an Autopia pin from " +
+      "the Autopia Road Trip and your Autopia Drivers' License to start. Finish to earn the Inner-Space Suit Blue " +
+      "Magic Pin: say \"Space!\" while wearing it to visit the Inner-Space Shop.",
+    requiresPins: [PIN.AUTOPIA_DRIVERS_LICENSE],
+    requiresAnyPin: [PIN.AUTOPIA_RACING_BLUE, PIN.AUTOPIA_RACING_PINK, PIN.AUTOPIA_OFFROAD_YELLOW, PIN.AUTOPIA_RACING_GREEN],
+    reward: { credits: 0, pins: [PIN.INNER_SPACE_SUIT_BLUE] },
+    tasks: [
+      visit(ROOM.NAUTILUS_GROTTO, "Your adventure begins deep under the sea, in a grotto full of treasure. Find it."),
+      {
+        type: TASK.COLLECT,
+        item: COLLECTABLE.CLAM,
+        amount: 5,
+        hint: "Shells have washed up on the floor of the grotto. Dive in and collect 5 clams.",
+      },
+      visit(ROOM.SCI_FI_DINE_IN, "The movie is about to start! Head to the drive-in and pick a spot."),
+      atoms("space.scifi", "Atoms have been left behind all over the drive-in, and you'll need them to get into space. Collect all 5."),
+      { ...visit(ROOM.MONORAIL_STATION, "Your next stop is a train ride away. Go to the Tomorrowland Monorail Station."), stop: STOP.TOMORROWLAND },
+      {
+        type: TASK.SONG,
+        mixer: "monorail",
+        hint: "Get everyone dancing: play one of your mixes on the Monorail Music Mixer stage.",
+      },
+      game(GAME.JUNGLE_CRUISE, 30000, "Wild creatures live near the river ride. Score 30,000 points on the Jungle Cruise Photo Safari."),
+      visit(ROOM.AUTOPIA_QUEST_TRACK, "Drive safely! VMK Driving School students know how to avoid wrecks. Go to the Autopia Quest Track."),
+      {
+        type: TASK.CHOICE,
+        hint: "Safety first: how many orange cones are on the Quest Track?",
+        answers: ["8", "10", "12", "14"],
+        correct: 3,
+      },
+      {
+        type: TASK.CHOICE,
+        hint: "A sign on the track shows how fast you should be going. What speed does it say?",
+        answers: ["45", "55", "65", "75"],
+        correct: 3,
+      },
+      visit(ROOM.AUTOPIA_SPACE_RACE, "The race in space is about to begin! Drive to the Autopia Space Race."),
+      {
+        type: TASK.COLLECT,
+        item: COLLECTABLE.GAS_CAN,
+        amount: 3,
+        hint: "Running on empty? Drive over 3 gas cans on the Space Race track.",
+      },
+      {
+        type: TASK.CHOICE,
+        hint: "How many VMK flags fly over the Space Race track?",
+        answers: ["2", "3", "4", "5"],
+        correct: 2,
+      },
+      visit(ROOM.SHIPWRECK_GRAVEYARD, "Back under the sea: find the resting place of a one-of-a-kind sunken ship."),
+      {
+        type: TASK.FIND_MANY,
+        spots: SHIPWRECK_GEMS,
+        // The gems are on the sea floor: a 1-star Dive lasts ~28 s and
+        // recharges for 2 min, so 10 minutes is about four dives.
+        timeLimitS: 600,
+        hint: "Five gems lie hidden under the debris of the Shipwreck Graveyard. Dive and collect them all before time runs out!",
+      },
+      visit(ROOM.TOMORROWLAND_HUB, "Look up: the moon and stars are shining. Go to the Tomorrowland Hub."),
+      atoms("space.tlhub", "Two cosmic atoms are hidden here, one high and one low. Collect both."),
+      visit(ROOM.SPACE_MOUNTAIN_QUEST_DECK, "Deja vu! Return to where your adventure began: the Space Mountain Quest Deck."),
+      {
+        type: TASK.CHOICE,
+        hint: "How many space outfits are on display on the Space Mountain Quest Deck?",
+        answers: ["2", "3", "4", "6"],
+        correct: 3,
+      },
+      { type: TASK.DANCE, hint: "You made it! Dance to finish your adventure." },
     ],
   },
 ];

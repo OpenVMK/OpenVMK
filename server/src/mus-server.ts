@@ -5897,6 +5897,7 @@ function createVmkSession(
     const left = Math.max(0, (activeMagic.endsAt ?? Date.now()) - Date.now());
     armMagicTimer(pinId, left + GAS_MS);
     activeMagic.cans = (activeMagic.cans ?? 0) + 1;
+    quests?.collectablePicked(found.type);
     console.log(`[${label}] autopia: gas at ${tile} (${activeMagic.cans} this drive), ${Math.round((left + GAS_MS) / 1000)}s left`);
     if (currentRoomCode === QUEST_TRACK_CODE && activeMagic.cans >= LICENSE_CANS && !ownsLicense()) {
       addItems(userId, [LICENSE_PIN], ITEM_CATEGORY.pins);
@@ -5990,6 +5991,7 @@ function createVmkSession(
       sendCredits();
       activeMagic.reward = (activeMagic.reward ?? 0) + 1;
       console.log(`[${label}] dive: clam at ${tile}, +1 credit (${activeMagic.reward} this dive)`);
+      quests?.collectablePicked(CLAM_TYPE);
     }, WALK_STEP_MS / 2);
   };
   /**
@@ -6179,7 +6181,8 @@ function createVmkSession(
     const pin = getWornPins(live.userId).find((p) => p.id === pinId);
     if (!pin) return fail(4521, "not wearing it");
     if (!magicOf(pin.typeCode)) return fail(4520, "no magic");
-    if ((magicReadyAt.get(pin.id) ?? 0) > Date.now()) return fail(4522, "recharging");
+    const readyAt = magicReadyAt.get(pin.id) ?? 0;
+    if (readyAt > Date.now()) return fail(4522, `recharging, ready in ${Math.ceil((readyAt - Date.now()) / 1000)} s`);
     const level = pinLevel(pin);
     magicReadyAt.set(pin.id, Date.now() + magicTiming(pin.typeCode, level).rechargeS * 1000);
     if (isSingleUsePin(pin.typeCode)) {
@@ -6975,6 +6978,7 @@ function createVmkSession(
     const ms = Math.max(1, songSlots(data)) * SLOT_MS[performance.variant] + 1_500;
     performance.timer = setTimeout(() => endPerformance("song over"), ms);
     console.log(`[${label}] performing "${songName}" on the ${performance.variant} stage (${Math.round(ms / 1000)}s)`);
+    quests?.songPlayed(performance.variant);
     const reward = claimPlayReward(live.userId, performance.variant);
     if (reward) payMixerReward(reward, "play", performance.variant);
   };

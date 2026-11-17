@@ -156,6 +156,10 @@ export class QuestSession {
       this.setStatus("quit");
       this.row = undefined;
     }
+    // A timed task picked up again after a relog or restart: its clock starts
+    // over (the start time isn't stored), but it must run, or it never fails.
+    const t = this.task;
+    if (t?.timeLimitS) this.taskTimer = setTimeout(() => this.current(t.type) === t && this.fail(true), t.timeLimitS * 1000);
     sessions.set(host.userId, this);
   }
 
@@ -299,7 +303,14 @@ export class QuestSession {
   }
 
   private prerequisitesMet(q: OfficialQuest): boolean {
-    return (q.requiresPins ?? []).every((code) => this.host.ownsPin(code));
+    if (!(q.requiresPins ?? []).every((code) => this.host.ownsPin(code))) return false;
+    return !q.requiresAnyPin?.length || q.requiresAnyPin.some((code) => this.host.ownsPin(code));
+  }
+
+  /** Is a TASK.ROOM's room (and monorail platform) the one we are in? */
+  private inRoomOf(t: QuestTask): boolean {
+    if (t.room === undefined || t.room !== this.host.roomCode()) return false;
+    return t.stop === undefined || t.stop === this.host.stationStop();
   }
 
   /** 851. */
@@ -373,7 +384,7 @@ export class QuestSession {
     this.sendTask();
     // Already standing where the task points, or already holding the item:
     // solved on the spot (`quest.task.completed.immediately` is for items).
-    if (t.type === TASK.ROOM && t.room === this.host.roomCode()) setTimeout(() => this.current(TASK.ROOM) === t && this.complete(), 1500);
+    if (t.type === TASK.ROOM && this.inRoomOf(t)) setTimeout(() => this.current(TASK.ROOM) === t && this.complete(), 1500);
     if (t.type === TASK.ACQUIRE && t.item !== undefined && this.host.ownsItem(t.item)) {
       setTimeout(() => this.current(TASK.ACQUIRE) === t && this.complete(true), 1500);
     }
@@ -444,8 +455,8 @@ export class QuestSession {
     const t = this.task;
     if (!t || !this.row) return;
     if (t.type === TASK.FIND || t.type === TASK.FIND_MANY) this.sendFindables();
-    const here = this.host.roomCode();
-    if (here !== undefined && this.current(TASK.ROOM)?.room === here) this.complete();
+    const visit = this.current(TASK.ROOM);
+    if (visit && this.inRoomOf(visit)) this.complete();
   }
 
   tileEntered(tile: number): void {
@@ -498,6 +509,25 @@ export class QuestSession {
 
   npcVisited(code: number): void {
     if (this.current(TASK.NPC)?.npc === code) this.complete();
+  }
+
+  /** A room collectable picked up (clam 394, gas can 382; autopia.ts). */
+  collectablePicked(typeCode: number): void {
+    const t = this.current(TASK.COLLECT);
+    if (!t || t.item !== typeCode || !this.row) return;
+    // Kept in `found` (one entry per pickup) so a relog or restart keeps the count.
+    const found = this.found();
+    found.add(`collected:${found.size + 1}`);
+    this.row.found = JSON.stringify([...found]);
+    this.save();
+    this.log(`collected ${typeCode} (${found.size}/${t.amount ?? 1})`);
+    if (found.size >= (t.amount ?? 1)) this.complete();
+  }
+
+  /** A mix played on a Music Mixer stage (music-mixer.ts variant). */
+  songPlayed(mixer: string): void {
+    const t = this.current(TASK.SONG);
+    if (t && (t.mixer === undefined || t.mixer === mixer)) this.complete();
   }
 
   minigame(game: number, score: number, won: boolean): void {
