@@ -671,6 +671,12 @@ export const MSG = {
   PHOTO_ALBUM_STATUS: 2767,
   /** `CHiddenMickeyHandler`: `[int reqId, int newMickeyFound]` — answers 770. */
   HIDDEN_MICKEY_IN_PICTURE: 2770,
+  /** `[int found, int total]` (`HiddenMickeyQuestStatus`). */
+  HIDDEN_MICKEY_STATUS: 2771,
+  /** `[int n, n × (int mickeyId, str date)]` (`foundHiddenMickeyList`). */
+  HIDDEN_MICKEY_LIST: 2772,
+  /** `[int n, n × (int mickeyId, int colour 0-4)]` — the Mickeys to draw. */
+  HIDDEN_MICKEY_ACTIVE_LIST: 2773,
 
   // ---- quest engine (CQuestEngineHandler; quests.ts, docs/QUEST-ENGINE.md)
   /** The task hint, or the multiple-choice window when it carries options. */
@@ -1271,6 +1277,12 @@ export const CMD = {
   TEST_ALBUM_STATUS: 769,
   /** `[int reqId, int left, int top]` — a Hidden Mickey was in the viewfinder. */
   HIDDEN_MICKEY_CHECK: 770,
+  /** `[int photoId, int left, int top]` — the found Mickey's photo was saved. */
+  HIDDEN_MICKEY_SAVE_PICTURE: 771,
+  /** `[]` — found / total (answered with 2771). */
+  HIDDEN_MICKEY_STATUS: 772,
+  /** `[]` — VMK Central's found list (answered with 2772). */
+  HIDDEN_MICKEY_LIST: 773,
   // ---- music mixers (see MSG.OPEN_MIXER). Names are canned tokens, no count.
   /** No body. EXIT / RETURN TO ROOM — back to the lobby or the train. */
   CLOSE_MIXER: 750,

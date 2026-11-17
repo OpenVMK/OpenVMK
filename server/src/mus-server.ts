@@ -262,6 +262,10 @@ import {
 import { NPC_REF_BASE, npcByRef, npcsInRoom, visitNpc, type Npc } from "./npcs.js";
 import { GAME, OFFICIAL_QUESTS, QuestSession } from "./quests.js";
 import {
+  activeMickeyList, foundMickeys, mickeyDate, mickeysInFrame, recordFinds, rewardsBetween, totalMickeys,
+} from "./hidden-mickeys.js";
+import { guessCategory } from "./room-prizes.js";
+import {
   MESSENGER_COMMANDS,
   handleMessengerCommand,
   sendStaffMessage,
@@ -7488,6 +7492,14 @@ function createVmkSession(
         [{ int: loginState }],
         loginState === 0 ? "login accepted (state 0, existing character)" : "login accepted (state 1, NEW USER → avatar creation)",
       );
+      // Hidden Mickey Quest II: the client draws only the IDs in this list and
+      // reads it before the first room is ready — so now, once (it appends).
+      const activeMickeys = activeMickeyList();
+      send(
+        MSG.HIDDEN_MICKEY_ACTIVE_LIST,
+        [{ int: activeMickeys.length }, ...activeMickeys.flatMap((m) => [{ int: m.id }, { int: m.colour }])],
+        `SetActiveMickeyList ${activeMickeys.length}`,
+      );
       // Push sound prefs as early as the session exists. The loading window's
       // EnableLoadingSound runs during boot and is gated on session `fx`, so a
       // push that waits for QUERY_CAMERA arrives after the jingle would have
@@ -9347,7 +9359,10 @@ function createVmkSession(
       command === CMD.EDIT_CAPTION ||
       command === CMD.REQUEST_PHOTO_ID_OF_POSTER ||
       command === CMD.TEST_ALBUM_STATUS ||
-      command === CMD.HIDDEN_MICKEY_CHECK
+      command === CMD.HIDDEN_MICKEY_CHECK ||
+      command === CMD.HIDDEN_MICKEY_SAVE_PICTURE ||
+      command === CMD.HIDDEN_MICKEY_STATUS ||
+      command === CMD.HIDDEN_MICKEY_LIST
     ) {
       if (!live) return;
       const me = live.userId;
@@ -9384,12 +9399,55 @@ function createVmkSession(
           sendAlbumStatus();
           return;
         case CMD.HIDDEN_MICKEY_CHECK: {
-          // `[reqId, left, top]`: a Hidden Mickey sprite was in the viewfinder.
-          // The client holds the upload until `2770 [reqId, found]`, and only
-          // uploads when found = 0. Hidden Mickeys are not implemented, so
-          // nothing is ever newly found and the photo is saved as usual.
+          // `[reqId, left, top]`: a Hidden Mickey sprite was wholly in the
+          // viewfinder (hidden-mickeys.ts). The client holds the upload until
+          // `2770 [reqId, found]`: 1 opens the "Mickey found" window, 0 goes on
+          // to the ordinary photo (already found, or not one we know).
           const reqId = readInt();
-          send(MSG.HIDDEN_MICKEY_IN_PICTURE, [{ int: reqId }, { int: 0 }], `HiddenMickeyInPicture ${reqId} 0`);
+          const left = readInt();
+          const top = readInt();
+          const layout = currentGuestRoom() || currentRoomCode === undefined ? undefined : ROOM_CODES.get(currentRoomCode);
+          const before = foundMickeys(me).length;
+          const fresh = recordFinds(me, mickeysInFrame(layout, left, top));
+          send(MSG.HIDDEN_MICKEY_IN_PICTURE, [{ int: reqId }, { int: fresh.length ? 1 : 0 }], `HiddenMickeyInPicture ${reqId} ${fresh.length ? 1 : 0}`);
+          if (!fresh.length) return;
+          const after = before + fresh.length;
+          console.log(`[${label}] hidden mickey: found ${fresh.map((m) => m.id).join(",")} in ${layout} (${after}/${totalMickeys()})`);
+          send(MSG.HIDDEN_MICKEY_STATUS, [{ int: after }, { int: totalMickeys() }], `HiddenMickeyQuestStatus ${after}/${totalMickeys()}`);
+          for (const reward of rewardsBetween(before, after)) {
+            if (reward.credits > 0) setCredits(me, (getUserById(me)?.credits ?? 0) + reward.credits, "Hidden Mickey Quest");
+            for (const code of reward.items) addItems(me, [code], guessCategory(code));
+            const prizes = reward.items.map((code) => itemName(code) ?? `item ${code}`);
+            sendStaffMessage(
+              me,
+              `You've found ${reward.at} Hidden Mickey${reward.at === 1 ? "" : "s"}! ` +
+                [reward.credits > 0 ? `${reward.credits} credits` : "", ...prizes].filter(Boolean).join(" and ") +
+                " have been added to your account.",
+            );
+            console.log(`[${label}] hidden mickey reward at ${reward.at}: ${reward.credits} cr ${reward.items.join(",")}`);
+          }
+          if (rewardsBetween(before, after).length) {
+            sendCredits();
+            queueItemList(1);
+          }
+          return;
+        }
+        case CMD.HIDDEN_MICKEY_SAVE_PICTURE:
+          // The found Mickey's photo went to the camera roll the usual way;
+          // nothing else hangs on it.
+          return;
+        case CMD.HIDDEN_MICKEY_STATUS: {
+          const found = foundMickeys(me).length;
+          send(MSG.HIDDEN_MICKEY_STATUS, [{ int: found }, { int: totalMickeys() }], `HiddenMickeyQuestStatus ${found}/${totalMickeys()}`);
+          return;
+        }
+        case CMD.HIDDEN_MICKEY_LIST: {
+          const found = foundMickeys(me);
+          send(
+            MSG.HIDDEN_MICKEY_LIST,
+            [{ int: found.length }, ...found.flatMap((f) => [{ int: f.id }, { str: mickeyDate(f.foundAt) }])],
+            `FoundHiddenMickeyList ${found.length}`,
+          );
           return;
         }
         case CMD.PUBLISH_PHOTO: {

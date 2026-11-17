@@ -1544,6 +1544,18 @@ export class CastMember {
   }
 
   /**
+   * `the memberNum of member` — the member's slot within ITS cast (the low five
+   * digits of `_number`, which is castLib × 100000 + slot); 0 for a miss.
+   *
+   * ⚠ Undefined before this, so `member(x).memberNum > 0` was always false:
+   * `CHiddenMickeyInterface.allocateMickeysInRoom` decided every room had no
+   * `<room>.mickey.xml` and drew no Hidden Mickeys at all.
+   */
+  get memberNum(): number {
+    return this.isEmpty || this._number <= 0 ? 0 : this._number % 100000;
+  }
+
+  /**
    * Whether this is the miss sentinel. Not `_number <= 0`: runtime-minted text
    * members carry negative ids so they cannot collide with real cast ids, and
    * an id test would quietly drop every text sprite from the stage.
