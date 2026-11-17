@@ -28,7 +28,7 @@
 import { db, creditListeners, itemListeners } from "./db.js";
 import { MSG, CMD, decodeToInt, type OutgoingParam } from "./vmk-protocol.js";
 
-import { OFFICIAL_QUESTS, TASK, GAME, type OfficialQuest, type QuestTask } from "./quest-defs.js";
+import { OFFICIAL_QUESTS, TASK, GAME, type FindableSpot, type OfficialQuest, type QuestTask } from "./quest-defs.js";
 export { OFFICIAL_QUESTS, TASK, GAME, FINDABLE } from "./quest-defs.js";
 
 const questById = (id: number) => OFFICIAL_QUESTS.find((q) => q.id === id);
@@ -112,6 +112,8 @@ export interface QuestHost {
   send: Send;
   /** The public room code we are in; undefined in a guest room or between rooms. */
   roomCode: () => number | undefined;
+  /** In the Monorail Station (room 14): which land's platform (a monorail stop id). */
+  stationStop: () => number | undefined;
   ownsPin: (code: number) => boolean;
   ownsItem: (code: number) => boolean;
   /** Pay the prize: credits + pins, announced the way other rewards are. */
@@ -180,6 +182,12 @@ export class QuestSession {
     if (this.awaiting !== "none") return undefined;
     const t = this.task;
     return t && t.type === type ? t : undefined;
+  }
+
+  /** Is this spot in the room (and, on the monorail, the platform) we are in? */
+  private isHere(spot: FindableSpot): boolean {
+    if (spot.room !== this.host.roomCode()) return false;
+    return spot.stop === undefined || spot.stop === this.host.stationStop();
   }
 
   private found(): Set<string> {
@@ -425,6 +433,12 @@ export class QuestSession {
 
   // ------------------------------------------------------------ events
 
+  /** Put the current task's findables back on screen (after `/questatoms`). */
+  resendFindables(): void {
+    const t = this.task;
+    if (t && (t.type === TASK.FIND || t.type === TASK.FIND_MANY)) this.sendFindables();
+  }
+
   /** After the room is built (2869 needs its tiles). */
   roomReady(): void {
     const t = this.task;
@@ -437,8 +451,7 @@ export class QuestSession {
   tileEntered(tile: number): void {
     const t = this.task;
     if (!t || !this.row || this.awaiting !== "none" || (t.type !== TASK.FIND && t.type !== TASK.FIND_MANY)) return;
-    const room = this.host.roomCode();
-    const spot = t.spots?.find((s) => s.room === room && s.tile === tile);
+    const spot = t.spots?.find((s) => s.tile === tile && this.isHere(s));
     if (!spot) return;
     const found = this.found();
     const key = `${spot.room}:${spot.tile}`;
@@ -588,9 +601,8 @@ export class QuestSession {
   /** 2869: the current task's unfound items in THIS room (an empty list clears the old room's). */
   private sendFindables(): void {
     const t = this.task;
-    const room = this.host.roomCode();
     const found = this.found();
-    const here = (t?.spots ?? []).filter((s) => s.room === room && !found.has(`${s.room}:${s.tile}`));
+    const here = (t?.spots ?? []).filter((s) => this.isHere(s) && !found.has(`${s.room}:${s.tile}`));
     this.host.send(
       MSG.QUEST_SHOW_FINDABLE,
       [{ int: here.length }, ...here.flatMap((s) => [{ int: s.tile }, { int: s.code }])],

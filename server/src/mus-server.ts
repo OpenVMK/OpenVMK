@@ -260,7 +260,7 @@ import {
   type AutopiaDeps,
 } from "./autopia.js";
 import { NPC_REF_BASE, npcByRef, npcsInRoom, visitNpc, type Npc } from "./npcs.js";
-import { GAME, QuestSession } from "./quests.js";
+import { GAME, OFFICIAL_QUESTS, QuestSession } from "./quests.js";
 import {
   MESSENGER_COMMANDS,
   handleMessengerCommand,
@@ -3692,6 +3692,7 @@ function createVmkSession(
         reply("/changename <old name> = <new name> - rename a player everywhere");
         reply(`badge codes: ${BADGE_CODES.join(" ")} (max ${MAX_BADGES} worn)`);
         reply("/dispenser - this guest room's prize dispenser (admin; /dispenser help)");
+        reply("/questatoms - show every quest atom/skull placed in this room; /questatoms 0 to restore");
         return true;
 
       case "perms":
@@ -3832,6 +3833,40 @@ function createVmkSession(
         reply(`spawned ${granted} of ${wanted.length}`);
         if (bad.length > 0) reply(`skipped: ${bad.join(" ")}`);
         console.log(`[${label}] spawned [${wanted.join(",")}] for "${characterName}"`);
+        return true;
+      }
+
+      case "questatoms": {
+        // `/questatoms` — show EVERY quest findable placed in this room (all
+        // quests, all tasks) at once, to check by eye that none sits behind
+        // scenery; `/questatoms 0` puts back your current task's own. (Not
+        // "off": a dictionary word arrives as a token, never as an argument.)
+        // The reply lists the tiles in the order the client draws them.
+        if (args[0] === "0" || args[0]?.toLowerCase() === "off") {
+          send(MSG.QUEST_SHOW_FINDABLE, [{ int: 0 }], "QuestShowFindable 0 (questatoms off)");
+          quests?.resendFindables();
+          reply("quest findables back to your current task");
+          return true;
+        }
+        const here = currentGuestRoom() ? undefined : currentRoomCode;
+        const seen = new Set<number>();
+        const spots: { tile: number; code: number; where: string }[] = [];
+        for (const q of OFFICIAL_QUESTS) {
+          q.tasks.forEach((t, i) => {
+            for (const s of t.spots ?? []) {
+              if (s.room !== here || seen.has(s.tile)) continue;
+              if (s.stop !== undefined && s.stop !== stationStop) continue; // another land's platform
+              seen.add(s.tile);
+              spots.push({ tile: s.tile, code: s.code, where: `q${q.id}t${i + 1}` });
+            }
+          });
+        }
+        send(
+          MSG.QUEST_SHOW_FINDABLE,
+          [{ int: spots.length }, ...spots.flatMap((s) => [{ int: s.tile }, { int: s.code }])],
+          `QuestShowFindable ${spots.length} (questatoms)`,
+        );
+        reply(spots.length ? `${spots.length}: ${spots.map((s) => `${s.tile}(${s.where})`).join(" ")}` : "no quest findables in this room");
         return true;
       }
 
@@ -7359,6 +7394,7 @@ function createVmkSession(
         send,
         // Public rooms only: a guest room built on a public style is not that room.
         roomCode: () => (currentGuestRoom() ? undefined : currentRoomCode),
+        stationStop: () => (!currentGuestRoom() && currentRoomCode === MONORAIL_STATION ? stationStop : undefined),
         ownsPin: (code) => getOwnedItems(account.id, ITEM_CATEGORY.pins).some((i) => i.typeCode === code),
         ownsItem: (code) => getOwnedItems(account.id).some((i) => i.typeCode === code),
         grant: (quest) => {
