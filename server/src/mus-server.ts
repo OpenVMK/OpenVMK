@@ -1023,8 +1023,10 @@ interface LiveConnection {
   bootFrom: (roomName: string) => void;
   /** Send this player a message. */
   send: (msgType: number, params: OutgoingParam[], note?: string) => void;
-  /** The room this player stands in, if any. */
+  /** The room this player stands in, if any — set from the loading screen on. */
   roomName: () => string | undefined;
+  /** Staff in `/ghost`: not there as far as players can tell. */
+  ghosting: () => boolean;
   /** The "trading" bubble (avatar action slot 9): on while a trade window is open. */
   setTrading: (on: boolean) => void;
   /** Garment set ids this player is wearing — those cannot be traded away. */
@@ -1925,6 +1927,62 @@ const ITEM_CATEGORY_FURNITURE = 1;
 const ITEM_CATEGORY_POSTER = 3;
 /** "OVMK Photo": a camera photo hung on a wall is a poster of this type. */
 const PHOTO_POSTER_TYPE = 3008;
+
+/**
+ * Empty a guest room (CLEAR ROOM, and selling it), giving everything back.
+ * Returns a summary for the log.
+ *
+ * ⚠ This MOVES the items, it does not destroy them — same rule as "take away"
+ * on a single piece. Each goes back to ITS OWNER, not to whoever cleared the
+ * room, so a staff member tidying someone's room does not end up owning their
+ * furniture. Unowned scenery simply ceases to exist; there is no inventory to
+ * credit.
+ *
+ * ⚠ `clearRoomItems` deletes the walls' rows too, and `getRoomItems` lists only
+ * furniture — posters and photos must be returned here or they are lost.
+ */
+function returnRoomContents(room: string): string {
+  const items = getRoomItems(room);
+  const posters = getRoomPosters(room);
+  const returned = new Map<number, number>();
+  const credit = (ownerId: number) => returned.set(ownerId, (returned.get(ownerId) ?? 0) + 1);
+  for (const item of items) {
+    if (item.ownerId === null) continue;
+    // A teleporter half goes back still paired, as in "take away".
+    if (item.pair) addPairedItem(item.ownerId, item.typeCode, ITEM_CATEGORY.items, item.pair);
+    else addItems(item.ownerId, [item.typeCode], ITEM_CATEGORY.items);
+    credit(item.ownerId);
+  }
+  for (const poster of posters) {
+    // A hung PHOTO goes back to its owner's photo catalog, never into the
+    // poster inventory.
+    if (poster.typeCode === PHOTO_POSTER_TYPE) {
+      const photo = getPhotoOnWall(poster.ref);
+      if (!photo) continue;
+      movePhoto(photo.id, "catalog");
+      liveByUser.get(photo.ownerId)?.send(
+        MSG.PHOTO_REMOVED_FROM_WALL,
+        [{ int: poster.ref }, { int: photo.id }],
+        undefined,
+      );
+    } else if (poster.ownerId !== null) {
+      addItems(poster.ownerId, [poster.typeCode], ITEM_CATEGORY.posters);
+      credit(poster.ownerId);
+    }
+  }
+  clearRoomItems(room);
+  for (const occupant of occupantsOf(room)) {
+    for (const item of items) occupant.send(MSG.REMOVE_ELEMENT, [{ int: item.ref }], undefined);
+    for (const poster of posters) occupant.send(MSG.REMOVE_POSTER, [{ int: poster.ref }], undefined);
+  }
+  // Same as pick-up: the grid only changes if we resend it — and for EVERY
+  // owner who got something back and is online.
+  for (const ownerId of returned.keys()) liveByUser.get(ownerId)?.refreshInventory();
+  return (
+    `${items.length} item(s), ${posters.length} on walls -> ` +
+    `${[...returned].map(([id, n]) => `${n} to user ${id}`).join(", ") || "none returned"}`
+  );
+}
 /** Photos an album holds (`2767` capacity). Not documented; the wiki never hit it. */
 const PHOTO_ALBUM_CAPACITY = Number(process.env.VMK_PHOTO_ALBUM_CAPACITY ?? 50);
 /** "You will get 5 credits for every photo" (wiki, How to take a picture) — on delete. */
@@ -7373,6 +7431,7 @@ function createVmkSession(
         },
         send,
         roomName: () => currentRoomName,
+        ghosting: () => ghosting,
         setTrading: (on) => {
           trading = on ? 1 : 0;
           if (me) me.trading = trading;
@@ -11052,31 +11111,7 @@ function createVmkSession(
         send(MSG.CONFIRM_CLEAR_ROOM, [], "ConfirmClearRoom (asking)");
         return;
       }
-      // ⚠ Clearing MOVES the furniture, it does not destroy it — same rule as
-      // "take away" on a single piece. Each item goes back to ITS OWNER, not to
-      // whoever cleared the room, so a staff member tidying someone's room does
-      // not end up owning their furniture. Unowned scenery simply ceases to
-      // exist; there is no inventory to credit.
-      const items = getRoomItems(currentRoomName!);
-      const returned = new Map<number, number>();
-      for (const item of items) {
-        if (item.ownerId === null) continue;
-        addItems(item.ownerId, [item.typeCode], ITEM_CATEGORY.items);
-        returned.set(item.ownerId, (returned.get(item.ownerId) ?? 0) + 1);
-      }
-      clearRoomItems(currentRoomName!);
-      for (const occupant of occupantsOf(currentRoomName!)) {
-        for (const item of items) {
-          occupant.send(MSG.REMOVE_ELEMENT, [{ int: item.ref }], undefined);
-        }
-      }
-      // Same as pick-up: the grid only changes if we resend it — and for EVERY
-      // owner who got something back and is online, not just whoever cleared.
-      for (const ownerId of returned.keys()) liveByUser.get(ownerId)?.refreshInventory();
-      console.log(
-        `[${label}] room ${room.id} cleared: ${items.length} item(s) -> ` +
-          `${[...returned].map(([id, n]) => `${n} to user ${id}`).join(", ") || "none (all unowned)"}`,
-      );
+      console.log(`[${label}] room ${room.id} cleared: ${returnRoomContents(currentRoomName!)}`);
       return;
     }
 
@@ -11093,6 +11128,21 @@ function createVmkSession(
         console.warn(`[${label}] SellRoom refused for ${roomId} — not owned by this player`);
         return;
       }
+      // "You cannot sell this room back if you or other players are present in
+      // the room." Checked on both steps: someone can walk in while the dialog
+      // is up. A ghost is not there as far as the owner can tell, so refusing
+      // would give it away — it is moved out below instead. (The owner's own
+      // ghost does count.)
+      const bucket = `guest:${room.id}`;
+      const inside = [...liveByUser.values()].filter((l) => l.roomName() === bucket);
+      const present = inside.filter((l) => l.userId === room.ownerId || !l.ghosting());
+      if (present.length > 0) {
+        console.log(
+          `[${label}] SellRoom ${room.id} refused: occupied by user ${present.map((l) => l.userId).join(", ")}`,
+        );
+        send(MSG.GENERIC_ERROR, [{ int: 4586 }], "GenericError 4586 (room occupied)");
+        return;
+      }
       if (!confirmed) {
         send(
           MSG.ROOM_SELL_CONFIRM,
@@ -11101,14 +11151,15 @@ function createVmkSession(
         );
         return;
       }
-      // If they are standing in it, get them out first — the room is about to
-      // stop existing, and leaving them there would strand them.
-      if (currentRoomName === `guest:${room.id}`) {
-        enterRoom(LANDING_ROOM_CODE);
-      }
+      // Only ghosts are left in it. Out first — the room is about to stop
+      // existing, and leaving them there would strand them.
+      for (const ghost of inside) ghost.goTo({ roomCode: LANDING_ROOM_CODE });
+      // What is in it goes back first: once the room row is gone nobody can
+      // reach its `room_items` again.
+      const contents = returnRoomContents(bucket);
       const credits = deleteGuestRoom(room.id, ROOM_REFUND);
       console.log(
-        `[${label}] room ${room.id} "${room.name}" sold for ${ROOM_REFUND}; owner now holds ${credits}`,
+        `[${label}] room ${room.id} "${room.name}" sold for ${ROOM_REFUND}; owner now holds ${credits}; ${contents}`,
       );
       send(
         MSG.ROOM_SOLD,
