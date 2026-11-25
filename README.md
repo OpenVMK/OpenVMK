@@ -103,13 +103,13 @@ These act directly on your local database (`data/vmk.db`), so only someone who c
 - [x] Staff admin panel and moderation (kicks, bans, staff alerts)
 - [x] Mini games: Pirates of the Caribbean, Haunted Mansion Ghost Chasers, Castle Fireworks Remixed, Jungle Cruise Photo Safari, Street Party Music Game
 - [x] Haunted Mansion public rooms with NPC ghosts
+- [x] Quests and Hidden Mickeys
 - [x] TypeScript browser port of the original client: plays in a modern browser, no plugin
 - [x] First release on GitHub Releases (October 18, 2026)
 
 **In progress**
 
 - [ ] Mini games: Magic Shop Checkers (the last one)
-- [ ] Quests and Hidden Mickeys
 - [ ] Docker deployment: a Compose setup ships with the release but is still early; reports welcome
 
 **Known issues**
@@ -142,7 +142,7 @@ The original Shockwave files (`.dcr` / `.cct` casts) are not included, but are *
 5. Mini games: five of six done, Checkers in progress
 6. ~~First release on GitHub Releases: October 18, 2026~~
 7. ~~Publish the full source code~~
-8. Quests and Hidden Mickeys
+8. ~~Quests and Hidden Mickeys~~
 9. Docker packaging
 
 ## Community
