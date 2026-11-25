@@ -406,8 +406,3 @@ export function roomIconFor(code: number): IconSpec {
     ? { code, kind: "single", layers: [{ url: urlOf(bg), regX: bg.regX, regY: bg.regY, x: 0, y: 0 }] }
     : { code, kind: "none", layers: [] };
 }
-
-/** Is this code drawable furniture per the furnimap? (Give-item category guess.) */
-export function isFurniCode(code: number): boolean {
-  return furni().has(code);
-}

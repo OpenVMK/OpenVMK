@@ -24,6 +24,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isPinCode, isPosterCode } from "./item-codes.js";
 import { downloadFile } from "./paths.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -287,10 +288,12 @@ export function directionsFor(typeCode: number): number[] {
  * 2000 block (2010 is "Best Guest Room Award"), and placing one writes a row
  * that no amount of client-side work can render. Check this before putting any
  * code into `room_items`.
+ *
+ * ⚠ The furnimap draws posters too, and one pin — neither is furniture.
  */
 export function isFurniture(typeCode: number): boolean {
   parse();
-  return items.has(typeCode);
+  return items.has(typeCode) && !isPosterCode(typeCode) && !isPinCode(typeCode);
 }
 
 /**

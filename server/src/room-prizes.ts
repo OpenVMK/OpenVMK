@@ -12,7 +12,8 @@
  */
 import { ITEM_CATEGORY, addItems, db, getUserById, grantItemPair, grantItems, setCredits } from "./db.js";
 import { itemName } from "./catalog.js";
-import { isFurniture, isPairedTeleporter } from "./furni-footprint.js";
+import { isPairedTeleporter } from "./furni-footprint.js";
+import { guessCategory, inventoryCategory } from "./item-codes.js";
 
 export type PrizeTrigger = "enter" | "exit" | "both";
 export type DispenseEvent = "enter" | "exit";
@@ -82,15 +83,6 @@ db.exec(`
 
 type Row = Record<string, unknown>;
 
-/** Inventory category for a code nobody classified. */
-export function guessCategory(code: number): number {
-  if (isFurniture(code)) return ITEM_CATEGORY.items;
-  if (code >= 20000 && code < 50000) return ITEM_CATEGORY.clothes;
-  if ((code >= 2000 && code < 3000) || (code >= 12000 && code < 13000)) return ITEM_CATEGORY.pins;
-  if (code >= 3000 && code < 4000) return ITEM_CATEGORY.posters;
-  return ITEM_CATEGORY.items;
-}
-
 export function defaultPrizeConfig(roomId: number): PrizeConfig {
   return {
     roomId,
@@ -139,7 +131,7 @@ export function parsePrizeDraft(roomId: number, input: unknown): Omit<PrizeConfi
     if (p.kind !== "item") throw new Error(`${at}: kind must be "item" or "credits".`);
     const code = whole(p.code, `${at}: item code`, 1, 999_999);
     const cat = Number(p.category);
-    const category = Number.isInteger(cat) && cat >= 1 && cat <= 4 ? cat : guessCategory(code);
+    const category = Number.isInteger(cat) && cat >= 1 && cat <= 4 ? inventoryCategory(code, cat) : guessCategory(code);
     return { kind: "item", code, category, count: whole(p.count ?? 1, `${at}: count`, 1, MAX_ITEM_COUNT), amount: 0, weight };
   });
   const enabled = c.enabled === true;

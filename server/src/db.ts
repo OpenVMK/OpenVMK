@@ -20,6 +20,7 @@ import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { inventoryCategory } from "./item-codes.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const DATA_DIR = process.env.VMK_DATA_DIR ?? join(ROOT, "data");
@@ -568,6 +569,17 @@ db.exec(`
 const POSTER_CATEGORY = 3;
 /** Matches furniture rows: everything that is not a poster. */
 const FURNITURE_ROWS = `(category IS NULL OR category <> ${POSTER_CATEGORY})`;
+
+// Posters staff tools filed under Furniture (see item-codes.ts). One already on
+// a room's floor has no wall to hang on; taking it away files it correctly.
+{
+  const moved = Number(
+    db
+      .prepare(`UPDATE items SET category = ${POSTER_CATEGORY} WHERE category = 1 AND type_code BETWEEN 3000 AND 3999`)
+      .run().changes,
+  );
+  if (moved > 0) logMigration(`[db] items: moved ${moved} poster(s) out of Furniture`);
+}
 
 export interface RoomPoster {
   ref: number;
@@ -1198,7 +1210,7 @@ export function addItems(ownerId: number, typeCodes: number[], category: number)
   const codes: number[] = [];
   for (const code of typeCodes) {
     if (!Number.isInteger(code) || code <= 0) continue;
-    insert.run(ownerId, code, category, at);
+    insert.run(ownerId, code, inventoryCategory(code, category), at);
     codes.push(code);
     added++;
   }

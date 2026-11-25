@@ -264,7 +264,7 @@ import { GAME, OFFICIAL_QUESTS, QuestSession } from "./quests.js";
 import {
   activeMickeyList, foundMickeys, mickeyDate, mickeysInFrame, recordFinds, rewardsBetween, totalMickeys,
 } from "./hidden-mickeys.js";
-import { guessCategory } from "./room-prizes.js";
+import { guessCategory } from "./item-codes.js";
 import {
   MESSENGER_COMMANDS,
   handleMessengerCommand,
@@ -3956,7 +3956,7 @@ function createVmkSession(
         // for a row that can never render.
         if (!isFurniture(typeCode)) {
           reply(`${typeCode} is not furniture — the furnimap does not define it, so it cannot render.`);
-          reply("Pins live in the 2000 block and are worn, not placed.");
+          reply("Pins (2000 block) are worn and posters (3000 block) hang on a wall.");
           return true;
         }
         // ⚠ Pick a facing the item actually DEFINES. Direction 1 is the usual

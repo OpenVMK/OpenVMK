@@ -100,7 +100,8 @@ import {
   type StoredShop,
 } from "./catalog-store.js";
 import { isPairedTeleporter } from "./furni-footprint.js";
-import { avatarFor, iconFor, isFurniCode, roomIconFor, warmIcons } from "./hk-icons.js";
+import { avatarFor, iconFor, roomIconFor, warmIcons } from "./hk-icons.js";
+import { guessCategory, inventoryCategory } from "./item-codes.js";
 
 /** Start building /hk's icon index now, off the request path. See warmIcons. */
 export const warmHk = (): Promise<void> => warmIcons();
@@ -248,15 +249,6 @@ function requireUser(id: number): User {
   const u = getUserById(id);
   if (!u) throw new HkError(404, `No user ${id}.`);
   return u;
-}
-
-/** Inventory category for a code the staff member did not classify. */
-function guessCategory(code: number): number {
-  if (code >= 20000 && code < 50000) return ITEM_CATEGORY.clothes;
-  if (code >= 3000 && code < 4000 && !isFurniCode(code)) return ITEM_CATEGORY.posters;
-  if (isFurniCode(code)) return ITEM_CATEGORY.items;
-  if ((code >= 2000 && code < 3000) || (code >= 12000 && code < 13000)) return ITEM_CATEGORY.pins;
-  return ITEM_CATEGORY.items;
 }
 
 const DURATIONS: Record<string, number | null> = {
@@ -1306,6 +1298,8 @@ async function userAction(
       );
       let restored = 0;
       for (const item of JSON.parse(String(snap.items)) as Row[]) {
+        // An old snapshot may still file posters under Furniture.
+        item.category = inventoryCategory(Number(item.type_code), Number(item.category));
         const keys = Object.keys(item).filter((k) => columns.has(k));
         // Same row id where it is still free, so pairs and tickets line up.
         const result = db
