@@ -20,13 +20,13 @@ Virtual Magic Kingdom launched in 2005 as part of Disneyland's 50th anniversary 
 
 ## Getting Started
 
-You need about **5 GB of free disk space** (a 1.8 GB download that unpacks to about 3 GB).
+You need about **2 GB of free disk space** (a 0.7 GB download that unpacks to about 1 GB).
 
 1. Open the **[latest release](https://github.com/OpenVMK/OpenVMK/releases/latest)** and, under **Assets**, download **`vmk-release.zip`**. Skip the "Source code" archives GitHub adds automatically; they are the unbuilt source (see [Running from source](#running-from-source)), not the ready-to-run game.
 2. *(Optional)* Check the download against the **SHA-256** in the release notes:
    - Windows (PowerShell): `Get-FileHash vmk-release.zip`
    - macOS / Linux: `shasum -a 256 vmk-release.zip`
-3. **Extract it** to a folder of your choice, such as `Documents\OpenVMK`. The game is about 340,000 small files, so Windows' built-in "Extract All" is very slow. [7-Zip](https://www.7-zip.org/) is much faster, or from a terminal in the download folder:
+3. **Extract it** to a folder of your choice, such as `Documents\OpenVMK`. The game is about 51,000 small files, so Windows' built-in "Extract All" is very slow. [7-Zip](https://www.7-zip.org/) is much faster, or from a terminal in the download folder:
    - Windows (PowerShell): `tar -xf vmk-release.zip`
    - macOS / Linux: `unzip vmk-release.zip`
 4. **Start it** from inside the new `vmk-release` folder:
@@ -51,7 +51,7 @@ You need about **5 GB of free disk space** (a 1.8 GB download that unpacks to ab
 
 For working on OpenVMK. To play or run a server for people, **use the [release](https://github.com/OpenVMK/OpenVMK/releases/latest)**: it is built, optimised (recompressed art, packed casts, bundled servers) and loads much faster.
 
-You need [Node.js](https://nodejs.org/) 22.5 or newer and about 4.5 GB of disk. The clone is large (about a 600 MB download that checks out to about 3 GB and 143,000 files) because it carries the game's extracted art in `client/assets`, exactly as it was extracted.
+You need [Node.js](https://nodejs.org/) 22.5 or newer and about 2.5 GB of disk. The clone is large (about a 520 MB download that checks out to about 1.6 GB and 63,000 files) because it carries the game's extracted art in `client/assets`, exactly as it was extracted.
 
 On Windows, clone into a short path such as `C:\OpenVMK` or `Documents\OpenVMK`: some asset paths are long, and a deeply nested folder can pass Windows' 260-character limit. If checkout fails with "Filename too long", run `git config --global core.longpaths true` and clone again.
 

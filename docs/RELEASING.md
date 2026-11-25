@@ -22,7 +22,7 @@ the new one always starts with an empty `data` folder.
 ## 2. Check the size
 
 GitHub rejects any single file over **2 GiB**. The zip is currently about
-1.83 GB:
+0.7 GB:
 
 ```powershell
 (Get-Item ..\vmk-release.zip).Length / 1GB
@@ -73,7 +73,7 @@ the SHA-256 matches, extract it, and start it once.
 ```markdown
 The first OpenVMK release: Virtual Magic Kingdom in your browser, no plugin.
 
-**Download `vmk-release.zip` below** (1.8 GB; about 5 GB free needed once
+**Download `vmk-release.zip` below** (0.7 GB; about 2 GB free needed once
 extracted). The "Source code" archives GitHub adds are the unbuilt source,
 not the ready-to-run game.
 
